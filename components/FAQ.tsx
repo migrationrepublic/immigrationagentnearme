@@ -9,10 +9,12 @@ import { HelpCircle } from "lucide-react";
 interface FAQProps {
   cityName?: string;
   stateCode?: string;
+  faqString?: string;
 }
 
-export default function FAQ({ cityName, stateCode }: FAQProps = {}) {
-  const faqs = [
+export default function FAQ({ cityName, stateCode, faqString }: FAQProps = {}) {
+  // Use parsed faqString, fallback to default hardcoded array if not present
+  let faqs = [
     {
       q: `Do I need a registered immigration agent in ${cityName || 'Australia'}?`,
       a: "While it is not legally mandatory to use a migration agent, only MARA registered agents are authorised to charge for immigration advice. Using a registered agent significantly improves your chances of a successful application and protects you from unqualified advice.",
@@ -36,6 +38,25 @@ export default function FAQ({ cityName, stateCode }: FAQProps = {}) {
       a: "Migration Republic's MARA registration number is 2518961. You can verify this on the OMARA public register at any time.",
     },
   ];
+
+  if (faqString) {
+    const blocks = faqString.split('\n\n').filter(Boolean);
+    const parsedFaqs: { q: string, a: string }[] = [];
+    
+    // Parse Q: & A: from markdown
+    blocks.forEach((block) => {
+      const lines = block.split('\n').map(l => l.trimStart());
+      if (lines[0] && lines[0].startsWith('Q: ')) {
+        const q = lines[0].replace('Q: ', '');
+        const a = lines.slice(1).join(' ').replace('A: ', '').trim();
+        parsedFaqs.push({ q, a });
+      }
+    });
+
+    if (parsedFaqs.length > 0) {
+      faqs = parsedFaqs;
+    }
+  }
 
   return (
     <section className="py-24 bg-brand-primary/5 relative" id="faq">
@@ -63,7 +84,7 @@ export default function FAQ({ cityName, stateCode }: FAQProps = {}) {
                   {faq.q}
                 </AccordionTrigger>
                 <AccordionContent className="text-brand-gray text-base leading-relaxed pb-6 pr-8">
-                  {faq.a}
+                  <span dangerouslySetInnerHTML={{ __html: faq.a }} />
                 </AccordionContent>
               </AccordionItem>
             ))}

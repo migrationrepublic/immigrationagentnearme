@@ -1,6 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, CheckCircle2, ShieldCheck, MapPin } from "lucide-react";
 import Image from "next/image";
+import Breadcrumbs from "./Breadcrumbs";
+
 
 interface HeroProps {
   city?: {
@@ -19,9 +21,11 @@ export default function Hero({ city }: HeroProps = {}) {
       <div className="absolute top-0 right-0 -translate-y-12 translate-x-1/3 w-[800px] h-[800px] bg-brand-primary/5 rounded-full blur-3xl" />
       <div className="absolute bottom-0 left-0 translate-y-1/3 -translate-x-1/3 w-[600px] h-[600px] bg-brand-accent/5 rounded-full blur-3xl" />
       <div className="absolute -left-32 -top-32 w-96 h-96 bg-brand-primary/5 rounded-full blur-3xl" />
-        
+
       <div className="container mx-auto px-4 max-w-6xl relative z-10">
-        <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
+        {city?.slug && <Breadcrumbs slug={city.slug} />}
+        <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-20 mt-8">
+
           {/* Text Content */}
           <div className="flex-1 text-center lg:text-left">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-brand-primary/20 text-brand-primary text-sm font-semibold mb-8 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -48,31 +52,61 @@ export default function Hero({ city }: HeroProps = {}) {
                 <p>{city.intro}</p>
               ) : (
                 <p>
-                  Looking for a registered immigration agent near you in Australia? Whether you are in <strong>Sydney, Melbourne, Brisbane, Perth, Adelaide</strong> or anywhere across the country, Migration Republic&apos;s <strong>MARA-registered migration agents</strong> are here to help.
+                  Looking for a registered immigration agent near you in
+                  Australia? Whether you are in{" "}
+                  <strong>Sydney, Melbourne, Brisbane, Perth, Adelaide</strong>{" "}
+                  or anywhere across the country, Migration Republic&apos;s{" "}
+                  <strong>MARA-registered migration agents</strong> are here to
+                  help.
                 </p>
               )}
               <p className="text-base text-gray-600">
-                We provide expert, legally compliant immigration advice and visa application support for all Australian visa types — from <a href="https://migrationrepublic.com.au/migration/" className="text-brand-primary font-medium hover:underline">skilled migration</a> to <a href="https://migrationrepublic.com.au/subclass-482-visa-australia/" className="text-brand-primary font-medium hover:underline">employer sponsored</a>, partner, student, and training visas.
+                We provide expert, legally compliant immigration advice and visa
+                application support for all Australian visa types — from{" "}
+                <a
+                  href="https://migrationrepublic.com.au/migration/"
+                  className="text-brand-primary font-medium hover:underline"
+                >
+                  skilled migration
+                </a>{" "}
+                to{" "}
+                <a
+                  href="https://migrationrepublic.com.au/subclass-482-visa-australia/"
+                  className="text-brand-primary font-medium hover:underline"
+                >
+                  employer sponsored
+                </a>
+                , partner, student, and training visas.
               </p>
             </div>
 
             <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 animate-in fade-in slide-in-from-bottom-10 duration-700 delay-300">
-              <a href="https://migrationrepublic.com.au/book-a-consultation/" target="_blank" rel="noopener noreferrer">
-                <Button size="lg" className="w-full sm:w-auto bg-brand-accent hover:bg-brand-accent/90 text-white rounded-full px-8 h-14 text-lg shadow-lg shadow-brand-accent/20 transition-all hover:-translate-y-1">
+              <a
+                href="https://migrationrepublic.com.au/book-a-consultation/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Button
+                  size="lg"
+                  className="w-full sm:w-auto bg-brand-accent hover:bg-brand-accent/90 text-white rounded-full px-8 h-14 text-lg shadow-lg shadow-brand-accent/20 transition-all hover:-translate-y-1"
+                >
                   Book Consultation <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </a>
             </div>
 
-            <div className="mt-10 flex flex-wrap items-center justify-center lg:justify-start gap-6 text-sm text-gray-600 font-medium animate-in fade-in duration-700 delay-500">
+            <div className="mt-10 flex flex-wrap items-center justify-center lg:justify-start gap-4 text-sm text-gray-600 font-medium animate-in fade-in duration-700 delay-500">
               <div className="flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-brand-primary" /> MARN: 2518961
+                <ShieldCheck className="w-5 h-5 text-brand-primary" /> MARN:
+                2518961
               </div>
               <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-5 h-5 text-green-600" /> 98% Success Rate
+                <CheckCircle2 className="w-5 h-5 text-green-600" /> 100% Success
+                Rate
               </div>
               <div className="flex items-center gap-2">
-                <MapPin className="h-5 w-5 text-brand-primary" /> Australia-Wide Service
+                <MapPin className="h-5 w-5 text-brand-primary" /> Australia-Wide
+                Service
               </div>
             </div>
           </div>
@@ -80,8 +114,8 @@ export default function Hero({ city }: HeroProps = {}) {
           {/* Main Visual */}
           <div className="flex-1 relative animate-in fade-in slide-in-from-right-8 duration-1000 delay-300 w-full max-w-lg lg:max-w-none mx-auto lg:mx-0 mt-8 lg:mt-0">
             <div className="relative z-10 w-full aspect-square md:aspect-[4/3] lg:aspect-square rounded-[2rem] overflow-hidden shadow-2xl border-[8px] border-white/50 backdrop-blur-sm">
-              <Image 
-                src="/images/hero_immigration_agent.png" 
+              <Image
+                src="/images/hero_immigration_agent.png"
                 alt="Professional MARA Registered Immigration Agent in Australia consulting with clients in a modern office"
                 fill
                 priority
@@ -90,7 +124,7 @@ export default function Hero({ city }: HeroProps = {}) {
               />
               <div className="absolute inset-0 bg-gradient-to-tr from-brand-primary/20 to-transparent mix-blend-overlay" />
             </div>
-              
+
             {/* Floating Badge */}
             <div className="absolute -left-6 top-1/4 bg-white rounded-2xl p-4 shadow-xl border border-gray-100 animate-bounce transition-all [animation-duration:3s] z-20">
               <div className="flex items-center gap-3">
@@ -98,7 +132,9 @@ export default function Hero({ city }: HeroProps = {}) {
                   <CheckCircle2 className="h-6 w-6" />
                 </div>
                 <div>
-                  <div className="text-sm font-bold text-gray-900">Legally Compliant</div>
+                  <div className="text-sm font-bold text-gray-900">
+                    Legally Compliant
+                  </div>
                   <div className="text-xs text-gray-500">Regulated Advice</div>
                 </div>
               </div>

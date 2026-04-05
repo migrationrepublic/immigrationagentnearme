@@ -8,13 +8,18 @@ import TextRenderer from "@/components/TextRenderer";
 import VisaServicesGrid from "@/components/VisaServicesGrid";
 import PartnerSection from "@/components/PartnerSection";
 import Breadcrumbs from "@/components/Breadcrumbs";
-import { generateLocalBusinessSchema, generateFAQSchema, generateBreadcrumbSchema } from "@/lib/schema";
+import {
+  generateLocalBusinessSchema,
+  generateFAQSchema,
+  generateBreadcrumbSchema,
+} from "@/lib/schema";
 
 export async function generateMetadata() {
   const data = getParsedContent("home");
   return {
     title: data?.meta.title || "Immigration Agent Near Me",
-    description: data?.meta.description || "Find a registered immigration agent near you.",
+    description:
+      data?.meta.description || "Find a registered immigration agent near you.",
     keywords: data?.meta.focusKeyword,
     alternates: {
       canonical: "https://immigrationagentnearme.com/",
@@ -38,33 +43,42 @@ export default function Home() {
     <div className="min-h-screen flex flex-col font-sans">
       <Navbar />
       <main className="flex-grow pt-20">
-        <Breadcrumbs slug="home" />
-
         {/* Dynamic Schema */}
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(generateLocalBusinessSchema('home', content)) }}
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(
+              generateLocalBusinessSchema("home", content),
+            ),
+          }}
         />
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(generateBreadcrumbSchema('home')) }}
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(generateBreadcrumbSchema("home")),
+          }}
         />
         {content.faq && (
           <script
             type="application/ld+json"
-            dangerouslySetInnerHTML={{ __html: JSON.stringify(generateFAQSchema(content.faq)) }}
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify(generateFAQSchema(content.faq)),
+            }}
           />
         )}
 
-        <Hero city={{
+        <Hero
+          city={{
             name: "Australia",
             state: "AU",
             h1: content.hero.h1,
             intro: content.hero.subheadline,
-            slug: "home"
-        }} />
+            slug: "home",
+          }}
+        />
 
         <section className="py-20 bg-white">
+
           <div className="container mx-auto px-4 max-w-4xl">
             {content.intro && <TextRenderer content={content.intro} />}
             {content.services && <TextRenderer content={content.services} />}
@@ -79,19 +93,19 @@ export default function Home() {
 
         <section className="py-20 bg-white">
           <div className="container mx-auto px-4 max-w-4xl">
-             <TextRenderer content={content.locations} />
+            <TextRenderer content={content.locations} />
           </div>
         </section>
-        
+
         <section className="py-20 bg-gray-50">
           <div className="container mx-auto px-4 max-w-4xl">
-             <TextRenderer content={content.howItWorks} />
+            <TextRenderer content={content.howItWorks} />
           </div>
         </section>
 
         <section className="py-20 bg-white">
           <div className="container mx-auto px-4 max-w-4xl">
-             <TextRenderer content={content.testimonials} />
+            <TextRenderer content={content.testimonials} />
           </div>
         </section>
 
@@ -99,7 +113,6 @@ export default function Home() {
         <PartnerSection />
 
         {content.faq && <FAQ faqString={content.faq} />}
-
       </main>
       <Footer />
       <FloatingCTA />

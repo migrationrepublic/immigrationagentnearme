@@ -1,6 +1,15 @@
 import Link from "next/link";
-import { ShieldCheck, MapPin, ExternalLink, ArrowRight, Mail, Phone, Clock } from "lucide-react";
+import {
+  ShieldCheck,
+  MapPin,
+  ExternalLink,
+  ArrowRight,
+  Mail,
+  Phone,
+  Clock,
+} from "lucide-react";
 import { cities, services } from "@/data/cities";
+import Image from "next/image";
 
 export default function Footer() {
   return (
@@ -79,27 +88,25 @@ export default function Footer() {
 
       <footer className="footer">
         <div className="footer-inner">
-          <div className="space-y-6">
-            <h3 className="text-xl font-bold text-white relative inline-block">
-              Cities We Serve
-              <span className="absolute -bottom-2 left-0 w-1/2 h-1 bg-brand-accent rounded-full"></span>
-            </h3>
-            <ul className="space-y-3">
-              {cities.map((city) => (
-                <li key={city.slug}>
-                  <Link href={`/${city.slug}`} className="text-white/70 hover:text-white flex items-center group/link transition-colors">
-                    <ArrowRight className="w-4 h-4 mr-2 text-brand-primary opacity-0 -ml-6 group-hover:opacity-100 group-hover:ml-0 transition-all" />
-                    {city.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
           <div className="footer-grid">
             <div className="footer-brand">
-              <h3>
-                Immigration Agent <span>Near Me</span>
-              </h3>
+              <Link href="/" className="flex items-center gap-3 group mb-6">
+                <Image
+                  src="/images/logo.jpg"
+                  alt="Migration Republic"
+                  width={80}
+                  height={80}
+                  className="rounded-full border-2 border-white/10"
+                />
+                <div>
+                  <div className="text-xl font-extrabold text-white leading-tight group-hover:text-brand-accent transition-colors">
+                    Migration Republic
+                  </div>
+                  <div className="text-xs text-brand-accent font-semibold uppercase tracking-widest">
+                    Immigration near me
+                  </div>
+                </div>
+              </Link>
               <p>
                 MARA-registered migration agents serving all of Australia. Find
                 expert immigration advice near you in Sydney, Melbourne,
@@ -110,11 +117,15 @@ export default function Footer() {
 
             <div className="footer-col">
               <h4>Cities</h4>
-              <ul className="footer-links">
+              <ul className="space-y-2 mt-4">
                 {cities.map((city) => (
-                  <li key={city.slug}>
-                    <Link href={`/${city.slug}`}>
-                      📍 {city.name}, {city.state}
+                  <li key={city.slug} className="group/link overflow-hidden">
+                    <Link
+                      href={`/${city.slug}`}
+                      className="text-white/60 hover:text-white flex items-center transition-all duration-300"
+                    >
+                      <ArrowRight className="w-4 h-4 mr-2 text-brand-accent opacity-0 -ml-6 group-hover/link:opacity-100 group-hover/link:ml-0 transition-all duration-300" />
+                      <span className="text-sm font-medium">{city.name}</span>
                     </Link>
                   </li>
                 ))}
@@ -123,15 +134,17 @@ export default function Footer() {
 
             <div className="footer-col">
               <h4>Services</h4>
-              <ul className="footer-links">
+              <ul className="space-y-2 mt-4">
                 {services.map((svc) => (
-                  <li key={svc.title}>
+                  <li key={svc.title} className="group/link overflow-hidden">
                     <a
                       href={svc.link}
                       target="_blank"
                       rel="noopener noreferrer"
+                      className="text-white/60 hover:text-white flex items-center transition-all duration-300"
                     >
-                      {svc.title}
+                      <ArrowRight className="w-4 h-4 mr-2 text-brand-accent opacity-0 -ml-6 group-hover/link:opacity-100 group-hover/link:ml-0 transition-all duration-300" />
+                      <span className="text-sm font-medium">{svc.title}</span>
                     </a>
                   </li>
                 ))}
@@ -140,31 +153,53 @@ export default function Footer() {
 
             <div className="footer-col">
               <h4>Migration Republic</h4>
-              <ul className="footer-links">
-                <li>
-                  <a href="https://migrationrepublic.com.au/" target="_blank" rel="noopener noreferrer">Main Website</a>
-                </li>
-                <li>
-                  <a href="https://migrationrepublic.com.au/about/" target="_blank" rel="noopener noreferrer">About Us</a>
-                </li>
-                <li>
-                  <a href="https://migrationrepublic.com.au/blog/" target="_blank" rel="noopener noreferrer">Blog & News</a>
-                </li>
-                <li>
-                  <a href="https://migrationrepublic.com.au/contact/" target="_blank" rel="noopener noreferrer">Contact</a>
-                </li>
-                <li>
-                  <a href="https://migrationrepublic.com.au/book-a-consultation/" target="_blank" rel="noopener noreferrer">Book Consultation</a>
-                </li>
-                <li>
-                  <a href="https://australiatrainingvisa.com.au/" target="_blank" rel="noopener noreferrer">Training Visa 407</a>
-                </li>
-                <li>
-                  <a href="https://www.mara.gov.au/" target="_blank" rel="noopener noreferrer">Verify MARA Agent</a>
-                </li>
-                <li>
-                  <a href="https://immi.homeaffairs.gov.au/" target="_blank" rel="noopener noreferrer">Dept of Home Affairs</a>
-                </li>
+              <ul className="space-y-2 mt-4">
+                {[
+                  {
+                    name: "Main Website",
+                    href: "https://migrationrepublic.com.au/",
+                  },
+                  {
+                    name: "About Us",
+                    href: "https://migrationrepublic.com.au/about/",
+                  },
+                  {
+                    name: "Blog & News",
+                    href: "https://migrationrepublic.com.au/blog/",
+                  },
+                  {
+                    name: "Contact",
+                    href: "https://migrationrepublic.com.au/contact/",
+                  },
+                  {
+                    name: "Book Consultation",
+                    href: "https://migrationrepublic.com.au/book-a-consultation/",
+                  },
+                  {
+                    name: "Training Visa 407",
+                    href: "https://australiatrainingvisa.com.au/",
+                  },
+                  {
+                    name: "Verify MARA Agent",
+                    href: "https://www.mara.gov.au/",
+                  },
+                  {
+                    name: "Dept of Home Affairs",
+                    href: "https://immi.homeaffairs.gov.au/",
+                  },
+                ].map((item) => (
+                  <li key={item.name} className="group/link overflow-hidden">
+                    <a
+                      href={item.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-white/60 hover:text-white flex items-center transition-all duration-300"
+                    >
+                      <ArrowRight className="w-4 h-4 mr-2 text-brand-accent opacity-0 -ml-6 group-hover/link:opacity-100 group-hover/link:ml-0 transition-all duration-300" />
+                      <span className="text-sm font-medium">{item.name}</span>
+                    </a>
+                  </li>
+                ))}
               </ul>
             </div>
           </div>

@@ -16,6 +16,12 @@ export default function sitemap() {
       changeFrequency: "monthly",
       priority: 1.0,
     },
+    {
+      url: "https://immigrationagentnearme.com/blog",
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.9,
+    },
     ...cityPages,
   ];
 }

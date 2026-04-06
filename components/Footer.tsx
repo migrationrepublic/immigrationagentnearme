@@ -165,7 +165,7 @@ export default function Footer() {
                   },
                   {
                     name: "Blog & News",
-                    href: "https://migrationrepublic.com.au/blog/",
+                    href: "/blog",
                   },
                   {
                     name: "Contact",
@@ -187,19 +187,36 @@ export default function Footer() {
                     name: "Dept of Home Affairs",
                     href: "https://immi.homeaffairs.gov.au/",
                   },
-                ].map((item) => (
-                  <li key={item.name} className="group/link overflow-hidden">
-                    <a
-                      href={item.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-white/60 hover:text-white flex items-center transition-all duration-300"
-                    >
-                      <ArrowRight className="w-4 h-4 mr-2 text-brand-accent opacity-0 -ml-6 group-hover/link:opacity-100 group-hover/link:ml-0 transition-all duration-300" />
-                      <span className="text-sm font-medium">{item.name}</span>
-                    </a>
-                  </li>
-                ))}
+                ].map((item) => {
+                  const isInternal = item.href.startsWith("/");
+                  return (
+                    <li key={item.name} className="group/link overflow-hidden">
+                      {isInternal ? (
+                        <Link
+                          href={item.href}
+                          className="text-white/60 hover:text-white flex items-center transition-all duration-300"
+                        >
+                          <ArrowRight className="w-4 h-4 mr-2 text-brand-accent opacity-0 -ml-6 group-hover/link:opacity-100 group-hover/link:ml-0 transition-all duration-300" />
+                          <span className="text-sm font-medium">
+                            {item.name}
+                          </span>
+                        </Link>
+                      ) : (
+                        <a
+                          href={item.href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-white/60 hover:text-white flex items-center transition-all duration-300"
+                        >
+                          <ArrowRight className="w-4 h-4 mr-2 text-brand-accent opacity-0 -ml-6 group-hover/link:opacity-100 group-hover/link:ml-0 transition-all duration-300" />
+                          <span className="text-sm font-medium">
+                            {item.name}
+                          </span>
+                        </a>
+                      )}
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           </div>

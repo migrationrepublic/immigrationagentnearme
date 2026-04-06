@@ -74,6 +74,13 @@ export default function Navbar() {
           </div>
 
           <Link
+            href="/blog"
+            className="text-brand-heading font-semibold hover:text-brand-accent transition-colors text-sm"
+          >
+            Blog
+          </Link>
+
+          <Link
             href="/#faq"
             className="text-brand-heading font-semibold hover:text-brand-accent transition-colors text-sm"
           >

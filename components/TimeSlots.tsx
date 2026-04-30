@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { Clock } from 'lucide-react'
+import { Clock, AlertCircle } from 'lucide-react'
 
 interface TimeSlotsProps {
   slots: string[]
@@ -13,9 +13,9 @@ interface TimeSlotsProps {
 export default function TimeSlots({ slots, selectedTime, onSelectTime, isLoading }: TimeSlotsProps) {
   if (isLoading) {
     return (
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {[...Array(6)].map((_, i) => (
-          <div key={i} className="h-12 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse" />
+          <div key={i} className="h-14 bg-gray-50 rounded-2xl animate-pulse border border-gray-100" />
         ))}
       </div>
     )
@@ -23,10 +23,10 @@ export default function TimeSlots({ slots, selectedTime, onSelectTime, isLoading
 
   if (slots.length === 0) {
     return (
-      <div className="text-center py-12 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-800">
-        <Clock className="w-8 h-8 text-gray-400 mx-auto mb-3" />
-        <p className="text-gray-500 dark:text-gray-400 text-sm">No available slots for this date.</p>
-        <p className="text-gray-400 dark:text-gray-500 text-xs mt-1">Please select another day.</p>
+      <div className="text-center py-10 px-4 bg-red-50/30 rounded-3xl border border-red-100">
+        <AlertCircle className="w-8 h-8 text-[#e40229] mx-auto mb-3 opacity-50" />
+        <p className="text-[#012269] font-black text-sm uppercase tracking-tighter">No Availability</p>
+        <p className="text-gray-400 text-xs mt-1 font-medium">All slots are booked for this date.</p>
       </div>
     )
   }
@@ -34,7 +34,6 @@ export default function TimeSlots({ slots, selectedTime, onSelectTime, isLoading
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
       {slots.map((time) => {
-        // Format time (e.g., "09:00:00" -> "9:00 AM")
         const [hourStr, minuteStr] = time.split(':')
         let hour = parseInt(hourStr, 10)
         const ampm = hour >= 12 ? 'PM' : 'AM'
@@ -50,17 +49,24 @@ export default function TimeSlots({ slots, selectedTime, onSelectTime, isLoading
             type="button"
             onClick={() => onSelectTime(time)}
             className={`
-              py-3 px-4 rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-2
+              group relative py-4 px-4 rounded-2xl text-sm font-black transition-all duration-300 flex items-center justify-center gap-2 border-2
               ${isSelected 
-                ? 'bg-blue-600 text-white shadow-md shadow-blue-200 dark:shadow-none border border-transparent' 
-                : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/30'
+                ? 'bg-[#012269] text-white border-[#012269] shadow-xl shadow-blue-900/10' 
+                : 'bg-white text-[#012269] border-gray-100 hover:border-[#e40229]/30 hover:bg-red-50/20'
               }
             `}
           >
+            <Clock className={`w-3.5 h-3.5 transition-colors ${isSelected ? 'text-[#e40229]' : 'text-gray-300 group-hover:text-[#e40229]'}`} />
             {formattedTime}
+            {isSelected && (
+              <div className="absolute -top-1.5 -right-1.5 bg-[#e40229] text-white rounded-full p-0.5 shadow-lg">
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
+              </div>
+            )}
           </button>
         )
       })}
     </div>
   )
 }
+

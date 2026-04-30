@@ -2,12 +2,12 @@
 
 import React, { useState } from 'react'
 import { createCheckoutSession } from '@/app/actions/booking'
-import { Loader2 } from 'lucide-react'
+import { Loader2, ArrowLeft, ShieldCheck } from 'lucide-react'
 
 interface BookingFormProps {
   planId: string
-  date: string // YYYY-MM-DD
-  time: string // HH:mm:ss
+  date: string
+  time: string
   onBack: () => void
 }
 
@@ -41,7 +41,6 @@ export default function BookingForm({ planId, date, time, onBack }: BookingFormP
         setError(result.error)
         setIsSubmitting(false)
       } else if (result.url) {
-        // Redirect to Stripe Checkout
         window.location.href = result.url
       }
     } catch (err) {
@@ -51,32 +50,49 @@ export default function BookingForm({ planId, date, time, onBack }: BookingFormP
   }
 
   return (
-    <div className="bg-white dark:bg-gray-900 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800">
-      <h3 className="text-xl font-semibold mb-6 text-gray-900 dark:text-white">Your Details</h3>
-      
+    <div className="w-full">
       {error && (
-        <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-xl text-sm border border-red-100 dark:border-red-800">
+        <div className="mb-8 p-4 bg-red-50 border border-red-100 text-[#e40229] rounded-2xl text-sm font-bold flex items-center gap-3">
+          <div className="bg-[#e40229] text-white p-1 rounded-full">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12"></path></svg>
+          </div>
           {error}
         </div>
       )}
 
-      <form onSubmit={onSubmit} className="space-y-4">
-        <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Full Name *
-          </label>
-          <input
-            type="text"
-            id="name"
-            name="name"
-            required
-            className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 focus:bg-white dark:focus:bg-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-gray-900 dark:text-white"
-            placeholder="John Doe"
-          />
+      <form onSubmit={onSubmit} className="space-y-6">
+        <div className="grid md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <label htmlFor="name" className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">
+              Your Full Name *
+            </label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              required
+              className="w-full px-5 py-4 rounded-2xl border-2 border-gray-100 bg-gray-50/50 focus:bg-white focus:border-[#012269] focus:ring-4 focus:ring-blue-900/5 outline-none transition-all text-[#012269] font-bold placeholder:text-gray-300"
+              placeholder="John Doe"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="phone" className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">
+              Phone Number *
+            </label>
+            <input
+              type="tel"
+              id="phone"
+              name="phone"
+              required
+              className="w-full px-5 py-4 rounded-2xl border-2 border-gray-100 bg-gray-50/50 focus:bg-white focus:border-[#012269] focus:ring-4 focus:ring-blue-900/5 outline-none transition-all text-[#012269] font-bold placeholder:text-gray-300"
+              placeholder="+61 400 000 000"
+            />
+          </div>
         </div>
 
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <div className="space-y-2">
+          <label htmlFor="email" className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">
             Email Address *
           </label>
           <input
@@ -84,62 +100,57 @@ export default function BookingForm({ planId, date, time, onBack }: BookingFormP
             id="email"
             name="email"
             required
-            className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 focus:bg-white dark:focus:bg-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-gray-900 dark:text-white"
+            className="w-full px-5 py-4 rounded-2xl border-2 border-gray-100 bg-gray-50/50 focus:bg-white focus:border-[#012269] focus:ring-4 focus:ring-blue-900/5 outline-none transition-all text-[#012269] font-bold placeholder:text-gray-300"
             placeholder="john@example.com"
           />
         </div>
 
-        <div>
-          <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Phone Number *
-          </label>
-          <input
-            type="tel"
-            id="phone"
-            name="phone"
-            required
-            className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 focus:bg-white dark:focus:bg-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-gray-900 dark:text-white"
-            placeholder="+61 400 000 000"
-          />
-        </div>
-
-        <div>
-          <label htmlFor="notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Brief details about your case (Optional)
+        <div className="space-y-2">
+          <label htmlFor="notes" className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">
+            Tell us about your visa case (Optional)
           </label>
           <textarea
             id="notes"
             name="notes"
-            rows={3}
-            className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 focus:bg-white dark:focus:bg-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-gray-900 dark:text-white resize-none"
-            placeholder="I need help with a Partner Visa..."
+            rows={4}
+            className="w-full px-5 py-4 rounded-2xl border-2 border-gray-100 bg-gray-50/50 focus:bg-white focus:border-[#012269] focus:ring-4 focus:ring-blue-900/5 outline-none transition-all text-[#012269] font-bold placeholder:text-gray-300 resize-none"
+            placeholder="E.g. I need help with my Partner Visa application..."
           ></textarea>
         </div>
 
-        <div className="pt-4 flex gap-3">
+        <div className="pt-8 flex flex-col sm:flex-row gap-4">
           <button
             type="button"
             onClick={onBack}
-            className="px-6 py-3 rounded-xl font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all"
+            className="px-8 py-4 rounded-2xl font-black text-[#012269] bg-gray-100 hover:bg-gray-200 transition-all flex items-center justify-center gap-2 uppercase tracking-tighter"
           >
+            <ArrowLeft className="w-4 h-4" />
             Back
           </button>
           <button
             type="submit"
             disabled={isSubmitting}
-            className="flex-1 px-6 py-3 rounded-xl font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-70 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+            className="btn-primary flex-1 py-4 text-lg uppercase tracking-tighter flex items-center justify-center gap-3"
           >
             {isSubmitting ? (
               <>
-                <Loader2 className="w-5 h-5 animate-spin" />
-                Processing...
+                <Loader2 className="w-6 h-6 animate-spin" />
+                Securing Your Spot...
               </>
             ) : (
-              'Proceed to Payment'
+              <>
+                Secure Booking & Pay
+                <ShieldCheck className="w-5 h-5" />
+              </>
             )}
           </button>
         </div>
+        
+        <p className="text-center text-[10px] font-bold text-gray-400 uppercase tracking-widest pt-4">
+          By clicking pay, you agree to our terms of service and privacy policy.
+        </p>
       </form>
     </div>
   )
 }
+

@@ -14,24 +14,26 @@ export default function Calendar({ selectedDate, onSelectDate }: CalendarProps) 
 
   const renderHeader = () => {
     return (
-      <div className="flex justify-between items-center mb-4">
-        <button
-          onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
-          className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition"
-          type="button"
-        >
-          <ChevronLeft className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-        </button>
-        <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
+      <div className="flex justify-between items-center mb-8 px-2">
+        <h2 className="text-xl font-black text-[#012269] tracking-tight">
           {format(currentMonth, 'MMMM yyyy')}
         </h2>
-        <button
-          onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
-          className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition"
-          type="button"
-        >
-          <ChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
+            className="p-2.5 rounded-xl border border-gray-100 hover:bg-gray-50 text-[#012269] transition-all active:scale-95"
+            type="button"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          <button
+            onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
+            className="p-2.5 rounded-xl border border-gray-100 hover:bg-gray-50 text-[#012269] transition-all active:scale-95"
+            type="button"
+          >
+            <ChevronRight className="w-5 h-5" />
+          </button>
+        </div>
       </div>
     )
   }
@@ -43,13 +45,13 @@ export default function Calendar({ selectedDate, onSelectDate }: CalendarProps) 
 
     for (let i = 0; i < 7; i++) {
       days.push(
-        <div className="text-center text-sm font-medium text-gray-500 py-2" key={i}>
+        <div className="text-center text-[10px] font-black uppercase tracking-widest text-gray-400 py-3" key={i}>
           {format(addDays(startDate, i), dateFormat)}
         </div>
       )
     }
 
-    return <div className="grid grid-cols-7 mb-2">{days}</div>
+    return <div className="grid grid-cols-7 mb-2 border-b border-gray-50">{days}</div>
   }
 
   const renderCells = () => {
@@ -80,20 +82,23 @@ export default function Calendar({ selectedDate, onSelectDate }: CalendarProps) 
             disabled={isPast || !isCurrentMonth}
             onClick={() => onSelectDate(cloneDay)}
             className={`
-              p-2 w-full aspect-square flex items-center justify-center rounded-full text-sm transition-all
-              ${!isCurrentMonth ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed' : ''}
-              ${isPast && isCurrentMonth ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed line-through' : ''}
-              ${!isPast && isCurrentMonth && !isSelected ? 'text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-600 cursor-pointer' : ''}
-              ${isSelected ? 'bg-blue-600 text-white font-semibold shadow-md shadow-blue-200 dark:shadow-none' : ''}
+              relative p-2 w-full aspect-square flex items-center justify-center rounded-2xl text-sm font-bold transition-all duration-300
+              ${!isCurrentMonth ? 'text-gray-200 cursor-not-allowed opacity-0' : ''}
+              ${isPast && isCurrentMonth ? 'text-gray-300 cursor-not-allowed bg-gray-50/50' : ''}
+              ${!isPast && isCurrentMonth && !isSelected ? 'text-[#012269] hover:bg-blue-50 hover:text-[#e40229] cursor-pointer' : ''}
+              ${isSelected ? 'bg-[#e40229] text-white shadow-lg shadow-[#e40229]/20 transform scale-110 z-10' : ''}
             `}
           >
             <span>{formattedDate}</span>
+            {isSameDay(day, today) && !isSelected && isCurrentMonth && (
+              <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 bg-[#e40229] rounded-full" />
+            )}
           </button>
         )
         day = addDays(day, 1)
       }
       rows.push(
-        <div className="grid grid-cols-7 gap-1" key={day.toString()}>
+        <div className="grid grid-cols-7 gap-2 mt-2" key={day.toString()}>
           {days}
         </div>
       )
@@ -103,10 +108,11 @@ export default function Calendar({ selectedDate, onSelectDate }: CalendarProps) 
   }
 
   return (
-    <div className="bg-white dark:bg-gray-900 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800">
+    <div className="w-full">
       {renderHeader()}
       {renderDays()}
       {renderCells()}
     </div>
   )
 }
+

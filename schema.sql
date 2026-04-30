@@ -6,16 +6,17 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE TABLE plans (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name TEXT NOT NULL,
+    slug TEXT UNIQUE,
     price_aud INTEGER NOT NULL,
     duration_minutes INTEGER NOT NULL,
     is_active BOOLEAN DEFAULT true
 );
 
 -- Seed basic plans
-INSERT INTO plans (name, price_aud, duration_minutes) VALUES
-    ('Phone Consultation', 100, 30),
-    ('Online Video Consultation', 150, 45),
-    ('In-Office Consultation', 200, 60);
+INSERT INTO plans (name, slug, price_aud, duration_minutes) VALUES
+    ('Phone Consultation', 'phone-consultation', 100, 30),
+    ('Online Video Consultation', 'online-video-consultation', 150, 45),
+    ('In-Office Consultation', 'in-office-consultation', 200, 60);
 
 -- 2. Availability Table
 CREATE TABLE availability (

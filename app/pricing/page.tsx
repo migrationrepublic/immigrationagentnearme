@@ -15,9 +15,9 @@ export default async function PricingPage() {
   // If Supabase isn't hooked up yet, plans might be empty.
   // Fallback for development/UI design:
   const displayPlans = plans.length > 0 ? plans : [
-    { id: '1', name: 'Phone Consultation', price_aud: 100, duration_minutes: 30 },
-    { id: '2', name: 'Online Video Consultation', price_aud: 150, duration_minutes: 45 },
-    { id: '3', name: 'In-Office Consultation', price_aud: 200, duration_minutes: 60 },
+    { id: '1', slug: 'phone-consultation', name: 'Phone Consultation', price_aud: 100, duration_minutes: 30 },
+    { id: '2', slug: 'online-video-consultation', name: 'Online Video Consultation', price_aud: 150, duration_minutes: 45 },
+    { id: '3', slug: 'in-office-consultation', name: 'In-Office Consultation', price_aud: 200, duration_minutes: 60 },
   ]
 
   return (
@@ -81,7 +81,7 @@ export default async function PricingPage() {
                 </ul>
 
                 <Link 
-                  href={`/book/${plan.id}`}
+                  href={`/book/${plan.slug || plan.id}`}
                   className={`block w-full text-center py-4 rounded-xl font-semibold transition-all
                     ${isPopular
                       ? 'bg-blue-600 text-white hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-500/30'

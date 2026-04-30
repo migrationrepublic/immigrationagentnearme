@@ -78,7 +78,6 @@ export default function Home() {
         />
 
         <section className="py-20 bg-white">
-
           <div className="container mx-auto px-4 max-w-4xl">
             {content.intro && <TextRenderer content={content.intro} />}
             {content.services && <TextRenderer content={content.services} />}

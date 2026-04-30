@@ -46,6 +46,20 @@ export async function getPlan(id: string) {
   return data;
 }
 
+export async function getPlanBySlug(slug: string) {
+  const { data, error } = await supabaseServer
+    .from("plans")
+    .select("*")
+    .eq("slug", slug)
+    .single();
+
+  if (error) {
+    console.error("Error fetching plan by slug:", error);
+    return null;
+  }
+  return data;
+}
+
 export async function getAvailableSlots(date: string) {
   // Format: YYYY-MM-DD
   const { data, error } = await supabaseServer

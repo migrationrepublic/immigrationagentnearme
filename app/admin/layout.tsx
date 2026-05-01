@@ -37,10 +37,45 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="max-w-md w-full bg-white dark:bg-gray-900 rounded-3xl p-8 border border-gray-100 dark:border-gray-800 shadow-sm text-center">
           <ShieldCheck className="w-12 h-12 text-blue-500 mx-auto mb-4" />
           <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Admin Login</h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-6 text-sm">
-            Please log in via the Supabase Dashboard or provide a login form here. For now, you need to be authenticated via Supabase to view this page.
-          </p>
-          {/* Note: In a full app, you would add a proper login form here using supabase.auth.signInWithPassword */}
+          
+          <form 
+            onSubmit={async (e) => {
+              e.preventDefault();
+              const formData = new FormData(e.currentTarget);
+              const email = formData.get('email') as string;
+              const password = formData.get('password') as string;
+              const { error } = await supabase.auth.signInWithPassword({ email, password });
+              if (error) alert(error.message);
+            }}
+            className="space-y-4 text-left"
+          >
+            <div>
+              <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1 ml-1">Email</label>
+              <input 
+                name="email" 
+                type="email" 
+                required 
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800 outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
+                placeholder="admin@example.com"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1 ml-1">Password</label>
+              <input 
+                name="password" 
+                type="password" 
+                required 
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800 outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
+                placeholder="••••••••"
+              />
+            </div>
+            <button 
+              type="submit" 
+              className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-blue-500/20"
+            >
+              Sign In
+            </button>
+          </form>
         </div>
       </div>
     )

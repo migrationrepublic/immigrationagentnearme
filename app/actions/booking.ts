@@ -168,7 +168,7 @@ export async function createCheckoutSession(input: BookingInput) {
               name: `Consultation: ${plan.name}`,
               description: `${plan.duration_minutes} minutes consultation on ${validatedData.date} at ${validatedData.time}`,
             },
-            unit_amount: plan.price_aud * 100, // Stripe expects cents
+            unit_amount: plan.price_aud, // price_aud is now stored in cents to support decimals
           },
           quantity: 1,
         },
@@ -194,5 +194,15 @@ export async function createCheckoutSession(input: BookingInput) {
       error:
         error instanceof Error ? error.message : "An unknown error occurred",
     };
+  }
+}
+
+export async function getCheckoutSession(sessionId: string) {
+  try {
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+    return session;
+  } catch (error) {
+    console.error("Error retrieving session:", error);
+    return null;
   }
 }

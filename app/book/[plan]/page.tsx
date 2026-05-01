@@ -1,76 +1,114 @@
-'use client'
+"use client";
 
-import React, { useState, useEffect, use } from 'react'
-import { getPlan, getPlanBySlug, getAvailableSlots } from '@/app/actions/booking'
-import Calendar from '@/components/Calendar'
-import TimeSlots from '@/components/TimeSlots'
-import BookingForm from '@/components/BookingForm'
-import { format } from 'date-fns'
-import { ArrowLeft, Loader2, Calendar as CalendarIcon, Clock, CreditCard, ShieldCheck, CheckCircle2 } from 'lucide-react'
-import Link from 'next/link'
+import React, { useState, useEffect, use } from "react";
+import {
+  getPlan,
+  getPlanBySlug,
+  getAvailableSlots,
+} from "@/app/actions/booking";
+import Calendar from "@/components/Calendar";
+import TimeSlots from "@/components/TimeSlots";
+import BookingForm from "@/components/BookingForm";
+import { format } from "date-fns";
+import {
+  ArrowLeft,
+  Loader2,
+  Calendar as CalendarIcon,
+  Clock,
+  CreditCard,
+  ShieldCheck,
+  CheckCircle2,
+} from "lucide-react";
+import Link from "next/link";
+import Image from "next/image";
 
-export default function BookPlanPage({ params }: { params: Promise<{ plan: string }> }) {
-  const unwrappedParams = use(params)
-  const planId = unwrappedParams.plan
+export default function BookPlanPage({
+  params,
+}: {
+  params: Promise<{ plan: string }>;
+}) {
+  const unwrappedParams = use(params);
+  const planId = unwrappedParams.plan;
 
-  const [plan, setPlan] = useState<any>(null)
-  const [loadingPlan, setLoadingPlan] = useState(true)
-  
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null)
-  const [slots, setSlots] = useState<string[]>([])
-  const [loadingSlots, setLoadingSlots] = useState(false)
-  const [selectedTime, setSelectedTime] = useState<string | null>(null)
+  const [plan, setPlan] = useState<any>(null);
+  const [loadingPlan, setLoadingPlan] = useState(true);
 
-  const [step, setStep] = useState<1 | 2>(1) // 1: Date/Time, 2: Form
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [slots, setSlots] = useState<string[]>([]);
+  const [loadingSlots, setLoadingSlots] = useState(false);
+  const [selectedTime, setSelectedTime] = useState<string | null>(null);
+
+  const [step, setStep] = useState<1 | 2>(1); // 1: Date/Time, 2: Form
 
   useEffect(() => {
     async function fetchPlan() {
-      let p = await getPlanBySlug(planId)
+      let p = await getPlanBySlug(planId);
       if (!p) {
-        p = await getPlan(planId)
+        p = await getPlan(planId);
       }
-      
-      if (p) setPlan(p)
-      else setPlan({ id: planId, name: 'Selected Plan', price_aud: 150, duration_minutes: 45 })
-      setLoadingPlan(false)
+
+      if (p) setPlan(p);
+      else
+        setPlan({
+          id: planId,
+          name: "Selected Plan",
+          price_aud: 11407,
+          duration_minutes: 30,
+        });
+      setLoadingPlan(false);
     }
-    fetchPlan()
-  }, [planId])
+    fetchPlan();
+  }, [planId]);
 
   useEffect(() => {
-    if (!selectedDate) return
+    if (!selectedDate) return;
     async function fetchSlots() {
-      setLoadingSlots(true)
-      setSelectedTime(null)
-      const formattedDate = format(selectedDate!, 'yyyy-MM-dd')
-      let availableSlots = await getAvailableSlots(formattedDate)
-      
+      setLoadingSlots(true);
+      setSelectedTime(null);
+      const formattedDate = format(selectedDate!, "yyyy-MM-dd");
+      let availableSlots = await getAvailableSlots(formattedDate);
+
       if (availableSlots.length === 0) {
-        availableSlots = ['09:00:00', '10:00:00', '11:00:00', '13:00:00', '14:00:00', '15:00:00', '16:00:00']
+        availableSlots = [
+          "09:00:00",
+          "10:00:00",
+          "11:00:00",
+          "13:00:00",
+          "14:00:00",
+          "15:00:00",
+          "16:00:00",
+        ];
       }
-      
-      setSlots(availableSlots)
-      setLoadingSlots(false)
+
+      setSlots(availableSlots);
+      setLoadingSlots(false);
     }
-    fetchSlots()
-  }, [selectedDate])
+    fetchSlots();
+  }, [selectedDate]);
 
   if (loadingPlan) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
         <Loader2 className="w-10 h-10 animate-spin text-[#012269]" />
       </div>
-    )
+    );
   }
 
   if (!plan) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center text-center px-4">
-        <h2 className="text-3xl font-black text-[#012269] mb-4">Plan Not Found</h2>
-        <p className="text-gray-500 mb-8 max-w-md">We couldn't find the consultation plan you're looking for. It may have been moved or removed.</p>
-        <Link href="/pricing" className="btn-primary">View All Plans</Link>
+        <h2 className="text-3xl font-black text-[#012269] mb-4">
+          Plan Not Found
+        </h2>
+        <p className="text-gray-500 mb-8 max-w-md">
+          We couldn't find the consultation plan you're looking for. It may have
+          been moved or removed.
+        </p>
+        <Link href="/pricing" className="btn-primary">
+          View All Plans
+        </Link>
       </div>
-    )
+    );
   }
 
   return (
@@ -78,7 +116,19 @@ export default function BookPlanPage({ params }: { params: Promise<{ plan: strin
       {/* Header Info Section */}
       <div className="bg-[#012269] text-white pt-12 pb-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto text-center">
-          <Link href="/pricing" className="inline-flex items-center text-white/60 hover:text-white transition-colors mb-6 text-sm font-bold uppercase tracking-widest">
+          <div className="flex justify-center mb-8">
+            <Image
+              src="/images/logobgwhite.jpg"
+              alt="Migration Republic"
+              width={160}
+              height={160}
+              className="rounded-full border-4 border-white/20 shadow-2xl shadow-black/20"
+            />
+          </div>
+          <Link
+            href="/pricing"
+            className="inline-flex items-center text-white/60 hover:text-white transition-colors mb-6 text-sm font-bold uppercase tracking-widest"
+          >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Consultations
           </Link>
@@ -86,32 +136,46 @@ export default function BookPlanPage({ params }: { params: Promise<{ plan: strin
             Book Your {plan.name}
           </h1>
           <p className="text-xl text-blue-100/80 max-w-2xl mx-auto font-medium">
-            Take the first step towards your Australian dream. Expert guidance is just a few clicks away.
+            Take the first step towards your Australian dream. Expert guidance
+            is just a few clicks away.
           </p>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-12 pb-20">
         <div className="grid lg:grid-cols-[1fr_380px] gap-8 items-start">
-          
           {/* Main Booking Interface */}
           <div className="bg-white rounded-3xl shadow-2xl shadow-blue-900/5 border border-blue-50/50 p-6 md:p-10">
             {/* Step Progress */}
             <div className="flex items-center justify-between mb-10 pb-10 border-b border-gray-100">
               <div className="flex flex-col items-center gap-2">
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black transition-all duration-500 ${step === 1 ? 'bg-[#e40229] text-white shadow-lg shadow-[#e40229]/20 scale-110' : 'bg-green-500 text-white'}`}>
+                <div
+                  className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black transition-all duration-500 ${step === 1 ? "bg-[#e40229] text-white shadow-lg shadow-[#e40229]/20 scale-110" : "bg-green-500 text-white"}`}
+                >
                   {step > 1 ? <CheckCircle2 className="w-6 h-6" /> : "1"}
                 </div>
-                <span className={`text-xs font-black uppercase tracking-tighter ${step === 1 ? 'text-[#012269]' : 'text-gray-400'}`}>Select Time</span>
+                <span
+                  className={`text-xs font-black uppercase tracking-tighter ${step === 1 ? "text-[#012269]" : "text-gray-400"}`}
+                >
+                  Select Time
+                </span>
               </div>
               <div className="flex-grow h-1 mx-4 bg-gray-100 rounded-full overflow-hidden">
-                <div className={`h-full bg-[#e40229] transition-all duration-700 ease-in-out ${step > 1 ? 'w-full' : 'w-0'}`} />
+                <div
+                  className={`h-full bg-[#e40229] transition-all duration-700 ease-in-out ${step > 1 ? "w-full" : "w-0"}`}
+                />
               </div>
               <div className="flex flex-col items-center gap-2">
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black transition-all duration-500 ${step === 2 ? 'bg-[#e40229] text-white shadow-lg shadow-[#e40229]/20 scale-110' : 'bg-gray-100 text-gray-400'}`}>
+                <div
+                  className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black transition-all duration-500 ${step === 2 ? "bg-[#e40229] text-white shadow-lg shadow-[#e40229]/20 scale-110" : "bg-gray-100 text-gray-400"}`}
+                >
                   2
                 </div>
-                <span className={`text-xs font-black uppercase tracking-tighter ${step === 2 ? 'text-[#012269]' : 'text-gray-400'}`}>Your Details</span>
+                <span
+                  className={`text-xs font-black uppercase tracking-tighter ${step === 2 ? "text-[#012269]" : "text-gray-400"}`}
+                >
+                  Your Details
+                </span>
               </div>
             </div>
 
@@ -125,22 +189,28 @@ export default function BookPlanPage({ params }: { params: Promise<{ plan: strin
                       </div>
                       1. Choose a Date
                     </h3>
-                    <Calendar selectedDate={selectedDate} onSelectDate={setSelectedDate} />
+                    <Calendar
+                      selectedDate={selectedDate}
+                      onSelectDate={setSelectedDate}
+                    />
                   </section>
-                  
+
                   {selectedDate && (
                     <section className="animate-in fade-in slide-in-from-top-4 duration-700">
                       <h3 className="text-xl font-black text-[#012269] mb-6 flex items-center gap-3">
                         <div className="p-2 bg-blue-50 rounded-lg">
                           <Clock className="w-5 h-5 text-[#012269]" />
                         </div>
-                        2. Available Times for {format(selectedDate, 'MMMM d')}
+                        2. Available Times for {format(selectedDate, "MMMM d")}
+                        <span className="ml-2 text-xs font-bold text-blue-500 uppercase tracking-widest bg-blue-50 px-2 py-1 rounded-md">
+                          Melbourne Time (AEST/AEDT)
+                        </span>
                       </h3>
-                      <TimeSlots 
-                        slots={slots} 
-                        selectedTime={selectedTime} 
-                        onSelectTime={setSelectedTime} 
-                        isLoading={loadingSlots} 
+                      <TimeSlots
+                        slots={slots}
+                        selectedTime={selectedTime}
+                        onSelectTime={setSelectedTime}
+                        isLoading={loadingSlots}
                       />
                     </section>
                   )}
@@ -162,10 +232,12 @@ export default function BookPlanPage({ params }: { params: Promise<{ plan: strin
 
             {step === 2 && selectedDate && selectedTime && (
               <div className="animate-in fade-in slide-in-from-right-4 duration-700">
-                <h3 className="text-2xl font-black text-[#012269] mb-8">Enter Your Information</h3>
-                <BookingForm 
+                <h3 className="text-2xl font-black text-[#012269] mb-8">
+                  Enter Your Information
+                </h3>
+                <BookingForm
                   planId={plan.id}
-                  date={format(selectedDate, 'yyyy-MM-dd')}
+                  date={format(selectedDate, "yyyy-MM-dd")}
                   time={selectedTime}
                   onBack={() => setStep(1)}
                 />
@@ -179,33 +251,58 @@ export default function BookPlanPage({ params }: { params: Promise<{ plan: strin
               <h3 className="text-xl font-black text-[#012269] mb-6 border-b border-gray-100 pb-4 tracking-tight">
                 Booking Summary
               </h3>
-              
+
               <div className="space-y-5">
                 <div className="flex justify-between items-start">
-                  <span className="text-gray-400 font-bold text-xs uppercase tracking-widest">Consultation</span>
-                  <span className="font-black text-[#012269] text-right max-w-[200px]">{plan.name}</span>
+                  <span className="text-gray-400 font-bold text-xs uppercase tracking-widest">
+                    Consultation
+                  </span>
+                  <span className="font-black text-[#012269] text-right max-w-[200px]">
+                    {plan.name}
+                  </span>
                 </div>
-                
+
+                {plan.slug === "in-office-consultation" && (
+                  <div className="flex justify-between items-start">
+                    <span className="text-gray-400 font-bold text-xs uppercase tracking-widest">
+                      Address
+                    </span>
+                    <span className="font-black text-[#012269] text-right text-xs max-w-[180px]">
+                      470 St Kilda Rd, Melbourne VIC 3004
+                    </span>
+                  </div>
+                )}
+
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-400 font-bold text-xs uppercase tracking-widest">Time Limit</span>
-                  <span className="font-black text-[#012269]">{plan.duration_minutes} Minutes</span>
+                  <span className="text-gray-400 font-bold text-xs uppercase tracking-widest">
+                    Time Limit
+                  </span>
+                  <span className="font-black text-[#012269]">
+                    {plan.duration_minutes} Minutes
+                  </span>
                 </div>
 
                 {selectedDate && (
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-400 font-bold text-xs uppercase tracking-widest">Date</span>
-                    <span className="font-black text-[#012269]">{format(selectedDate, 'MMMM d, yyyy')}</span>
+                    <span className="text-gray-400 font-bold text-xs uppercase tracking-widest">
+                      Date
+                    </span>
+                    <span className="font-black text-[#012269]">
+                      {format(selectedDate, "MMMM d, yyyy")}
+                    </span>
                   </div>
                 )}
 
                 {selectedTime && (
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-400 font-bold text-xs uppercase tracking-widest">Selected Time</span>
+                    <span className="text-gray-400 font-bold text-xs uppercase tracking-widest">
+                      Selected Time
+                    </span>
                     <span className="font-black text-[#e40229]">
                       {(() => {
-                        const [h, m] = selectedTime.split(':');
+                        const [h, m] = selectedTime.split(":");
                         let hour = parseInt(h, 10);
-                        const ampm = hour >= 12 ? 'PM' : 'AM';
+                        const ampm = hour >= 12 ? "PM" : "AM";
                         hour = hour % 12 || 12;
                         return `${hour}:${m} ${ampm}`;
                       })()}
@@ -215,17 +312,29 @@ export default function BookPlanPage({ params }: { params: Promise<{ plan: strin
 
                 <div className="pt-6 mt-6 border-t border-gray-100 flex justify-between items-end">
                   <div className="flex flex-col">
-                    <span className="text-gray-400 font-bold text-xs uppercase tracking-widest">Total Amount</span>
-                    <span className="text-sm text-gray-400 font-medium">Incl. GST</span>
+                    <span className="text-gray-400 font-bold text-xs uppercase tracking-widest">
+                      Total Amount
+                    </span>
+                    <span className="text-xs text-gray-400 font-bold uppercase tracking-widest mt-1">
+                      ${Math.round(plan.price_aud / 114.07)} + GST
+                    </span>
                   </div>
-                  <span className="text-3xl font-black text-[#012269]">${plan.price_aud}<span className="text-sm text-gray-400 ml-1">AUD</span></span>
+
+                  <span className="text-3xl font-black text-[#012269]">
+                    ${(plan.price_aud / 100).toFixed(2)}
+                    <span className="text-sm text-gray-400 ml-1">AUD</span>
+                  </span>
                 </div>
+                <span className="text-xs text-red-400 font-bold uppercase tracking-widest">
+                  Card Surcharge Will Apply
+                </span>
               </div>
 
               <div className="mt-8 p-4 bg-blue-50/50 rounded-2xl flex items-center gap-4 border border-blue-100">
                 <ShieldCheck className="w-8 h-8 text-[#012269]" />
                 <div className="text-[10px] leading-tight font-bold text-[#012269] uppercase tracking-wider">
-                  MARA Registered Agent<br/>
+                  MARA Registered Agent
+                  <br />
                   <span className="text-[#e40229]">Security Guaranteed</span>
                 </div>
               </div>
@@ -234,10 +343,15 @@ export default function BookPlanPage({ params }: { params: Promise<{ plan: strin
             {/* Additional Trust Signal */}
             <div className="bg-[#012269] rounded-3xl p-6 text-white overflow-hidden relative group">
               <div className="relative z-10">
-                <p className="text-sm font-bold opacity-80 mb-2 italic">"Professional and fast service. Highly recommended for any Australian visa needs."</p>
+                <p className="text-sm font-bold opacity-90 mb-2 italic leading-relaxed">
+                  "At Migration Republic, we strive to help make your Australian
+                  dream a reality."
+                </p>
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-[#e40229] rounded-full" />
-                  <span className="text-xs font-black uppercase tracking-tighter">Verified Client</span>
+                  <span className="text-xs font-black uppercase tracking-tighter">
+                    Migration Republic
+                  </span>
                 </div>
               </div>
               <ShieldCheck className="absolute -right-4 -bottom-4 w-24 h-24 text-white/5 group-hover:scale-110 transition-transform duration-700" />
@@ -246,6 +360,5 @@ export default function BookPlanPage({ params }: { params: Promise<{ plan: strin
         </div>
       </div>
     </div>
-  )
+  );
 }
-

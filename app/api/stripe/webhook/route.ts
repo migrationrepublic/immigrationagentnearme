@@ -67,6 +67,19 @@ export async function POST(req: Request) {
       }
 
       // 2. Mark the slot as booked (or insert it if it doesn't exist)
+      // PRIORITY CHECK: Check if already booked (potential race condition)
+      const { data: existingSlot } = await supabaseServer
+        .from("availability")
+        .select("is_booked")
+        .eq("date", metadata.date)
+        .eq("time", metadata.time)
+        .maybeSingle();
+
+      if (existingSlot && existingSlot.is_booked) {
+        console.error(`!!! PRIORITY ALERT: OVERBOOKING DETECTED !!! Slot ${metadata.date} ${metadata.time} was already booked.`);
+        // We still proceed to send confirmation, but admin needs to know.
+      }
+
       const { error: updateError } = await supabaseServer
         .from("availability")
         .upsert(

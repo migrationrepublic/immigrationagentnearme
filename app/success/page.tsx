@@ -1,52 +1,97 @@
+'use client'
+
+import React, { useEffect, useState, use } from 'react'
 import Link from 'next/link'
-import { CheckCircle2, Calendar as CalendarIcon } from 'lucide-react'
+import { CheckCircle2, Calendar as CalendarIcon, Clock, CreditCard, ArrowRight } from 'lucide-react'
+import { getCheckoutSession } from '@/app/actions/booking'
 
-export const metadata = {
-  title: 'Booking Confirmed | Migration Agent Near Me',
-  description: 'Your consultation booking is confirmed.',
-}
+export default function SuccessPage({ searchParams }: { searchParams: Promise<{ session_id?: string }> }) {
+  const unwrappedParams = use(searchParams)
+  const sessionId = unwrappedParams.session_id
+  const [session, setSession] = useState<any>(null)
+  const [loading, setLoading] = useState(!!sessionId)
 
-export default function SuccessPage() {
+  useEffect(() => {
+    if (sessionId) {
+      getCheckoutSession(sessionId).then(data => {
+        setSession(data)
+        setLoading(false)
+      })
+    }
+  }, [sessionId])
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex flex-col items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white dark:bg-gray-900 rounded-3xl p-8 border border-gray-100 dark:border-gray-800 shadow-xl text-center">
+    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 py-20">
+      <div className="max-w-2xl w-full bg-white rounded-[2.5rem] p-8 md:p-12 shadow-2xl shadow-blue-900/5 border border-blue-50 text-center relative overflow-hidden">
+        {/* Background Accent */}
+        <div className="absolute top-0 left-0 w-full h-2 bg-green-500" />
         
-        <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
-          <CheckCircle2 className="w-10 h-10 text-green-500" />
+        <div className="w-24 h-24 bg-green-50 rounded-3xl flex items-center justify-center mx-auto mb-8 rotate-3">
+          <CheckCircle2 className="w-12 h-12 text-green-500 -rotate-3" />
         </div>
 
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Booking Confirmed!</h1>
-        <p className="text-gray-600 dark:text-gray-400 mb-8">
-          Thank you for your payment. Your consultation has been successfully scheduled.
+        <h1 className="text-4xl font-black text-[#012269] mb-4 tracking-tighter">Booking Confirmed!</h1>
+        <p className="text-lg text-slate-500 mb-10 font-medium">
+          Thank you for choosing Migration Republic. Your Australian journey just took a major step forward.
         </p>
 
-        <div className="bg-gray-50 dark:bg-gray-800/50 rounded-2xl p-6 mb-8 text-left border border-gray-100 dark:border-gray-800">
-          <h3 className="font-medium text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-            <CalendarIcon className="w-5 h-5 text-blue-500" />
-            What happens next?
-          </h3>
-          <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-3">
-            <li className="flex items-start gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 shrink-0" />
-              <span>You will receive a confirmation email shortly.</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 shrink-0" />
-              <span>If you booked an online session, the meeting link is in the email.</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 shrink-0" />
-              <span>Please gather any relevant documents before our meeting.</span>
-            </li>
-          </ul>
-        </div>
+        {loading ? (
+          <div className="flex items-center justify-center py-10">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#012269]"></div>
+          </div>
+        ) : session && session.metadata ? (
+          <div className="bg-slate-50 rounded-[2rem] p-8 mb-10 text-left border border-slate-100">
+            <h3 className="text-sm font-black text-[#012269] uppercase tracking-widest mb-6 flex items-center gap-2">
+              <div className="p-1.5 bg-[#012269] rounded-lg">
+                <CalendarIcon className="w-4 h-4 text-white" />
+              </div>
+              Booking Summary
+            </h3>
+            
+            <div className="grid md:grid-cols-2 gap-8">
+              <div className="space-y-4">
+                <div>
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Consultation</span>
+                  <span className="font-bold text-[#012269]">{session.metadata.planName}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Client Name</span>
+                  <span className="font-bold text-[#012269]">{session.metadata.name}</span>
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Date & Time</span>
+                  <span className="font-bold text-[#e40229]">
+                    {session.metadata.date} @ {session.metadata.time}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Payment Status</span>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-green-100 text-green-700 uppercase tracking-tighter">
+                    <div className="w-1.5 h-1.5 rounded-full bg-green-600" />
+                    Paid Successfully
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : null}
 
-        <Link
-          href="/"
-          className="block w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-all"
-        >
-          Return to Homepage
-        </Link>
+        <div className="space-y-4">
+          <Link
+            href="/"
+            className="group w-full py-5 bg-[#012269] hover:bg-[#012269]/90 text-white font-black rounded-2xl transition-all flex items-center justify-center gap-3 text-lg uppercase tracking-tighter"
+          >
+            Go to Homepage
+            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+          </Link>
+          
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+            A confirmation email has been sent to your inbox.
+          </p>
+        </div>
       </div>
     </div>
   )

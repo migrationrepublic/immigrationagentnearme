@@ -15,9 +15,9 @@ export default async function PricingPage() {
   // If Supabase isn't hooked up yet, plans might be empty.
   // Fallback for development/UI design:
   const displayPlans = plans.length > 0 ? plans : [
-    { id: '1', slug: 'phone-consultation', name: 'Phone Consultation', price_aud: 100, duration_minutes: 30 },
-    { id: '2', slug: 'online-video-consultation', name: 'Online Video Consultation', price_aud: 150, duration_minutes: 45 },
-    { id: '3', slug: 'in-office-consultation', name: 'In-Office Consultation', price_aud: 200, duration_minutes: 60 },
+    { id: '1', slug: 'phone-consultation', name: 'Phone Consultation', price_aud: 11407, duration_minutes: 30, base_price: 100 },
+    { id: '2', slug: 'online-video-consultation', name: 'Online Video Consultation', price_aud: 17111, duration_minutes: 45, base_price: 150 },
+    { id: '3', slug: 'in-office-consultation', name: 'In-Office Consultation', price_aud: 34221, duration_minutes: 60, base_price: 300 },
   ]
 
   return (
@@ -55,9 +55,14 @@ export default async function PricingPage() {
                 )}
                 
                 <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">{plan.name}</h3>
-                <div className="flex items-baseline gap-2 mb-6">
-                  <span className="text-4xl font-extrabold text-gray-900 dark:text-white">${plan.price_aud}</span>
-                  <span className="text-gray-500 dark:text-gray-400 font-medium">AUD</span>
+                <div className="flex flex-col mb-6">
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-4xl font-extrabold text-gray-900 dark:text-white">${(plan.price_aud / 100).toFixed(2)}</span>
+                    <span className="text-gray-500 dark:text-gray-400 font-medium">AUD</span>
+                  </div>
+                  <span className="text-sm text-gray-400 mt-1 font-medium">
+                    ${plan.base_price || (plan.price_aud / 114.07 * 100 / 100).toFixed(0)} + GST
+                  </span>
                 </div>
 
                 <div className="flex items-center gap-2 mb-8 text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-800/50 p-3 rounded-xl">

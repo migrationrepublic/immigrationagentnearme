@@ -16,8 +16,8 @@ export default async function PricingPage() {
   // Fallback for development/UI design:
   const displayPlans = plans.length > 0 ? plans : [
     { id: '1', slug: 'phone-consultation', name: 'Phone Consultation', price_aud: 11407, duration_minutes: 30, base_price: 100 },
-    { id: '2', slug: 'online-video-consultation', name: 'Online Video Consultation', price_aud: 17111, duration_minutes: 45, base_price: 150 },
-    { id: '3', slug: 'in-office-consultation', name: 'In-Office Consultation', price_aud: 34221, duration_minutes: 60, base_price: 300 },
+    { id: '2', slug: 'online-video-consultation', name: 'Online Video Consultation', price_aud: 17111, duration_minutes: 30, base_price: 150 },
+    { id: '3', slug: 'in-office-consultation', name: 'In-Office Consultation', price_aud: 34221, duration_minutes: 30, base_price: 300 },
   ]
 
   return (

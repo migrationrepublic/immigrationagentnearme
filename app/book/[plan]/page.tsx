@@ -325,8 +325,8 @@ export default function BookPlanPage({
                     <span className="text-sm text-gray-400 ml-1">AUD</span>
                   </span>
                 </div>
-                <span className="text-xs text-red-400 font-bold uppercase tracking-widest">
-                  Card Surcharge Will Apply
+                <span className="text-[10px] text-gray-500 font-bold uppercase tracking-tight leading-relaxed">
+                  Includes Card Surcharge
                 </span>
               </div>
 
@@ -335,7 +335,7 @@ export default function BookPlanPage({
                 <div className="text-[10px] leading-tight font-bold text-[#012269] uppercase tracking-wider">
                   MARA Registered Agent
                   <br />
-                  <span className="text-[#e40229]">Security Guaranteed</span>
+                  <span className="text-[#e40229]">Secured</span>
                 </div>
               </div>
             </div>

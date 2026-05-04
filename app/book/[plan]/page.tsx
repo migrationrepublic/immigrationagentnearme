@@ -118,11 +118,11 @@ export default function BookPlanPage({
         <div className="max-w-7xl mx-auto text-center">
           <div className="flex justify-center mb-8">
             <Image
-              src="/images/logobgwhite.jpg"
+              src="/images/logo.jpg"
               alt="Migration Republic"
               width={160}
               height={160}
-              className="rounded-full border-4 border-white/20 shadow-2xl shadow-black/20"
+              className="rounded-full shadow-2xl shadow-black/20"
             />
           </div>
           <Link

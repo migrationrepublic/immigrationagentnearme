@@ -85,10 +85,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       <nav className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 p-4">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <ShieldCheck className="w-6 h-6 text-blue-600" />
-            <span className="font-bold text-gray-900 dark:text-white">Admin Dashboard</span>
+          <div className="flex items-center gap-8">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="w-6 h-6 text-blue-600" />
+              <span className="font-bold text-gray-900 dark:text-white">Admin Portal</span>
+            </div>
+            
+            <div className="hidden sm:flex items-center gap-6">
+              <a href="/admin" className="text-sm font-semibold text-gray-600 dark:text-gray-400 hover:text-blue-600 transition-colors">Bookings</a>
+              <a href="/admin/tool-leads" className="text-sm font-semibold text-gray-600 dark:text-gray-400 hover:text-blue-600 transition-colors">Tool Leads</a>
+            </div>
           </div>
+          
           <button 
             onClick={() => supabase.auth.signOut()}
             className="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"

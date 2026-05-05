@@ -23,9 +23,10 @@ export default function BlogCard({ post }: BlogCardProps) {
     >
       <div className="relative h-64 w-full overflow-hidden">
         <Image
-          src={featuredImage || "/images/placeholder.jpg"}
+          src={featuredImage || "/images/why_choose_us_office.png"}
           alt={post.title.rendered}
           fill
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           className="object-cover transition-transform duration-700 group-hover:scale-110"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />

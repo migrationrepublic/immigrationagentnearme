@@ -107,7 +107,9 @@ export async function createCheckoutSession(input: BookingInput) {
       throw new Error("This time slot is no longer available.");
     }
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const host = (await headers()).get("host");
+    const protocol = process.env.NODE_ENV === "development" ? "http" : "https";
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || `${protocol}://${host}`;
     const hasStripeKey = process.env.STRIPE_SECRET_KEY && process.env.STRIPE_SECRET_KEY.startsWith('sk_');
 
     // BYPASS STRIPE FOR TESTING OR "FREE" MODE
@@ -157,7 +159,6 @@ export async function createCheckoutSession(input: BookingInput) {
 
     // 3. NORMAL STRIPE FLOW
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card"],
       mode: "payment",
       customer_email: validatedData.email,
       line_items: [
@@ -168,7 +169,7 @@ export async function createCheckoutSession(input: BookingInput) {
               name: `Consultation: ${plan.name}`,
               description: `${plan.duration_minutes} minutes consultation on ${validatedData.date} at ${validatedData.time}`,
             },
-            unit_amount: plan.price_aud, // price_aud is now stored in cents to support decimals
+            unit_amount: plan.price_aud, 
           },
           quantity: 1,
         },
@@ -181,11 +182,16 @@ export async function createCheckoutSession(input: BookingInput) {
         name: validatedData.name,
         email: validatedData.email,
         phone: validatedData.phone,
-        notes: validatedData.notes || "",
+        notes: (validatedData.notes || "").substring(0, 490), // Limit length for metadata
       },
       success_url: `${appUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${appUrl}/book/${plan.id}?canceled=true`,
+      allow_promotion_codes: true,
     });
+
+    if (!session.url) {
+      throw new Error("Failed to generate checkout URL. Please try again.");
+    }
 
     return { url: session.url };
   } catch (error) {

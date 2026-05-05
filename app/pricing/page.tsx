@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { Check } from 'lucide-react'
 
 export const metadata = {
-  title: 'Consultation Plans | Migration Agent Near Me',
+  title: 'Consultation Plans | Migration Republic',
   description: 'Select a consultation plan to speak with our expert migration agents.',
 }
 

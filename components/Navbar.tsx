@@ -33,6 +33,7 @@ export default function Navbar() {
             width={80}
             height={80}
             className="rounded-full"
+            style={{ height: 'auto' }}
           />
           <div>
             <div className="text-xl font-extrabold text-brand-heading leading-tight group-hover:text-brand-accent transition-colors">

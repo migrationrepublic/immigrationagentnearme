@@ -8,7 +8,7 @@ const adminEmail = process.env.ADMIN_EMAIL!
 export async function sendBookingConfirmation(email: string, name: string, planName: string, date: string, time: string) {
   try {
     await resend.emails.send({
-      from: `Migration Agent Near Me <${fromEmail}>`,
+      from: `Migration Republic <${fromEmail}>`,
       to: email,
       subject: `Booking Confirmed: ${planName}`,
       html: `
@@ -21,7 +21,7 @@ export async function sendBookingConfirmation(email: string, name: string, planN
             <p style="margin: 5px 0 0 0;"><strong>Time:</strong> ${time}</p>
           </div>
           <p>If you selected an online consultation, a meeting link will be sent to you shortly.</p>
-          <p>Thank you,<br/>Migration Agent Near Me Team</p>
+          <p>Thank you,<br/><strong>Migration Republic Team</strong></p>
         </div>
       `
     })

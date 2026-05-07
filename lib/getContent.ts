@@ -10,13 +10,16 @@ export interface PageContent {
   hero: {
     h1: string;
     subheadline: string;
+    intro?: string;
     cta1: string;
     cta2: string;
-    trustBar: string;
+    trustBar?: string;
+    badges?: string[];
   };
   intro: string;
   whyChooseUs: string;
   services: string;
+  visaPathways?: string;
   localKnowledge: string;
   locations: string;
   howItWorks: string;

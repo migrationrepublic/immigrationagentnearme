@@ -1,6 +1,6 @@
 "use server";
 
-import { supabase } from '@/lib/supabase';
+import { supabaseServer } from '@/lib/supabase-server';
 
 export async function submitToolLead(formData: {
   tool_name: string;
@@ -10,7 +10,7 @@ export async function submitToolLead(formData: {
   results: any;
 }) {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseServer
       .from('tool_submissions')
       .insert([
         {
@@ -23,11 +23,10 @@ export async function submitToolLead(formData: {
       ]);
 
     if (error) {
-      if (error.code === 'PGRST205') {
-        console.error('DATABASE TABLE MISSING: Please run tool_leads_schema.sql in Supabase SQL Editor.');
-        return { success: false, error: 'Database setup incomplete. Please contact the administrator.' };
-      }
       console.error('Error saving tool lead:', error);
+      if (error.code === 'PGRST205' || error.code === '42P01') {
+        return { success: false, error: 'Database table missing. Please run tool_leads_schema.sql in Supabase.' };
+      }
       return { success: false, error: error.message };
     }
 

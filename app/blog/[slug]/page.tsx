@@ -144,7 +144,7 @@ export default async function BlogPostPage({ params }: PostPageProps) {
            <div className="container mx-auto px-4 text-center max-w-4xl">
               <h2 className="text-3xl font-extrabold text-brand-heading mb-6">Stay Informed About Australian Immigration</h2>
               <p className="text-brand-gray text-lg mb-12 italic">
-                "Our mission is to simplify the complex world of migration, one client at a time."
+                &quot;Our mission is to simplify the complex world of migration, one client at a time.&quot;
               </p>
               <div className="flex flex-wrap justify-center gap-6">
                 <a 

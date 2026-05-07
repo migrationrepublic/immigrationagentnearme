@@ -117,7 +117,7 @@ export async function createCheckoutSession(input: BookingInput) {
       const mockSessionId = "mock_session_" + Math.random().toString(36).substring(7);
       
       // Insert Booking
-      await supabaseServer.from("bookings").insert([{
+      const { error: insertError } = await supabaseServer.from("bookings").insert([{
         name: validatedData.name,
         email: validatedData.email,
         phone: validatedData.phone,
@@ -129,12 +129,22 @@ export async function createCheckoutSession(input: BookingInput) {
         stripe_session_id: mockSessionId,
       }]);
 
+      if (insertError) {
+        console.error("Error saving mock booking:", insertError);
+        throw new Error(`Failed to save booking: ${insertError.message}`);
+      }
+
       // Upsert Availability
-      await supabaseServer.from("availability").upsert({
+      const { error: upsertError } = await supabaseServer.from("availability").upsert({
         date: validatedData.date,
         time: validatedData.time,
         is_booked: true
       }, { onConflict: "date, time" });
+
+      if (upsertError) {
+        console.error("Error updating availability:", upsertError);
+        // We don't throw here to avoid failing the whole process if just availability update fails
+      }
 
       // Send Emails
       await sendBookingConfirmation(

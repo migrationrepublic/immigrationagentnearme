@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Calculator, ClipboardCheck, MessageSquareQuote, ArrowRight } from 'lucide-react';
 
 const tools = [
@@ -32,16 +33,28 @@ const tools = [
 export default function ToolsDirectoryPage() {
   return (
     <div className="min-h-screen bg-white" suppressHydrationWarning>
-      <div className="bg-brand-primary py-24 px-4 overflow-hidden relative">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-brand-accent/10 rounded-full -mr-32 -mt-32 blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500/10 rounded-full -ml-32 -mb-32 blur-3xl" />
+      <div className="bg-brand-primary py-20 px-4 overflow-hidden relative">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-brand-accent/10 rounded-full -mr-48 -mt-48 blur-3xl" />
         
-        <div className="max-w-7xl mx-auto text-center relative z-10">
-          <h1 className="text-4xl md:text-7xl font-bold text-white mb-6">
+        <div className="max-w-7xl mx-auto flex flex-col items-center text-center relative z-10">
+          <Link href="/" className="mb-10 block group">
+            <div className="relative">
+              <div className="absolute -inset-4 bg-white/10 rounded-full blur-xl group-hover:bg-white/20 transition-all"></div>
+              <Image 
+                src="/images/logobgwhite.jpg" 
+                alt="Migration Republic Logo" 
+                width={100} 
+                height={100} 
+                className="rounded-full border-4 border-white/20 relative"
+              />
+            </div>
+          </Link>
+          
+          <h1 className="text-4xl md:text-7xl font-black text-white mb-6 tracking-tight">
             Migration Tools <span className="text-brand-accent">&</span> Calculators
           </h1>
-          <p className="text-brand-soft/80 text-xl max-w-2xl mx-auto">
-            Free interactive tools designed to help you plan your journey to Australia with confidence.
+          <p className="text-brand-soft/80 text-xl max-w-2xl mx-auto font-medium">
+            Professional interactive tools designed by Migration Republic to help you navigate Australian immigration with clarity.
           </p>
         </div>
       </div>

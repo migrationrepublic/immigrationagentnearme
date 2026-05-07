@@ -15,10 +15,10 @@ import {
   Loader2,
   Calendar as CalendarIcon,
   Clock,
-  CreditCard,
   ShieldCheck,
   CheckCircle2,
 } from "lucide-react";
+import { Plan } from "@/lib/types";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -30,7 +30,7 @@ export default function BookPlanPage({
   const unwrappedParams = use(params);
   const planId = unwrappedParams.plan;
 
-  const [plan, setPlan] = useState<any>(null);
+  const [plan, setPlan] = useState<Plan | null>(null);
   const [loadingPlan, setLoadingPlan] = useState(true);
 
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -101,7 +101,7 @@ export default function BookPlanPage({
           Plan Not Found
         </h2>
         <p className="text-gray-500 mb-8 max-w-md">
-          We couldn't find the consultation plan you're looking for. It may have
+          We couldn&apos;t find the consultation plan you&apos;re looking for. It may have
           been moved or removed.
         </p>
         <Link href="/pricing" className="btn-primary">
@@ -344,8 +344,8 @@ export default function BookPlanPage({
             <div className="bg-[#012269] rounded-3xl p-6 text-white overflow-hidden relative group">
               <div className="relative z-10">
                 <p className="text-sm font-bold opacity-90 mb-2 italic leading-relaxed">
-                  "At Migration Republic, we strive to help make your Australian
-                  dream a reality."
+                  &quot;At Migration Republic, we strive to help make your Australian
+                  dream a reality.&quot;
                 </p>
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-[#e40229] rounded-full" />

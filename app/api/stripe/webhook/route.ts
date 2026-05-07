@@ -1,73 +1,147 @@
 import { NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { supabaseServer } from "@/lib/supabase-server";
-import { sendBookingConfirmation, sendAdminAlert } from "@/lib/email";
+import {
+  sendBookingConfirmation,
+  sendAdminAlert,
+} from "@/lib/email";
+import Stripe from "stripe";
 
 export async function POST(req: Request) {
   const body = await req.text();
-  const sig = req.headers.get("stripe-signature") as string;
+  const sig = req.headers.get("stripe-signature");
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
-  let event;
-
-  try {
-    if (!webhookSecret) {
-      throw new Error("Stripe webhook secret is not set");
-    }
-    event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
-  } catch (err) {
-    const errorMessage = err instanceof Error ? err.message : "Unknown error";
-    console.error(`Webhook Error: ${errorMessage}`);
+  // -------------------------------
+  // Validate Required Values
+  // -------------------------------
+  if (!sig) {
+    console.error("Missing Stripe signature");
     return NextResponse.json(
-      { error: `Webhook Error: ${errorMessage}` },
-      { status: 400 },
+      { error: "Missing Stripe signature" },
+      { status: 400 }
     );
   }
 
-  // Handle the checkout.session.completed event
+  if (!webhookSecret) {
+    console.error("Missing webhook secret");
+    return NextResponse.json(
+      { error: "Webhook secret not configured" },
+      { status: 500 }
+    );
+  }
+
+  let event: Stripe.Event;
+
+  // -------------------------------
+  // Verify Stripe Webhook
+  // -------------------------------
+  try {
+    event = stripe.webhooks.constructEvent(
+      body,
+      sig,
+      webhookSecret
+    );
+  } catch (err) {
+    const errorMessage =
+      err instanceof Error ? err.message : "Unknown error";
+
+    console.error("Webhook verification failed:", errorMessage);
+
+    return NextResponse.json(
+      { error: `Webhook Error: ${errorMessage}` },
+      { status: 400 }
+    );
+  }
+
+  const eventId = event.id;
+
+  // -------------------------------
+  // Check Duplicate Event
+  // -------------------------------
+  const { data: existingEvent, error: existingEventError } =
+    await supabaseServer
+      .from("stripe_events")
+      .select("id")
+      .eq("id", eventId)
+      .maybeSingle();
+
+  if (existingEventError) {
+    console.error(
+      "Error checking existing event:",
+      existingEventError
+    );
+
+    return NextResponse.json(
+      { error: "Database error" },
+      { status: 500 }
+    );
+  }
+
+  if (existingEvent) {
+    console.log(`Duplicate event skipped: ${eventId}`);
+
+    return NextResponse.json({ received: true });
+  }
+
+  // -------------------------------
+  // Handle Checkout Completed
+  // -------------------------------
   if (event.type === "checkout.session.completed") {
-    const session = event.data.object as any;
+    const session = event.data.object as Stripe.Checkout.Session;
 
     const metadata = session.metadata;
     const sessionId = session.id;
 
-    if (!metadata) {
-      console.error("No metadata found in session");
-      return NextResponse.json({ error: "No metadata" }, { status: 400 });
+    // -------------------------------
+    // Validate Payment Status
+    // -------------------------------
+    if (session.payment_status !== "paid") {
+      console.log(`Session not paid: ${sessionId}`);
+
+      return NextResponse.json({ received: true });
+    }
+
+    // -------------------------------
+    // Validate Metadata
+    // -------------------------------
+    if (
+      !metadata ||
+      !metadata.name ||
+      !metadata.email ||
+      !metadata.date ||
+      !metadata.time ||
+      !metadata.planId
+    ) {
+      console.error("Missing required metadata");
+
+      return NextResponse.json(
+        { error: "Missing metadata" },
+        { status: 400 }
+      );
     }
 
     try {
-      // 1. Insert into bookings table
-      const { data: booking, error: insertError } = await supabaseServer
+      // -------------------------------
+      // Prevent Duplicate Booking
+      // -------------------------------
+      const { data: existingBooking } = await supabaseServer
         .from("bookings")
-        .insert([
-          {
-            name: metadata.name,
-            email: metadata.email,
-            phone: metadata.phone,
-            plan_id: metadata.planId,
-            date: metadata.date,
-            time: metadata.time,
-            notes: metadata.notes,
-            status: "confirmed",
-            stripe_session_id: sessionId,
-          },
-        ])
-        .select()
-        .single();
+        .select("id")
+        .eq("stripe_session_id", sessionId)
+        .maybeSingle();
 
-      if (insertError) {
-        // If error is unique constraint on stripe_session_id, it means we already processed this
-        if (insertError.code === "23505") {
-          console.log(`Booking for session ${sessionId} already exists.`);
-          return NextResponse.json({ received: true });
-        }
-        console.error("Error inserting booking:", insertError);
-        throw new Error("Failed to insert booking");
+      if (existingBooking) {
+        console.log(
+          `Booking already exists for session: ${sessionId}`
+        );
+
+        return NextResponse.json({ received: true });
       }
 
-      // 2. Mark the slot as booked (or insert it if it doesn't exist)
-      // PRIORITY CHECK: Check if already booked (potential race condition)
+      // -------------------------------
+      // Check Slot Availability
+      // -------------------------------
       const { data: existingSlot } = await supabaseServer
         .from("availability")
         .select("is_booked")
@@ -75,54 +149,130 @@ export async function POST(req: Request) {
         .eq("time", metadata.time)
         .maybeSingle();
 
-      if (existingSlot && existingSlot.is_booked) {
-        console.error(`!!! PRIORITY ALERT: OVERBOOKING DETECTED !!! Slot ${metadata.date} ${metadata.time} was already booked.`);
-        // We still proceed to send confirmation, but admin needs to know.
-      }
-
-      const { error: updateError } = await supabaseServer
-        .from("availability")
-        .upsert(
-          {
-            date: metadata.date,
-            time: metadata.time,
-            is_booked: true,
-          },
-          { onConflict: "date, time" },
+      if (existingSlot?.is_booked) {
+        console.error(
+          `Slot already booked: ${metadata.date} ${metadata.time}`
         );
 
-      if (updateError) {
-        console.error("Error updating availability:", updateError);
-        // We don't throw here because the booking was paid and saved. An admin might need to manually fix the slot.
+        return NextResponse.json(
+          { error: "Slot already booked" },
+          { status: 409 }
+        );
       }
 
-      // 3. Send Emails
-      await sendBookingConfirmation(
-        metadata.email,
-        metadata.name,
-        metadata.planName,
-        metadata.date,
-        metadata.time,
+      // -------------------------------
+      // Insert Booking
+      // -------------------------------
+      const { error: bookingError } = await supabaseServer
+        .from("bookings")
+        .insert([
+          {
+            name: metadata.name,
+            email: metadata.email,
+            phone: metadata.phone || "",
+            plan_id: metadata.planId,
+            date: metadata.date,
+            time: metadata.time,
+            notes: metadata.notes || "",
+            status: "confirmed",
+            stripe_session_id: sessionId,
+          },
+        ]);
+
+      if (bookingError) {
+        console.error(
+          "Booking insert failed:",
+          bookingError
+        );
+
+        return NextResponse.json(
+          { error: "Failed to create booking" },
+          { status: 500 }
+        );
+      }
+
+      // -------------------------------
+      // Mark Slot As Booked
+      // -------------------------------
+      const { error: availabilityError } =
+        await supabaseServer
+          .from("availability")
+          .upsert(
+            {
+              date: metadata.date,
+              time: metadata.time,
+              is_booked: true,
+            },
+            {
+              onConflict: "date,time",
+            }
+          );
+
+      if (availabilityError) {
+        console.error(
+          "Availability update failed:",
+          availabilityError
+        );
+      }
+
+      // -------------------------------
+      // Save Processed Event
+      // IMPORTANT:
+      // Save AFTER successful processing
+      // -------------------------------
+      const { error: saveEventError } =
+        await supabaseServer
+          .from("stripe_events")
+          .insert([{ id: eventId }]);
+
+      if (saveEventError) {
+        console.error(
+          "Failed to save event ID:",
+          saveEventError
+        );
+      }
+
+      // -------------------------------
+      // Send Emails
+      // -------------------------------
+      try {
+        await sendBookingConfirmation(
+          metadata.email,
+          metadata.name,
+          metadata.planName || "Consultation",
+          metadata.date,
+          metadata.time
+        );
+
+        await sendAdminAlert(
+          metadata.name,
+          metadata.email,
+          metadata.planName || "Consultation",
+          metadata.date,
+          metadata.time,
+          metadata.notes || ""
+        );
+      } catch (emailError) {
+        console.error("Email sending failed:", emailError);
+      }
+
+      console.log(
+        `Booking processed successfully: ${sessionId}`
       );
 
-      await sendAdminAlert(
-        metadata.name,
-        metadata.email,
-        metadata.planName,
-        metadata.date,
-        metadata.time,
-        metadata.notes,
-      );
-
-      console.log(`Successfully processed booking for session ${sessionId}`);
+      return NextResponse.json({ received: true });
     } catch (error) {
-      console.error("Error processing webhook data:", error);
+      console.error("Webhook processing failed:", error);
+
       return NextResponse.json(
-        { error: "Internal Server Error" },
-        { status: 500 },
+        { error: "Internal server error" },
+        { status: 500 }
       );
     }
   }
 
+  // -------------------------------
+  // Ignore Other Events
+  // -------------------------------
   return NextResponse.json({ received: true });
 }

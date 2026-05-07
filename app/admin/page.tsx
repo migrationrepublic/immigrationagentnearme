@@ -4,26 +4,26 @@ import React, { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { format } from 'date-fns'
 import { Loader2, Search, Filter } from 'lucide-react'
+import { Booking } from '@/lib/types'
+import { getBookingsAction } from '@/app/actions/admin'
 
 export default function AdminPage() {
-  const [bookings, setBookings] = useState<any[]>([])
+  const [bookings, setBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     async function fetchBookings() {
-      // We use regular supabase client, assuming RLS allows admins to view bookings
-      const { data, error } = await supabase
-        .from('bookings')
-        .select('*, plans(name)')
-        .order('date', { ascending: false })
-        .order('time', { ascending: true })
-
-      if (error) {
-        console.error('Error fetching bookings:', error)
-      } else {
-        setBookings(data || [])
+      try {
+        setError(null)
+        const data = await getBookingsAction()
+        setBookings(data as any || [])
+      } catch (err: any) {
+        console.error('Error fetching bookings:', err)
+        setError(err.message)
+      } finally {
+        setLoading(false)
       }
-      setLoading(false)
     }
 
     fetchBookings()
@@ -73,7 +73,13 @@ export default function AdminPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
-              {bookings.length === 0 ? (
+              {error ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-8 text-center text-red-500">
+                    Error loading bookings: {error}
+                  </td>
+                </tr>
+              ) : bookings.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
                     No bookings found.

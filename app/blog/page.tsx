@@ -55,7 +55,7 @@ export default async function BlogPage() {
             ) : (
               <div className="text-center py-20 bg-white rounded-[3rem] border border-gray-100">
                 <h3 className="text-2xl font-bold text-brand-heading mb-4">No stories found yet</h3>
-                <p className="text-brand-gray">We're currently preparing some insightful migration news for you. Please check back soon.</p>
+                <p className="text-brand-gray">We&apos;re currently preparing some insightful migration news for you. Please check back soon.</p>
               </div>
             )}
           </div>

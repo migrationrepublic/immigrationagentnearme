@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { MultiStepTool } from '@/components/tools/shared/multi-step-tool';
 import { visaQuizData } from '@/lib/tools/visa-quiz-data';
 import { LeadForm } from '@/components/tools/shared/lead-form';
+import { ToolHeader } from '@/components/tools/shared/tool-header';
 import { Sparkles, GraduationCap, Briefcase, Heart, Building2, Palmtree } from 'lucide-react';
 
 export default function VisaQuizPage() {
@@ -97,14 +98,10 @@ export default function VisaQuizPage() {
   return (
     <div className="min-h-screen bg-brand-soft/30 py-12 px-4 sm:px-6 lg:px-8" suppressHydrationWarning>
       <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-extrabold text-brand-primary tracking-tight mb-4">
-            Visa Suggestion Quiz
-          </h1>
-          <p className="max-w-2xl mx-auto text-lg text-gray-600">
-            Find the right visa subclass based on your personal circumstances and migration goals.
-          </p>
-        </div>
+        <ToolHeader 
+          title="Visa Suggestion Quiz" 
+          description="Find the right visa subclass based on your personal circumstances and migration goals."
+        />
 
         <MultiStepTool 
           tool={visaQuizData} 

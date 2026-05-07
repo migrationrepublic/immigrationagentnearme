@@ -3,21 +3,47 @@
 import React, { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Loader2, ShieldCheck } from 'lucide-react'
+import { Session } from '@supabase/supabase-js'
+import Link from 'next/link'
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const [session, setSession] = useState<any>(null)
+  const [session, setSession] = useState<Session | null>(null)
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    async function checkUser() {
+      const { data: { session } } = await supabase.auth.getSession()
       setSession(session)
+      
+      if (session) {
+        const { data: adminData } = await supabase
+          .from('admins')
+          .select('id')
+          .eq('id', session.user.id)
+          .maybeSingle()
+        
+        setIsAdmin(!!adminData)
+      }
       setLoading(false)
-    })
+    }
+
+    checkUser()
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session)
+      if (session) {
+        const { data: adminData } = await supabase
+          .from('admins')
+          .select('id')
+          .eq('id', session.user.id)
+          .maybeSingle()
+        setIsAdmin(!!adminData)
+      } else {
+        setIsAdmin(null)
+      }
     })
 
     return () => subscription.unsubscribe()
@@ -92,8 +118,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </div>
             
             <div className="hidden sm:flex items-center gap-6">
-              <a href="/admin" className="text-sm font-semibold text-gray-600 dark:text-gray-400 hover:text-blue-600 transition-colors">Bookings</a>
-              <a href="/admin/tool-leads" className="text-sm font-semibold text-gray-600 dark:text-gray-400 hover:text-blue-600 transition-colors">Tool Leads</a>
+              <Link href="/admin" className="text-sm font-semibold text-gray-600 dark:text-gray-400 hover:text-blue-600 transition-colors">Bookings</Link>
+              <Link href="/admin/tool-leads" className="text-sm font-semibold text-gray-600 dark:text-gray-400 hover:text-blue-600 transition-colors">Tool Leads</Link>
             </div>
           </div>
           
@@ -106,6 +132,25 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
       </nav>
       <main className="p-4 sm:p-6 lg:p-8">
+        {isAdmin === false && (
+          <div className="max-w-7xl mx-auto mb-8 bg-red-50 border border-red-200 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <ShieldCheck className="w-6 h-6 text-red-600" />
+              </div>
+              <div>
+                <h3 className="text-red-900 font-bold">Access Denied: Not an Admin</h3>
+                <p className="text-red-700 text-sm">Your account exists but is not listed in the <code className="bg-red-100 px-1 rounded">admins</code> table. You will not see any data below.</p>
+              </div>
+            </div>
+            <div className="flex flex-col gap-2">
+              <p className="text-xs text-red-600 font-medium">Your User ID:</p>
+              <code className="bg-white px-3 py-1 rounded-lg border border-red-200 text-xs font-mono select-all">
+                {session?.user.id}
+              </code>
+            </div>
+          </div>
+        )}
         {children}
       </main>
     </div>

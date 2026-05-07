@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { MultiStepTool } from '@/components/tools/shared/multi-step-tool';
 import { prCalculatorData } from '@/lib/tools/pr-calculator-data';
 import { LeadForm } from '@/components/tools/shared/lead-form';
+import { ToolHeader } from '@/components/tools/shared/tool-header';
 import { CheckCircle2, AlertCircle, Info } from 'lucide-react';
 
 export default function PRCalculatorPage() {
@@ -121,14 +122,10 @@ export default function PRCalculatorPage() {
   return (
     <div className="min-h-screen bg-brand-soft/30 py-12 px-4 sm:px-6 lg:px-8" suppressHydrationWarning>
       <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-extrabold text-brand-primary tracking-tight mb-4">
-            PR Points Calculator
-          </h1>
-          <p className="max-w-2xl mx-auto text-lg text-gray-600">
-            Check your eligibility for Australian Permanent Residency (General Skilled Migration) in minutes.
-          </p>
-        </div>
+        <ToolHeader 
+          title="PR Points Calculator" 
+          description="Check your eligibility for Australian Permanent Residency (General Skilled Migration) in minutes."
+        />
 
         <MultiStepTool 
           tool={prCalculatorData} 

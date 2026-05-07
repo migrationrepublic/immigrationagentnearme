@@ -1,6 +1,6 @@
-import React from 'react';
 import { EXTERNAL_LINKS } from '@/lib/links';
 import { ExternalLink, ShieldCheck, Award, Users2 } from 'lucide-react';
+import Image from 'next/image';
 
 export default function PartnerSection() {
   return (
@@ -12,7 +12,7 @@ export default function PartnerSection() {
                <ShieldCheck size={18} /> <span>Trusted Partners</span>
              </div>
              <h2 className="text-4xl md:text-5xl font-extrabold text-brand-heading mb-8 tracking-tight">
-               Affiliated with Australia's Top Migration Firms
+               Affiliated with Australia&apos;s Top Migration Firms
              </h2>
              <p className="text-xl text-brand-gray mb-10 leading-relaxed">
                We work exclusively with registered migration agents and established firms like <strong>Migration Republic</strong> to ensure you receive the most accurate and up-to-date immigration advice.
@@ -62,9 +62,11 @@ export default function PartnerSection() {
           <div className="lg:w-1/2 w-full">
             <div className="relative group overflow-hidden rounded-3xl border-8 border-white shadow-2xl skew-y-1 hover:skew-y-0 transition-transform duration-700">
                <div className="absolute inset-0 bg-gradient-to-tr from-brand-primary/20 to-transparent z-10"></div>
-               <img 
+               <Image 
                  src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=1476" 
                  alt="Professional Migration Agents" 
+                 width={1476}
+                 height={500}
                  className="w-full h-[500px] object-cover group-hover:scale-110 transition-transform duration-1000"
                />
                <div className="absolute bottom-8 left-8 right-8 bg-white/90 backdrop-blur-md p-8 rounded-2xl border border-white/50 z-20 shadow-xl">

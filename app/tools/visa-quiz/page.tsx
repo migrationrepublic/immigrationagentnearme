@@ -56,6 +56,12 @@ export default function VisaQuizPage() {
       });
     }
 
+    const suggestionsForDb = suggestions.map(s => ({
+      name: s.name,
+      type: s.type,
+      desc: s.desc
+    }));
+
     return (
       <div className="space-y-8">
         <h4 className="text-xl font-bold text-brand-primary">Based on your goals, we suggest exploring:</h4>
@@ -82,7 +88,7 @@ export default function VisaQuizPage() {
         {!submitted ? (
           <LeadForm 
             toolName="Visa Suggestion Quiz" 
-            results={{ suggestions }} 
+            results={{ suggestions: suggestionsForDb }} 
             onSuccess={() => setSubmitted(true)} 
           />
         ) : (

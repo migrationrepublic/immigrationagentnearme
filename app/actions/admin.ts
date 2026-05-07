@@ -1,26 +1,45 @@
 "use server";
 
 import { supabaseServer, createClientForAction } from "@/lib/supabase-server";
-import { cookies } from "next/headers";
 
-// Helper to verify if the user is an admin
-async function verifyAdmin() {
-  const supabase = await createClientForAction();
-  const { data: { user } } = await supabase.auth.getUser();
-  
-  if (!user) return false;
+export async function checkIsAdminAction() {
+  try {
+    const supabase = await createClientForAction();
+    const { data: { session } } = await supabase.auth.getSession();
+    const user = session?.user;
+    
+    if (!user) {
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser) return { isAdmin: false };
+      return await processUser(authUser);
+    }
 
+    return await processUser(user);
+  } catch (e: any) {
+    console.error("Admin check error:", e);
+    return { isAdmin: false };
+  }
+}
+
+async function processUser(user: any) {
+  // Check DB using service role
   const { data: admin } = await supabaseServer
     .from("admins")
     .select("id")
     .eq("id", user.id)
-    .single();
+    .maybeSingle();
 
-  return !!admin;
+  return { 
+    isAdmin: !!admin,
+  };
+}
+
+async function verifyAdmin() {
+  const res = await checkIsAdminAction();
+  return res.isAdmin;
 }
 
 export async function getBookingsAction() {
-  // We use supabaseServer to bypass RLS, but we MUST check if the user is an admin first
   const isAdmin = await verifyAdmin();
   if (!isAdmin) {
     throw new Error("Unauthorized: You are not an admin.");

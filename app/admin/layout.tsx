@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Loader2, ShieldCheck } from 'lucide-react'
 import { Session } from '@supabase/supabase-js'
+import { checkIsAdminAction } from '@/app/actions/admin'
 import Link from 'next/link'
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -17,13 +18,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       setSession(session)
       
       if (session) {
-        const { data: adminData } = await supabase
-          .from('admins')
-          .select('id')
-          .eq('id', session.user.id)
-          .maybeSingle()
-        
-        setIsAdmin(!!adminData)
+        const res = await checkIsAdminAction()
+        setIsAdmin(res.isAdmin)
       }
       setLoading(false)
     }
@@ -35,12 +31,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session)
       if (session) {
-        const { data: adminData } = await supabase
-          .from('admins')
-          .select('id')
-          .eq('id', session.user.id)
-          .maybeSingle()
-        setIsAdmin(!!adminData)
+        const res = await checkIsAdminAction()
+        setIsAdmin(res.isAdmin)
       } else {
         setIsAdmin(null)
       }
@@ -118,7 +110,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </div>
             
             <div className="hidden sm:flex items-center gap-6">
-              <Link href="/admin" className="text-sm font-semibold text-gray-600 dark:text-gray-400 hover:text-blue-600 transition-colors">Bookings</Link>
+              <Link href="/admin" className="text-sm font-semibold text-gray-600 dark:text-gray-400 hover:text-blue-600 transition-colors">Consultation Leads</Link>
               <Link href="/admin/tool-leads" className="text-sm font-semibold text-gray-600 dark:text-gray-400 hover:text-blue-600 transition-colors">Tool Leads</Link>
             </div>
           </div>

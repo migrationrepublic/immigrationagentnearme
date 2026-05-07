@@ -75,7 +75,7 @@ CREATE POLICY "Admins can view and manage bookings" ON bookings FOR ALL USING (
   auth.uid() IN (SELECT id FROM admins)
 );
 
--- Admins: Only admins can read the admins table
+-- Admins: Only admins can read the admins table (Fixing recursion)
 CREATE POLICY "Admins can view admins" ON admins FOR SELECT USING (
-  auth.uid() IN (SELECT id FROM admins)
+  auth.uid() = id
 );

@@ -41,8 +41,8 @@ export default function AdminPage() {
     <div className="max-w-7xl mx-auto">
       <div className="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Recent Bookings</h1>
-          <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">Manage your consultation schedule</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Consultation Leads</h1>
+          <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">Manage your consultation inquiries and schedule</p>
         </div>
         
         <div className="flex items-center gap-3">
@@ -57,6 +57,20 @@ export default function AdminPage() {
           <button className="p-2 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
             <Filter className="w-4 h-4 text-gray-600 dark:text-gray-300" />
           </button>
+        </div>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="bg-white dark:bg-gray-900 p-6 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm">
+          <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Consultation Leads</p>
+          <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{bookings.length}</p>
+        </div>
+        <div className="bg-white dark:bg-gray-900 p-6 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm">
+          <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Pending Inquiries</p>
+          <p className="text-3xl font-bold text-yellow-600 mt-2">{bookings.filter(b => b.status === 'pending').length}</p>
+        </div>
+        <div className="bg-white dark:bg-gray-900 p-6 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm">
+          <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Confirmed Bookings</p>
+          <p className="text-3xl font-bold text-green-600 mt-2">{bookings.filter(b => b.status === 'confirmed').length}</p>
         </div>
       </div>
 

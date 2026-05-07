@@ -140,7 +140,7 @@ export default function Hero({ city }: HeroProps = {}) {
                 </div>
                 <div>
                   <div className="text-sm font-bold text-gray-900">
-                    Affiliated with
+                    We are
                   </div>
                   <div className="text-xs text-gray-500 font-semibold text-brand-primary">Migration Republic</div>
                 </div>

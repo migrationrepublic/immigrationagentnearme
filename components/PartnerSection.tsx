@@ -12,7 +12,7 @@ export default function PartnerSection() {
                <ShieldCheck size={18} /> <span>Trusted Partners</span>
              </div>
              <h2 className="text-4xl md:text-5xl font-extrabold text-brand-heading mb-8 tracking-tight">
-               Affiliated with Australia&apos;s Top Migration Firms
+               We are Australia&apos;s Top Migration Firm
              </h2>
              <p className="text-xl text-brand-gray mb-10 leading-relaxed">
                We work exclusively with registered migration agents and established firms like <strong>Migration Republic</strong> to ensure you receive the most accurate and up-to-date immigration advice.

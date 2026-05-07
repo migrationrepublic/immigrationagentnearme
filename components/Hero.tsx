@@ -9,7 +9,7 @@ interface HeroProps {
     name: string;
     state: string;
     h1: string;
-    intro: string;
+    intro?: string;
     slug: string;
     cta1?: string;
     cta2?: string;

@@ -1,6 +1,7 @@
 "use server";
 
 import { supabaseServer } from '@/lib/supabase-server';
+import { sendToolLeadAdminAlert, sendToolResultClientEmail } from '@/lib/email';
 
 export async function submitToolLead(formData: {
   tool_name: string;
@@ -29,6 +30,24 @@ export async function submitToolLead(formData: {
       }
       return { success: false, error: error.message };
     }
+
+    // Send emails
+    const resultsString = JSON.stringify(formData.results, null, 2);
+    const resultsSummary = resultsString.length > 500 ? resultsString.substring(0, 500) + '...' : resultsString;
+
+    await sendToolLeadAdminAlert(
+      formData.user_name,
+      formData.user_email,
+      formData.user_phone,
+      formData.tool_name,
+      resultsSummary
+    );
+
+    await sendToolResultClientEmail(
+      formData.user_email,
+      formData.user_name,
+      formData.tool_name
+    );
 
     return { success: true };
   } catch (err: any) {

@@ -23,7 +23,7 @@ export default function Footer() {
         .footer-inner { max-width: 1160px; margin: 0 auto; }
         .footer-grid {
           display: grid;
-          grid-template-columns: 1.5fr 1fr 1fr 1fr;
+          grid-template-columns: 1.8fr 1fr 1fr 1.2fr 1fr;
           gap: 50px;
           margin-bottom: 50px;
         }
@@ -133,19 +133,58 @@ export default function Footer() {
             </div>
 
             <div className="footer-col">
-              <h4>Services</h4>
+              <h4>Migration Tools</h4>
               <ul className="space-y-2 mt-4">
-                {services.map((svc) => (
-                  <li key={svc.title} className="group/link overflow-hidden">
-                    <a
-                      href={svc.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                {[
+                  { name: "PR Points Calculator", href: "/tools/pr-calculator" },
+                  { name: "Eligibility Checker", href: "/tools/eligibility-checker" },
+                  { name: "Visa Selection Quiz", href: "/tools/visa-quiz" },
+                ].map((tool) => (
+                  <li key={tool.name} className="group/link overflow-hidden">
+                    <Link
+                      href={tool.href}
                       className="text-white/60 hover:text-white flex items-center transition-all duration-300"
                     >
                       <ArrowRight className="w-4 h-4 mr-2 text-brand-accent opacity-0 -ml-6 group-hover/link:opacity-100 group-hover/link:ml-0 transition-all duration-300" />
-                      <span className="text-sm font-medium">{svc.title}</span>
-                    </a>
+                      <span className="text-sm font-medium">{tool.name}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="footer-col">
+              <h4>Visa Subclasses</h4>
+              <ul className="space-y-2 mt-4">
+                {[
+                  { name: "Skilled 189", href: "https://migrationrepublic.com.au/subclass-189-visa/" },
+                  { name: "Nominated 190", href: "https://migrationrepublic.com.au/subclass-190-visa/" },
+                  { name: "Regional 491", href: "https://migrationrepublic.com.au/visa-subclass-491-australia/" },
+                  { name: "Employer 482", href: "https://migrationrepublic.com.au/subclass-482-visa-australia/" },
+                  { name: "Partner 820/801", href: "https://migrationrepublic.com.au/subclass-820-801-visa-australia/" },
+                  { name: "Student 500", href: "https://migrationrepublic.com.au/subclass-500-visa/" },
+                  { name: "View All Visas", href: "/visas", isInternal: true },
+                ].map((item: any) => (
+                  <li key={item.name} className="group/link overflow-hidden">
+                    {item.isInternal ? (
+                      <Link
+                        href={item.href}
+                        className="text-white/60 hover:text-white flex items-center transition-all duration-300"
+                      >
+                        <ArrowRight className="w-4 h-4 mr-2 text-brand-accent opacity-0 -ml-6 group-hover/link:opacity-100 group-hover/link:ml-0 transition-all duration-300" />
+                        <span className="text-sm font-bold text-brand-accent">{item.name}</span>
+                      </Link>
+                    ) : (
+                      <a
+                        href={item.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-white/60 hover:text-white flex items-center transition-all duration-300"
+                      >
+                        <ArrowRight className="w-4 h-4 mr-2 text-brand-accent opacity-0 -ml-6 group-hover/link:opacity-100 group-hover/link:ml-0 transition-all duration-300" />
+                        <span className="text-sm font-medium">{item.name}</span>
+                      </a>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -225,14 +264,7 @@ export default function Footer() {
 
           <div className="footer-bottom">
             <p>
-              © 2026 immigrationagentnearme.com — Information provided by{" "}
-              <a
-                href="https://migrationrepublic.com.au/"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Migration Republic
-              </a>
+              © 2026 Migration Republic — All agents MARA registered.
             </p>
             <div className="footer-legal">
               <a

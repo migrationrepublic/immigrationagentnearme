@@ -28,14 +28,24 @@ export const EXTERNAL_LINKS = {
 };
 
 export const INTERNAL_LINKS = {
-  home: "https://immigrationagentnearme.com/",
-  sydney: "https://immigrationagentnearme.com/sydney",
-  melbourne: "https://immigrationagentnearme.com/melbourne",
-  brisbane: "https://immigrationagentnearme.com/brisbane",
-  perth: "https://immigrationagentnearme.com/perth",
-  adelaide: "https://immigrationagentnearme.com/adelaide",
-  goldCoast: "https://immigrationagentnearme.com/gold-coast",
-  canberra: "https://immigrationagentnearme.com/canberra",
+  home: "/",
+  sydney: "/sydney",
+  melbourne: "/melbourne",
+  brisbane: "/brisbane",
+  perth: "/perth",
+  adelaide: "/adelaide",
+  goldCoast: "/gold-coast",
+  canberra: "/canberra",
+  visas: "/visas",
+  tools: "/tools",
+  pricing: "/pricing",
+  blog: "/blog",
+};
+
+export const TOOLS_LINKS = {
+  prCalculator: "/tools/pr-calculator",
+  eligibilityChecker: "/tools/eligibility-checker",
+  visaQuiz: "/tools/visa-quiz",
 };
 
 export const VISA_SUBCLASSES = [
@@ -61,6 +71,16 @@ export const VISA_SUBCLASSES = [
   },
 
   {
+    name: "Subclass 491",
+    url: "https://migrationrepublic.com.au/visa-subclass-491-australia/",
+    description: "Skilled Work Regional Visa",
+  },
+  {
+    name: "Subclass 485",
+    url: "https://migrationrepublic.com.au/subclass-485-visa/",
+    description: "Temporary Graduate Visa",
+  },
+  {
     name: "Partner Visa (820/801)",
     url: EXTERNAL_LINKS.subclass820_801,
     description: "Onshore Partner Visa",
@@ -71,23 +91,13 @@ export const VISA_SUBCLASSES = [
     description: "Offshore Partner Visa",
   },
   {
-    name: "Prospective Marriage (300)",
-    url: EXTERNAL_LINKS.subclass300,
-    description: "Fiancé Visa",
+    name: "Subclass 188",
+    url: "https://migrationrepublic.com.au/subclass-188-visa/",
+    description: "Business Innovation & Investment",
   },
   {
-    name: "Aged Parent Visa (804)",
-    url: EXTERNAL_LINKS.agedParent804,
-    description: "Permanent Aged Parent",
-  },
-  {
-    name: "Refugee Visa (200)",
-    url: EXTERNAL_LINKS.subclass200,
-    description: "Humanitarian Pathway",
-  },
-  {
-    name: "Skills In Demand",
-    url: EXTERNAL_LINKS.skillsInDemand,
-    description: "New 482 Replacement Pathway",
+    name: "Global Talent (858)",
+    url: "https://migrationrepublic.com.au/visa-subclass-858-australia/",
+    description: "Distinguished Talent Pathway",
   },
 ];

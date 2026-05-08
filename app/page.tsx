@@ -1,4 +1,5 @@
 import { getParsedContent } from "@/lib/getContent";
+import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import FAQ from "@/components/FAQ";
@@ -154,14 +155,12 @@ export default function Home() {
                >
                  Book Consultation
                </a>
-               <a 
-                href="https://migrationrepublic.com.au/free-visa-assessment/"
-                target="_blank"
-                rel="noopener noreferrer"
+               <Link 
+                href="/tools/visa-quiz"
                 className="bg-transparent border-2 border-white hover:bg-white/10 text-white px-10 py-4 rounded-full font-bold text-lg transition-all hover:-translate-y-1"
                >
                  Free Assessment
-               </a>
+               </Link>
             </div>
           </div>
         </section>

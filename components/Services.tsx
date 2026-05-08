@@ -1,5 +1,6 @@
 import { Briefcase, Users, GraduationCap, ArrowUpRight, Plane, Landmark, Scale, BookOpen, Heart, School } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 interface ServicesProps {
   content?: string;
@@ -77,8 +78,9 @@ export default function Services({ content }: ServicesProps) {
   return (
     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
       {services.map((service, index) => (
-        <div 
+        <Link 
           key={index}
+          href="/visas"
           className="group block bg-white rounded-3xl p-8 shadow-sm border border-gray-100 hover:shadow-xl hover:border-brand-primary/30 transition-all duration-300 relative overflow-hidden h-full flex flex-col"
         >
           <div className="absolute top-0 right-0 p-6 opacity-0 group-hover:opacity-100 transition-opacity translate-x-4 group-hover:translate-x-0 duration-300">
@@ -98,9 +100,9 @@ export default function Services({ content }: ServicesProps) {
           </p>
 
           <div className="mt-6 pt-6 border-t border-gray-100 flex items-center text-sm font-semibold text-brand-accent group-hover:text-brand-primary transition-colors">
-            Learn More &rarr;
+            View Details & Subclasses &rarr;
           </div>
-        </div>
+        </Link>
       ))}
     </div>
   );

@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, CheckCircle2, ShieldCheck, MapPin, Briefcase } from "lucide-react";
 import Image from "next/image";
 import Breadcrumbs from "./Breadcrumbs";
+import Link from "next/link";
 
 
 interface HeroProps {
@@ -77,10 +78,8 @@ export default function Hero({ city }: HeroProps = {}) {
                   {city?.cta1 || "Book Consultation"} <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </a>
-              <a
-                href="https://migrationrepublic.com.au/free-visa-assessment/"
-                target="_blank"
-                rel="noopener noreferrer"
+              <Link
+                href="/tools/visa-quiz"
                 className="w-full sm:w-auto"
               >
                 <Button
@@ -90,7 +89,7 @@ export default function Hero({ city }: HeroProps = {}) {
                 >
                   {city?.cta2 || "Free Visa Assessment"}
                 </Button>
-              </a>
+              </Link>
             </div>
 
             <div className="mt-10 grid grid-cols-2 gap-4 animate-in fade-in duration-700 delay-500">

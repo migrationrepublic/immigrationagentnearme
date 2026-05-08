@@ -47,11 +47,40 @@ export default function Navbar() {
 
         <div className="hidden lg:flex items-center gap-8">
           <Link
-            href="/#services"
+            href="/visas"
             className="text-brand-heading font-semibold hover:text-brand-accent transition-colors text-sm"
           >
-            Services
+            Visas
           </Link>
+
+          {/* Tools Dropdown */}
+          <div className="relative group">
+            <button className="flex items-center gap-1 text-brand-heading font-semibold hover:text-brand-accent transition-colors text-sm pb-1">
+              Tools <ChevronDown className="w-4 h-4" />
+            </button>
+            <div className="absolute top-full left-1/2 -translate-x-1/2 pt-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+              <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-4 w-64 grid gap-1">
+                <Link
+                  href="/tools/pr-calculator"
+                  className="flex items-center gap-3 px-4 py-3 hover:bg-brand-primary/5 rounded-xl text-brand-heading font-medium transition-colors"
+                >
+                  PR Points Calculator
+                </Link>
+                <Link
+                  href="/tools/eligibility-checker"
+                  className="flex items-center gap-3 px-4 py-3 hover:bg-brand-primary/5 rounded-xl text-brand-heading font-medium transition-colors"
+                >
+                  Eligibility Checker
+                </Link>
+                <Link
+                  href="/tools/visa-quiz"
+                  className="flex items-center gap-3 px-4 py-3 hover:bg-brand-primary/5 rounded-xl text-brand-heading font-medium transition-colors"
+                >
+                  Visa Selection Quiz
+                </Link>
+              </div>
+            </div>
+          </div>
 
           {/* Cities Dropdown */}
           <div className="relative group">

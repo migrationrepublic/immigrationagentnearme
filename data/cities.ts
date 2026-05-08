@@ -145,37 +145,37 @@ export const services = [
   {
     title: "Skilled Migration",
     desc: "Subclass 189, 190 & 491 visas for qualified professionals.",
-    link: "https://migrationrepublic.com.au/migration/",
+    link: "/visas",
     anchor: "Skilled Migration Visa Australia",
   },
   {
     title: "Employer Sponsored",
     desc: "Subclass 482 Skills in Demand & 186 Employer Nomination.",
-    link: "https://migrationrepublic.com.au/subclass-482-visa-australia/",
+    link: "/visas",
     anchor: "Employer Sponsored Visa 482",
   },
   {
     title: "Partner Visa",
     desc: "820/801 onshore and 309/100 offshore partner visas.",
-    link: "https://migrationrepublic.com.au/",
+    link: "/visas",
     anchor: "Partner Visa Australia",
   },
   {
     title: "Training Visa",
     desc: "Subclass 407 structured workplace training visa.",
-    link: "https://australiatrainingvisa.com.au/",
+    link: "/visas",
     anchor: "Australia Training Visa 407",
   },
   {
     title: "Student Visa",
     desc: "Study in Australia with full student visa support.",
-    link: "https://migrationrepublic.com.au/education-consultation/",
+    link: "/visas",
     anchor: "Student Visa Australia",
   },
   {
     title: "Parent Visa",
     desc: "Bring your parents to Australia permanently.",
-    link: "https://migrationrepublic.com.au/",
+    link: "/visas",
     anchor: "Parent Visa Australia",
   },
 ];

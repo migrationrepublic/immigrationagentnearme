@@ -71,7 +71,7 @@ export async function sendToolLeadAdminAlert(name: string, email: string, phone:
             <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Client:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${name}</td></tr>
             <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Email:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${email}</td></tr>
             <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Phone:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${phone || 'N/A'}</td></tr>
-            <tr><td style="padding: 8px;"><strong>Results Summary:</strong></td><td style="padding: 8px;"><pre style="font-size: 12px;">${resultsSummary}</pre></td></tr>
+            <tr><td style="padding: 8px; vertical-align: top;"><strong>Results Summary:</strong></td><td style="padding: 8px; vertical-align: top;"><div>${resultsSummary}</div></td></tr>
           </table>
         </div>
       `

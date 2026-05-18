@@ -222,3 +222,122 @@ export async function getCheckoutSession(sessionId: string) {
     return null;
   }
 }
+
+export async function handleSuccessfulPaymentAction(sessionId: string) {
+  try {
+    if (!sessionId) {
+      throw new Error("Session ID is required");
+    }
+
+    // 1. Retrieve Checkout Session from Stripe
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+    if (!session) {
+      throw new Error("Session not found in Stripe");
+    }
+
+    // 2. Validate Payment Status
+    if (session.payment_status !== "paid") {
+      return { success: false, error: `Session payment status is ${session.payment_status}` };
+    }
+
+    const metadata = session.metadata;
+    if (
+      !metadata ||
+      !metadata.name ||
+      !metadata.email ||
+      !metadata.date ||
+      !metadata.time ||
+      !metadata.planId
+    ) {
+      return { success: false, error: "Required metadata is missing in the checkout session" };
+    }
+
+    // 3. Prevent Duplicate Booking
+    const { data: existingBooking, error: checkError } = await supabaseServer
+      .from("bookings")
+      .select("id")
+      .eq("stripe_session_id", sessionId)
+      .maybeSingle();
+
+    if (checkError) {
+      console.error("Error checking existing booking in action:", checkError);
+    }
+
+    if (existingBooking) {
+      console.log(`Booking already exists for session (processed via action backup): ${sessionId}`);
+      return { success: true, alreadyExists: true };
+    }
+
+    // 4. Insert Booking into bookings table
+    const { error: bookingError } = await supabaseServer
+      .from("bookings")
+      .insert([
+        {
+          name: metadata.name,
+          email: metadata.email,
+          phone: metadata.phone || "",
+          plan_id: metadata.planId,
+          date: metadata.date,
+          time: metadata.time,
+          notes: metadata.notes || "",
+          status: "confirmed",
+          stripe_session_id: sessionId,
+        },
+      ]);
+
+    if (bookingError) {
+      console.error("Booking insert failed in backup action:", bookingError);
+      throw new Error(`Failed to create booking database entry: ${bookingError.message}`);
+    }
+
+    // 5. Mark Slot As Booked in availability table
+    const { error: availabilityError } = await supabaseServer
+      .from("availability")
+      .upsert(
+        {
+          date: metadata.date,
+          time: metadata.time,
+          is_booked: true,
+        },
+        {
+          onConflict: "date,time",
+        }
+      );
+
+    if (availabilityError) {
+      console.error("Availability update failed in backup action:", availabilityError);
+    }
+
+    // 6. Send Confirmation and Admin Emails
+    try {
+      await sendBookingConfirmation(
+        metadata.email,
+        metadata.name,
+        metadata.planName || "Consultation",
+        metadata.date,
+        metadata.time
+      );
+
+      await sendAdminAlert(
+        metadata.name,
+        metadata.email,
+        metadata.planName || "Consultation",
+        metadata.date,
+        metadata.time,
+        metadata.notes || ""
+      );
+    } catch (emailError) {
+      console.error("Email delivery failed in backup action:", emailError);
+    }
+
+    console.log(`Booking processed successfully via backup action: ${sessionId}`);
+    return { success: true, processedNow: true };
+  } catch (error) {
+    console.error("Backup booking processing failed:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "An unknown error occurred",
+    };
+  }
+}
+

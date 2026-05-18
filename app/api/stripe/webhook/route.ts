@@ -72,10 +72,16 @@ export async function POST(req: Request) {
       existingEventError
     );
 
-    return NextResponse.json(
-      { error: "Database error" },
-      { status: 500 }
-    );
+    // If the table 'stripe_events' is missing from the database, log a warning but proceed
+    // so we don't completely block booking creation and email delivery.
+    if (existingEventError.code === "PGRST205" || existingEventError.message?.includes("stripe_events")) {
+      console.warn("WARNING: 'stripe_events' table does not exist in Supabase. Processing event anyway.");
+    } else {
+      return NextResponse.json(
+        { error: "Database error" },
+        { status: 500 }
+      );
+    }
   }
 
   if (existingEvent) {

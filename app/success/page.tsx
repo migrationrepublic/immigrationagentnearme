@@ -3,7 +3,7 @@
 import React, { useEffect, useState, use } from 'react'
 import Link from 'next/link'
 import { CheckCircle2, Calendar as CalendarIcon, Clock, CreditCard, ArrowRight } from 'lucide-react'
-import { getCheckoutSession } from '@/app/actions/booking'
+import { getCheckoutSession, handleSuccessfulPaymentAction } from '@/app/actions/booking'
 
 export default function SuccessPage({ searchParams }: { searchParams: Promise<{ session_id?: string }> }) {
   const unwrappedParams = use(searchParams)
@@ -13,12 +13,27 @@ export default function SuccessPage({ searchParams }: { searchParams: Promise<{ 
 
   useEffect(() => {
     if (sessionId) {
-      getCheckoutSession(sessionId).then(data => {
-        setSession(data)
+      setLoading(true)
+      // Securely run the backup action to confirm the booking in database and send emails,
+      // while also fetching the session details to display in the UI.
+      Promise.all([
+        handleSuccessfulPaymentAction(sessionId),
+        getCheckoutSession(sessionId)
+      ]).then(([actionResult, sessionData]) => {
+        if (!actionResult.success) {
+          console.error("Backup booking process error:", actionResult.error)
+        } else {
+          console.log("Backup booking process result:", actionResult)
+        }
+        setSession(sessionData)
+        setLoading(false)
+      }).catch(err => {
+        console.error("Error in success page initialization:", err)
         setLoading(false)
       })
     }
   }, [sessionId])
+
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 py-20">

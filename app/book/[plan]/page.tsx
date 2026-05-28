@@ -6,10 +6,10 @@ import {
   getPlanBySlug,
   getAvailableSlots,
 } from "@/app/actions/booking";
-import Calendar from "@/components/Calendar";
+import dynamic from "next/dynamic";
 import TimeSlots from "@/components/TimeSlots";
 import BookingForm from "@/components/BookingForm";
-import { format } from "date-fns";
+import { format, startOfDay, addDays } from "date-fns";
 import {
   ArrowLeft,
   Loader2,
@@ -21,6 +21,12 @@ import {
 import { Plan } from "@/lib/types";
 import Link from "next/link";
 import Image from "next/image";
+const Calendar = dynamic(() => import("@/components/Calendar"), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-[350px] animate-pulse bg-gray-50 rounded-3xl" />
+  ),
+});
 
 export default function BookPlanPage({
   params,
@@ -39,6 +45,10 @@ export default function BookPlanPage({
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
 
   const [step, setStep] = useState<1 | 2>(1); // 1: Date/Time, 2: Form
+
+  useEffect(() => {
+    setSelectedDate(addDays(startOfDay(new Date()), 1));
+  }, []);
 
   useEffect(() => {
     async function fetchPlan() {

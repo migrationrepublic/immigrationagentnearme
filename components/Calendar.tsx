@@ -10,7 +10,9 @@ interface CalendarProps {
 }
 
 export default function Calendar({ selectedDate, onSelectDate }: CalendarProps) {
-  const [currentMonth, setCurrentMonth] = useState(new Date())
+  const today = startOfDay(new Date())
+  const tomorrow = addDays(today, 1)
+  const [currentMonth, setCurrentMonth] = useState(tomorrow)
 
   const renderHeader = () => {
     return (
@@ -59,7 +61,6 @@ export default function Calendar({ selectedDate, onSelectDate }: CalendarProps) 
     const monthEnd = endOfMonth(monthStart)
     const startDate = startOfWeek(monthStart)
     const endDate = endOfWeek(monthEnd)
-    const today = startOfDay(new Date())
 
     const dateFormat = 'd'
     const rows = []
@@ -71,7 +72,7 @@ export default function Calendar({ selectedDate, onSelectDate }: CalendarProps) 
       for (let i = 0; i < 7; i++) {
         formattedDate = format(day, dateFormat)
         const cloneDay = day
-        const isPast = isBefore(day, today)
+        const isDisabledDate = isBefore(day, tomorrow)
         const isCurrentMonth = isSameMonth(day, monthStart)
         const isSelected = selectedDate && isSameDay(day, selectedDate)
 
@@ -79,13 +80,13 @@ export default function Calendar({ selectedDate, onSelectDate }: CalendarProps) 
           <button
             key={day.toString()}
             type="button"
-            disabled={isPast || !isCurrentMonth}
+            disabled={isDisabledDate || !isCurrentMonth}
             onClick={() => onSelectDate(cloneDay)}
             className={`
               relative p-2 w-full aspect-square flex items-center justify-center rounded-2xl text-sm font-bold transition-all duration-300
               ${!isCurrentMonth ? 'text-gray-200 cursor-not-allowed opacity-0' : ''}
-              ${isPast && isCurrentMonth ? 'text-gray-300 cursor-not-allowed bg-gray-50/50' : ''}
-              ${!isPast && isCurrentMonth && !isSelected ? 'text-[#012269] hover:bg-blue-50 hover:text-[#e40229] cursor-pointer' : ''}
+              ${isDisabledDate && isCurrentMonth ? 'text-gray-300 cursor-not-allowed bg-gray-50/50' : ''}
+              ${!isDisabledDate && isCurrentMonth && !isSelected ? 'text-[#012269] hover:bg-blue-50 hover:text-[#e40229] cursor-pointer' : ''}
               ${isSelected ? 'bg-[#e40229] text-white shadow-lg shadow-[#e40229]/20 transform scale-110 z-10' : ''}
             `}
           >

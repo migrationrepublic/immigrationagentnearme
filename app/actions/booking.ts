@@ -62,19 +62,53 @@ export async function getPlanBySlug(slug: string) {
 
 export async function getAvailableSlots(date: string) {
   // Format: YYYY-MM-DD
+  const defaultSlots = [
+    "09:00:00",
+    "10:00:00",
+    "11:00:00",
+    "13:00:00",
+    "14:00:00",
+    "15:00:00",
+    "16:00:00",
+  ];
+
+  // 1. Fetch booked slots from availability table
   const { data, error } = await supabaseServer
     .from("availability")
-    .select("time, is_booked")
+    .select("time")
     .eq("date", date)
-    .order("time", { ascending: true });
+    .eq("is_booked", true);
 
   if (error) {
     console.error("Error fetching slots:", error);
-    return [];
+    return defaultSlots;
   }
 
-  // Filter out booked slots
-  return data.filter((slot) => !slot.is_booked).map((slot) => slot.time);
+  const bookedTimes = new Set(data?.map((slot) => slot.time) || []);
+
+  // 2. Filter default slots to remove booked ones
+  let availableSlots = defaultSlots.filter((time) => !bookedTimes.has(time));
+
+  // 3. If date is today, filter out slots that are less than 2 hours in the future (Melbourne Time)
+  const melbourneNowStr = new Date().toLocaleString("en-US", { timeZone: "Australia/Melbourne" });
+  const melbourneNow = new Date(melbourneNowStr);
+  
+  const yyyy = melbourneNow.getFullYear();
+  const mm = String(melbourneNow.getMonth() + 1).padStart(2, '0');
+  const dd = String(melbourneNow.getDate()).padStart(2, '0');
+  const melbourneTodayStr = `${yyyy}-${mm}-${dd}`;
+
+  if (date === melbourneTodayStr) {
+    const twoHoursInMs = 2 * 60 * 60 * 1000;
+    availableSlots = availableSlots.filter((timeStr) => {
+      const [sh, sm, ss] = timeStr.split(':').map(Number);
+      const slotDate = new Date(melbourneNow);
+      slotDate.setHours(sh, sm, ss, 0);
+      return (slotDate.getTime() - melbourneNow.getTime()) >= twoHoursInMs;
+    });
+  }
+
+  return availableSlots;
 }
 
 import { sendBookingConfirmation, sendAdminAlert } from "@/lib/email";
@@ -152,7 +186,8 @@ export async function createCheckoutSession(input: BookingInput) {
         validatedData.name,
         plan.name,
         validatedData.date,
-        validatedData.time
+        validatedData.time,
+        validatedData.phone
       );
       
       await sendAdminAlert(
@@ -161,6 +196,7 @@ export async function createCheckoutSession(input: BookingInput) {
         plan.name,
         validatedData.date,
         validatedData.time,
+        validatedData.phone,
         validatedData.notes
       );
 
@@ -315,7 +351,8 @@ export async function handleSuccessfulPaymentAction(sessionId: string) {
         metadata.name,
         metadata.planName || "Consultation",
         metadata.date,
-        metadata.time
+        metadata.time,
+        metadata.phone || ""
       );
 
       await sendAdminAlert(
@@ -324,6 +361,7 @@ export async function handleSuccessfulPaymentAction(sessionId: string) {
         metadata.planName || "Consultation",
         metadata.date,
         metadata.time,
+        metadata.phone || "",
         metadata.notes || ""
       );
     } catch (emailError) {

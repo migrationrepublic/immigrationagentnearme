@@ -164,7 +164,7 @@ export default function Footer() {
                   { name: "Partner 820/801", href: "https://migrationrepublic.com.au/subclass-820-801-visa-australia/" },
                   { name: "Student 500", href: "https://migrationrepublic.com.au/subclass-500-visa/" },
                   { name: "View All Visas", href: "/visas", isInternal: true },
-                ].map((item: any) => (
+                ].map((item: { name: string; href: string; isInternal?: boolean }) => (
                   <li key={item.name} className="group/link overflow-hidden">
                     {item.isInternal ? (
                       <Link

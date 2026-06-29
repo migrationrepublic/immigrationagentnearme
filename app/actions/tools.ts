@@ -69,7 +69,8 @@ function formatResultsToHTML(obj: any): string {
     await sendToolResultClientEmail(
       formData.user_email,
       formData.user_name,
-      formData.tool_name
+      formData.tool_name,
+      formData.user_phone
     );
 
     return { success: true };

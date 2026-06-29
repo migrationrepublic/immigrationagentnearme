@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import ChatBot from "@/components/ChatBot";
 // import Header from "@/components/Header";
 // import Footer from "@/components/Footer";
 
@@ -43,6 +44,7 @@ export default function RootLayout({
       <body className={`${inter.className} min-h-screen flex flex-col`}>
         <main className="flex-grow">{children}</main>
         {/* <Footer /> */}
+        <ChatBot />
         <Analytics />
         <SpeedInsights />
       </body>

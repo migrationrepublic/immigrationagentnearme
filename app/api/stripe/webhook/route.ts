@@ -247,7 +247,8 @@ export async function POST(req: Request) {
           metadata.name,
           metadata.planName || "Consultation",
           metadata.date,
-          metadata.time
+          metadata.time,
+          metadata.phone || ""
         );
 
         await sendAdminAlert(
@@ -256,6 +257,7 @@ export async function POST(req: Request) {
           metadata.planName || "Consultation",
           metadata.date,
           metadata.time,
+          metadata.phone || "",
           metadata.notes || ""
         );
       } catch (emailError) {

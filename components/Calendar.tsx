@@ -43,7 +43,7 @@ export default function Calendar({ selectedDate, onSelectDate }: CalendarProps) 
   const renderDays = () => {
     const dateFormat = 'EEE'
     const days = []
-    let startDate = startOfWeek(currentMonth)
+    const startDate = startOfWeek(currentMonth)
 
     for (let i = 0; i < 7; i++) {
       days.push(
@@ -72,7 +72,8 @@ export default function Calendar({ selectedDate, onSelectDate }: CalendarProps) 
       for (let i = 0; i < 7; i++) {
         formattedDate = format(day, dateFormat)
         const cloneDay = day
-        const isDisabledDate = isBefore(day, tomorrow)
+        const isSunday = day.getDay() === 0
+        const isDisabledDate = isBefore(day, today) || isSunday
         const isCurrentMonth = isSameMonth(day, monthStart)
         const isSelected = selectedDate && isSameDay(day, selectedDate)
 

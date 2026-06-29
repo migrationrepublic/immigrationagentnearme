@@ -47,7 +47,15 @@ export default function BookPlanPage({
   const [step, setStep] = useState<1 | 2>(1); // 1: Date/Time, 2: Form
 
   useEffect(() => {
+
     setSelectedDate(addDays(startOfDay(new Date()), 1));
+    const today = startOfDay(new Date());
+    if (today.getDay() === 0) {
+      setSelectedDate(addDays(today, 1));
+    } else {
+      setSelectedDate(today);
+    }
+
   }, []);
 
   useEffect(() => {
@@ -76,20 +84,7 @@ export default function BookPlanPage({
       setLoadingSlots(true);
       setSelectedTime(null);
       const formattedDate = format(selectedDate!, "yyyy-MM-dd");
-      let availableSlots = await getAvailableSlots(formattedDate);
-
-      if (availableSlots.length === 0) {
-        availableSlots = [
-          "09:00:00",
-          "10:00:00",
-          "11:00:00",
-          "13:00:00",
-          "14:00:00",
-          "15:00:00",
-          "16:00:00",
-        ];
-      }
-
+      const availableSlots = await getAvailableSlots(formattedDate);
       setSlots(availableSlots);
       setLoadingSlots(false);
     }

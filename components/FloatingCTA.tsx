@@ -3,7 +3,7 @@ import { PhoneCall } from "lucide-react";
 
 export default function FloatingCTA() {
   return (
-    <div className="fixed bottom-6 right-6 z-50 animate-in fade-in slide-in-from-bottom-10 duration-700 delay-1000">
+    <div className="fixed bottom-24 right-6 z-50 animate-in fade-in slide-in-from-bottom-10 duration-700 delay-1000">
       <a href="https://migrationrepublic.com.au/book-a-consultation/" target="_blank" rel="noopener noreferrer" className="group flex items-center gap-3">
         <div className="hidden md:block bg-white text-sm font-bold text-gray-900 px-4 py-2 rounded-full shadow-lg border border-gray-100 opacity-0 group-hover:opacity-100 transition-opacity translate-x-4 group-hover:translate-x-0 duration-300">
           Book Consultation

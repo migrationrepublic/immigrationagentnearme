@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase'
+// import { supabase } from '@/lib/supabase'
 import { format } from 'date-fns'
 import { Loader2, Search, Filter } from 'lucide-react'
 import { Booking } from '@/lib/types'
@@ -17,10 +17,10 @@ export default function AdminPage() {
       try {
         setError(null)
         const data = await getBookingsAction()
-        setBookings(data as any || [])
-      } catch (err: any) {
+        setBookings(data as Booking[] || [])
+      } catch (err: unknown) {
         console.error('Error fetching bookings:', err)
-        setError(err.message)
+        setError(err instanceof Error ? err.message : String(err))
       } finally {
         setLoading(false)
       }
@@ -44,11 +44,11 @@ export default function AdminPage() {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Consultation Leads</h1>
           <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">Manage your consultation inquiries and schedule</p>
         </div>
-        
+
         <div className="flex items-center gap-3">
           <div className="relative">
             <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input 
+            <input
               type="text"
               placeholder="Search clients..."
               className="pl-9 pr-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
@@ -123,17 +123,17 @@ export default function AdminPage() {
                     </td>
                     <td className="px-6 py-4">
                       <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border
-                        ${booking.status === 'confirmed' 
-                          ? 'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800' 
+                        ${booking.status === 'confirmed'
+                          ? 'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800'
                           : booking.status === 'pending'
-                          ? 'bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-400 dark:border-yellow-800'
-                          : 'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800'
+                            ? 'bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-400 dark:border-yellow-800'
+                            : 'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800'
                         }
                       `}>
                         <span className={`w-1.5 h-1.5 rounded-full 
-                          ${booking.status === 'confirmed' ? 'bg-green-600 dark:bg-green-400' 
-                          : booking.status === 'pending' ? 'bg-yellow-600 dark:bg-yellow-400'
-                          : 'bg-red-600 dark:bg-red-400'}`} 
+                          ${booking.status === 'confirmed' ? 'bg-green-600 dark:bg-green-400'
+                            : booking.status === 'pending' ? 'bg-yellow-600 dark:bg-yellow-400'
+                              : 'bg-red-600 dark:bg-red-400'}`}
                         />
                         {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
                       </span>

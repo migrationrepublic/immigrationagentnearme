@@ -10,7 +10,7 @@ import { CheckCircle2, XCircle, AlertTriangle, Info } from 'lucide-react';
 export default function EligibilityCheckerPage() {
   const [submitted, setSubmitted] = useState(false);
 
-  const calculateResults = (responses: Record<string, any>) => {
+  const calculateResults = (responses: Record<string, string>) => {
     let status = 'eligible';
     const issues: string[] = [];
 

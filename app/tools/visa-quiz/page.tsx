@@ -10,8 +10,8 @@ import { Sparkles, GraduationCap, Briefcase, Heart, Building2, Palmtree } from '
 export default function VisaQuizPage() {
   const [submitted, setSubmitted] = useState(false);
 
-  const calculateResults = (responses: Record<string, any>) => {
-    let suggestions: any[] = [];
+  const calculateResults = (responses: Record<string, string>) => {
+    const suggestions: { name: string; type: string; icon: React.ReactNode; desc: string }[] = [];
 
     if (responses.primary_goal === 'permanent') {
       suggestions.push({
@@ -65,7 +65,7 @@ export default function VisaQuizPage() {
     return (
       <div className="space-y-8">
         <h4 className="text-xl font-bold text-brand-primary">Based on your goals, we suggest exploring:</h4>
-        
+
         <div className="grid gap-6">
           {suggestions.map((visa, idx) => (
             <div key={idx} className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm flex items-start gap-5 hover:shadow-md transition-shadow">
@@ -86,10 +86,10 @@ export default function VisaQuizPage() {
         </div>
 
         {!submitted ? (
-          <LeadForm 
-            toolName="Visa Suggestion Quiz" 
-            results={{ suggestions: suggestionsForDb }} 
-            onSuccess={() => setSubmitted(true)} 
+          <LeadForm
+            toolName="Visa Suggestion Quiz"
+            results={{ suggestions: suggestionsForDb }}
+            onSuccess={() => setSubmitted(true)}
           />
         ) : (
           <div className="bg-green-50 border border-green-100 rounded-xl p-6 text-center">
@@ -104,14 +104,14 @@ export default function VisaQuizPage() {
   return (
     <div className="min-h-screen bg-brand-soft/30 py-12 px-4 sm:px-6 lg:px-8" suppressHydrationWarning>
       <div className="max-w-7xl mx-auto">
-        <ToolHeader 
-          title="Visa Suggestion Quiz" 
+        <ToolHeader
+          title="Visa Suggestion Quiz"
           description="Find the right visa subclass based on your personal circumstances and migration goals."
         />
 
-        <MultiStepTool 
-          tool={visaQuizData} 
-          onComplete={calculateResults} 
+        <MultiStepTool
+          tool={visaQuizData}
+          onComplete={calculateResults}
         />
       </div>
     </div>

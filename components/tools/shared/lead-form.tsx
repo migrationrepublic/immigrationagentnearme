@@ -7,7 +7,7 @@ import { Loader2 } from 'lucide-react';
 
 interface LeadFormProps {
   toolName: string;
-  results: any;
+  results: Record<string, unknown>;
   onSuccess: () => void;
 }
 

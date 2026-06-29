@@ -26,21 +26,21 @@ export function ToolHeader({ title, description }: ToolHeaderProps) {
             />
           </div>
         </Link>
-        
-        <Link 
-          href="/tools" 
+
+        <Link
+          href="/tools"
           className="inline-flex items-center gap-2 text-brand-primary/60 hover:text-brand-primary font-bold text-sm uppercase tracking-widest mb-6 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" /> Back to Tools
         </Link>
-        
+
         <h1 className="text-4xl md:text-6xl font-black text-brand-primary tracking-tight mb-4">
           {title}
         </h1>
         <p className="max-w-2xl mx-auto text-lg text-gray-600 font-medium">
           {description}
         </p>
-        
+
         <div className="mt-8 flex items-center gap-3 bg-brand-primary/5 px-6 py-2 rounded-full border border-brand-primary/10">
           <div className="w-2 h-2 bg-brand-accent rounded-full animate-pulse"></div>
           <span className="text-xs font-bold text-brand-primary uppercase tracking-widest">Official Migration Tool</span>

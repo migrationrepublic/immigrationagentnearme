@@ -112,6 +112,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <div className="hidden sm:flex items-center gap-6">
               <Link href="/admin" className="text-sm font-semibold text-gray-600 dark:text-gray-400 hover:text-blue-600 transition-colors">Consultation Leads</Link>
               <Link href="/admin/tool-leads" className="text-sm font-semibold text-gray-600 dark:text-gray-400 hover:text-blue-600 transition-colors">Tool Leads</Link>
+              <Link href="/admin/availability" className="text-sm font-semibold text-gray-600 dark:text-gray-400 hover:text-blue-600 transition-colors">Manage Availability</Link>
             </div>
           </div>
           

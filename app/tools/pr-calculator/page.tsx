@@ -10,9 +10,9 @@ import { CheckCircle2, AlertCircle, Info } from 'lucide-react';
 export default function PRCalculatorPage() {
   const [submitted, setSubmitted] = useState(false);
 
-  const calculateResults = (responses: Record<string, any>) => {
+  const calculateResults = (responses: Record<string, string>) => {
     let totalPoints = 0;
-    const breakdown: any[] = [];
+    const breakdown: { category: string; selection: string; points: number }[] = [];
 
     prCalculatorData.steps.forEach((step) => {
       const selectedValue = responses[step.id];

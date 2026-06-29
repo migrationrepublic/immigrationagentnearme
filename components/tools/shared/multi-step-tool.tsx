@@ -8,25 +8,24 @@ import {
   CheckCircle2,
   RotateCcw,
 } from "lucide-react";
-import { ToolData, ToolStep } from "@/lib/tools/types";
+import { ToolData } from "@/lib/tools/types";
 import { Button } from "@/components/ui/button";
 
 interface MultiStepToolProps {
   tool: ToolData;
-  onComplete: (responses: Record<string, any>) => React.ReactNode;
+  onComplete: (responses: Record<string, string>) => React.ReactNode;
 }
 
 export function MultiStepTool({ tool, onComplete }: MultiStepToolProps) {
   const [currentStep, setCurrentStep] = useState(0);
-  const [responses, setResponses] = useState<Record<string, any>>({});
+  const [responses, setResponses] = useState<Record<string, string>>({});
   const [isFinished, setIsFinished] = useState(false);
-  const [leadCaptured, setLeadCaptured] = useState(false);
 
   const steps = tool.steps;
   const progress = ((currentStep + 1) / steps.length) * 100;
 
-  const handleOptionSelect = (stepId: string, value: any) => {
-    setResponses((prev) => ({ ...prev, [stepId]: value }));
+  const handleOptionSelect = (stepId: string, value: string | number) => {
+    setResponses((prev) => ({ ...prev, [stepId]: String(value) }));
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
@@ -52,7 +51,6 @@ export function MultiStepTool({ tool, onComplete }: MultiStepToolProps) {
     setCurrentStep(0);
     setResponses({});
     setIsFinished(false);
-    setLeadCaptured(false);
   };
 
   if (isFinished) {
@@ -130,19 +128,17 @@ export function MultiStepTool({ tool, onComplete }: MultiStepToolProps) {
               <button
                 key={option.value}
                 onClick={() => handleOptionSelect(step.id, option.value)}
-                className={`flex items-center justify-between p-5 rounded-xl border-2 text-left transition-all group ${
-                  responses[step.id] === option.value
-                    ? "border-brand-primary bg-brand-soft text-brand-primary shadow-md"
-                    : "border-gray-100 hover:border-brand-primary/20 hover:bg-brand-soft/50 text-gray-700"
-                }`}
+                className={`flex items-center justify-between p-5 rounded-xl border-2 text-left transition-all group ${responses[step.id] === String(option.value)
+                  ? "border-brand-primary bg-brand-soft text-brand-primary shadow-md"
+                  : "border-gray-100 hover:border-brand-primary/20 hover:bg-brand-soft/50 text-gray-700"
+                  }`}
               >
                 <span className="font-medium text-lg">{option.label}</span>
                 <ChevronRight
-                  className={`w-5 h-5 transition-transform ${
-                    responses[step.id] === option.value
-                      ? "translate-x-1 text-brand-accent"
-                      : "text-gray-300 group-hover:text-gray-400"
-                  }`}
+                  className={`w-5 h-5 transition-transform ${responses[step.id] === String(option.value)
+                    ? "translate-x-1 text-brand-accent"
+                    : "text-gray-300 group-hover:text-gray-400"
+                    }`}
                 />
               </button>
             ))}

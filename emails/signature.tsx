@@ -37,13 +37,13 @@ export default function SignatureEmail({
           borderBottom: "2px solid #D4AF37",
         }}>
           <img
-            src="https://immigrationagentnearme.com/images/logo.jpg"
+            src="https://immigrationagentnearme.com/images/logobgwhite.jpg"
             alt="Migration Republic"
             style={{
               width: "70px",
               height: "70px",
               borderRadius: "50%",
-              border: "2px solid #D4AF37",
+              border: "2px solid #FFFFFF",
               display: "block",
               margin: "0 auto 12px auto",
               objectFit: "cover",

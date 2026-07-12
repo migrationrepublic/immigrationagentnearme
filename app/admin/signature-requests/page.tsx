@@ -966,9 +966,9 @@ export default function SignatureRequestsPage() {
                     </div>
                   </div>
 
-                  {/* Zoho Sign Advanced settings panel */}
+                  {/* Migration Republic Advanced settings panel */}
                   <div className="space-y-3 p-4 border rounded-2xl bg-[#F9FAFC]" style={{ borderColor: 'var(--color-admin-card-border)' }}>
-                    <h4 className="text-xs font-black uppercase tracking-wider text-gray-700">Zoho Workflow Parameters</h4>
+                    <h4 className="text-xs font-black uppercase tracking-wider text-gray-700">Migration Republic Workflow Parameters</h4>
 
                     <div className="space-y-2 mt-2">
                       <div>

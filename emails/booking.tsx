@@ -41,7 +41,7 @@ export default function BookingEmail({
           borderBottom: "2px solid #D4AF37",
         }}>
           <img
-            src="https://immigrationagentnearme.com/images/logo.jpg"
+            src="https://immigrationagentnearme.com/images/logobgwhite.jpg"
             alt="Migration Republic"
             style={{
               width: "70px",

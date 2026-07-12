@@ -293,7 +293,7 @@ function SignatureModal({ isOpen, onClose, onConfirm, defaultSignerName = 'Signe
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
       <div className="relative w-full max-w-2xl bg-white border border-gray-200 rounded-3xl p-6 shadow-2xl flex flex-col overflow-hidden">
-        
+
         {/* Zoho Tabs Selector */}
         <div className="flex border-b border-gray-100 mb-6 gap-6 text-xs font-bold">
           {[
@@ -308,7 +308,7 @@ function SignatureModal({ isOpen, onClose, onConfirm, defaultSignerName = 'Signe
               className={`pb-3 border-b-2 uppercase tracking-wider transition-all ${activeTab === t.key
                 ? 'border-[#012269] text-[#012269]'
                 : 'border-transparent text-gray-400 hover:text-gray-600'
-              }`}
+                }`}
             >
               {t.label}
             </button>
@@ -367,7 +367,7 @@ function SignatureModal({ isOpen, onClose, onConfirm, defaultSignerName = 'Signe
         {activeTab === 'draw' && (
           <div className="space-y-4">
             <div className="grid grid-cols-3 gap-6">
-              
+
               {/* Signature drawing pad */}
               <div className="col-span-2 space-y-1.5">
                 <div className="flex justify-between items-center text-xs">
@@ -443,7 +443,7 @@ function SignatureModal({ isOpen, onClose, onConfirm, defaultSignerName = 'Signe
         {/* Ink Colors selection & Autofill checkbox (Bottom panel options) */}
         <div className="mt-6 pt-4 border-t border-gray-100 flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between">
           <div className="flex items-center gap-6">
-            
+
             {/* Color circles */}
             {activeTab !== 'upload' && (
               <div className="flex items-center gap-2">
@@ -727,8 +727,11 @@ export default function SignPage() {
     const missingFields = signFields.filter(f => {
       if (f.type === 'checkbox') return false // Checkboxes are optional / true/false
       if (f.type === 'signature' || f.type === 'initial') return false // Handled above
-      // Name/Email/Date prefilled automatically on backend
-      if (f.type === 'full_name' || f.type === 'email' || f.type === 'sign_date') return false
+      if (f.type === 'email') return false
+      if (f.type === 'full_name' || f.type === 'sign_date') {
+        // If edited and explicitly cleared (empty string), flag as missing
+        return f.value === '';
+      }
       return !f.value || !String(f.value).trim() // User texts are required
     })
 
@@ -1060,15 +1063,25 @@ export default function SignPage() {
 
                         {/* 4. PREFILLED FIELDS (DATE/NAME/EMAIL) */}
                         {type === 'sign_date' && (
-                          <div className="w-full h-full bg-gray-100 border border-gray-300 rounded px-1.5 flex items-center text-gray-600 text-[10px] select-none font-semibold italic">
-                            {new Date().toLocaleDateString('en-AU')} (Auto)
-                          </div>
+                          <input
+                            type="text"
+                            required
+                            value={field.value !== null ? (field.value as string) : new Date().toLocaleDateString('en-AU')}
+                            onChange={(e) => handleUpdateFieldValue(field.id, e.target.value)}
+                            placeholder="DD/MM/YYYY"
+                            className="w-full h-full bg-[#fefefe] border border-blue-400 text-gray-900 text-xs px-1.5 py-0.5 rounded outline-none focus:ring-1 focus:ring-blue-500 text-left font-sans shadow-inner font-semibold"
+                          />
                         )}
 
                         {type === 'full_name' && (
-                          <div className="w-full h-full bg-gray-100 border border-gray-300 rounded px-1.5 flex items-center text-gray-600 text-[10px] select-none font-semibold truncate">
-                            {requestData?.signerName}
-                          </div>
+                          <input
+                            type="text"
+                            required
+                            value={field.value !== null ? (field.value as string) : (requestData?.signerName || '')}
+                            onChange={(e) => handleUpdateFieldValue(field.id, e.target.value)}
+                            placeholder="Full Name"
+                            className="w-full h-full bg-[#fefefe] border border-blue-400 text-gray-900 text-xs px-1.5 py-0.5 rounded outline-none focus:ring-1 focus:ring-blue-500 text-left font-sans shadow-inner font-semibold"
+                          />
                         )}
 
                         {type === 'email' && (

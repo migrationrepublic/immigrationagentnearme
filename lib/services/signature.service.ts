@@ -237,7 +237,7 @@ export class SignatureService {
             color: rgb(0.05, 0.05, 0.15),
           });
         } else if (type === "full_name" || type === "name") {
-          const nameText = typedRequest.signer_name;
+          const nameText = field.value || typedRequest.signer_name;
           page.drawText(nameText, {
             x: pdfX + 5,
             y: pdfY + (pdfH / 2) - 4,

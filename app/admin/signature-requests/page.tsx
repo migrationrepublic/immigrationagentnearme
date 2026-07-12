@@ -595,18 +595,18 @@ export default function SignatureRequestsPage() {
             </div>
 
             {/* Steps indicator bar */}
-            <div className="flex items-center justify-center gap-2 mt-4 text-[10px] uppercase tracking-wider font-extrabold w-full max-w-lg">
-              <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#012269] text-white">
+            <div className="flex flex-wrap sm:flex-nowrap items-center justify-center gap-2 mt-4 text-[10px] uppercase tracking-wider font-extrabold w-full max-w-lg">
+              <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#012269] text-white shrink-0">
                 <span className="w-4 h-4 bg-white/20 rounded-full flex items-center justify-center text-[9px]">1</span>
                 Add Document & Recipients
               </span>
-              <span className="w-10 h-px bg-gray-200" />
-              <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-100 text-gray-400">
+              <span className="hidden sm:block w-6 md:w-10 h-px bg-gray-200 shrink-0" />
+              <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-100 text-gray-400 shrink-0">
                 <span className="w-4 h-4 bg-gray-200 rounded-full flex items-center justify-center text-[9px]">2</span>
                 Drag & Drop Fields
               </span>
-              <span className="w-10 h-px bg-gray-200" />
-              <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-100 text-gray-400">
+              <span className="hidden sm:block w-6 md:w-10 h-px bg-gray-200 shrink-0" />
+              <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-100 text-gray-400 shrink-0">
                 <span className="w-4 h-4 bg-gray-200 rounded-full flex items-center justify-center text-[9px]">3</span>
                 Send Out
               </span>
@@ -621,7 +621,7 @@ export default function SignatureRequestsPage() {
                 <UploadCloud className="w-5 h-5" style={{ color: 'var(--color-admin-gold)' }} /> 1. Select Document File
               </h3>
 
-              <div className="grid grid-cols-3 gap-2 p-1 bg-[#F9FAFC] border rounded-xl" style={{ borderColor: 'var(--color-admin-card-border)' }}>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 p-1 bg-[#F9FAFC] border rounded-xl" style={{ borderColor: 'var(--color-admin-card-border)' }}>
                 {[
                   { key: 'upload', label: 'Upload PDF' },
                   { key: 'approved_doc', label: 'Client File' },
@@ -866,7 +866,7 @@ export default function SignatureRequestsPage() {
                       </div>
 
                       {/* Role Dropdown */}
-                      <div className="shrink-0 space-y-1 w-44">
+                      <div className="shrink-0 space-y-1 w-full md:w-44">
                         <label className="admin-label block ml-1 text-[9px]">Action / Role</label>
                         <select
                           value={rec.role}

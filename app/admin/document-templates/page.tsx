@@ -372,30 +372,32 @@ export default function DocumentTemplatesPage() {
                       <p className="text-gray-500 text-center text-sm py-4">No checklist fields configured.</p>
                     ) : (
                       <div className="admin-table-card">
-                        <table className="w-full text-left text-sm">
-                          <thead className="admin-thead">
-                            <tr>
-                              <th className="px-4 py-3">Label</th>
-                              <th className="px-4 py-3">Db Key</th>
-                              <th className="px-4 py-3">Type</th>
-                              <th className="px-4 py-3 text-right">Action</th>
-                            </tr>
-                          </thead>
-                          <tbody className="admin-tbody">
-                            {fields.map(f => (
-                              <tr key={f.id} className="admin-tr">
-                                <td className="px-4 py-3 admin-cell-primary">{f.field_label}</td>
-                                <td className="px-4 py-3 font-mono text-xs" style={{ color: 'var(--color-admin-muted)' }}>{f.field_name}</td>
-                                <td className="px-4 py-3"><span className="admin-badge admin-badge-navy capitalize">{f.field_type}</span></td>
-                                <td className="px-4 py-3 text-right">
-                                  <button onClick={() => handleDeleteField(f.id)} className="p-1 rounded hover:bg-red-50" style={{ color: 'var(--color-badge-error-text)' }}>
-                                    <Trash2 className="w-4 h-4" />
-                                  </button>
-                                </td>
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-left text-sm whitespace-nowrap">
+                            <thead className="admin-thead">
+                              <tr>
+                                <th className="px-4 py-3">Label</th>
+                                <th className="px-4 py-3">Db Key</th>
+                                <th className="px-4 py-3">Type</th>
+                                <th className="px-4 py-3 text-right">Action</th>
                               </tr>
-                            ))}
-                          </tbody>
-                        </table>
+                            </thead>
+                            <tbody className="admin-tbody">
+                              {fields.map(f => (
+                                <tr key={f.id} className="admin-tr">
+                                  <td className="px-4 py-3 admin-cell-primary">{f.field_label}</td>
+                                  <td className="px-4 py-3 font-mono text-xs" style={{ color: 'var(--color-admin-muted)' }}>{f.field_name}</td>
+                                  <td className="px-4 py-3"><span className="admin-badge admin-badge-navy capitalize">{f.field_type}</span></td>
+                                  <td className="px-4 py-3 text-right">
+                                    <button onClick={() => handleDeleteField(f.id)} className="p-1 rounded hover:bg-red-50" style={{ color: 'var(--color-badge-error-text)' }}>
+                                      <Trash2 className="w-4 h-4" />
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
                       </div>
                     )}
                   </div>

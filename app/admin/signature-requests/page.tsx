@@ -141,9 +141,12 @@ export default function SignatureRequestsPage() {
   }, [])
 
   useEffect(() => {
-    fetchRequests()
-    fetchApprovedDocs()
-    fetchTemplates()
+    const timer = setTimeout(() => {
+      fetchRequests()
+      fetchApprovedDocs()
+      fetchTemplates()
+    }, 0)
+    return () => clearTimeout(timer)
   }, [fetchRequests, fetchApprovedDocs, fetchTemplates])
 
   // File drop handler

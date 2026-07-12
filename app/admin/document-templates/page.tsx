@@ -39,7 +39,6 @@ export default function DocumentTemplatesPage() {
 
   async function fetchTemplates() {
     try {
-      setLoadingTemplates(true)
       const { data, error } = await supabase
         .from('document_templates')
         .select('*')
@@ -55,7 +54,10 @@ export default function DocumentTemplatesPage() {
   }
 
   useEffect(() => {
-    fetchTemplates()
+    const timer = setTimeout(() => {
+      fetchTemplates()
+    }, 0)
+    return () => clearTimeout(timer)
   }, [])
 
   async function handleSelectTemplate(tpl: DocumentTemplate) {

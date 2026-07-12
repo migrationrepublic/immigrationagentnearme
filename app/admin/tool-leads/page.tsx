@@ -15,6 +15,22 @@ interface ToolLead {
   created_at: string
 }
 
+interface ToolLeadResults {
+  totalPoints?: number
+  breakdown?: Array<{ category: string; selection: string; points: number }>
+  status?: string
+  issues?: string[]
+  suggestions?: Array<{ name: string; type: string; desc: string }>
+  calculated_category?: string
+  passport_country?: string
+  current_country?: string
+  occupation?: string
+  employer_name?: string
+  consent_given?: string
+  identified_flags?: string[]
+  quiz_responses?: Record<string, unknown>
+}
+
 export default function ToolLeadsPage() {
   const [leads, setLeads] = useState<ToolLead[]>([])
   const [search, setSearch] = useState("")
@@ -165,214 +181,215 @@ export default function ToolLeadsPage() {
           </table>
         </div>
       </div>
-    </div>
-      
-      {/* Lead Details Modal */}
-      {selectedLead && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fadeIn">
-          <div className="relative w-full max-w-2xl bg-white border rounded-3xl p-6 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-            
-            {/* Header */}
-            <div className="flex justify-between items-start border-b pb-4 mb-4">
-              <div>
-                <span className="text-[10px] font-black uppercase tracking-widest text-[#E40229]">
-                  Interactive Tool Submission Details
-                </span>
-                <h3 className="text-xl font-extrabold text-gray-800 mt-1">
-                  {selectedLead.user_name}
-                </h3>
-              </div>
-              <button
-                onClick={() => setSelectedLead(null)}
-                className="p-1.5 hover:bg-gray-100 rounded-xl transition-colors text-gray-400 hover:text-gray-600"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Scrollable Contents */}
-            <div className="space-y-6 overflow-y-auto flex-1 pr-1 font-sans text-sm text-gray-700">
+      {selectedLead && (() => {
+        const lead = selectedLead;
+        const results = (lead.results as unknown as ToolLeadResults) || {};
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fadeIn">
+            <div className="relative w-full max-w-2xl bg-white border rounded-3xl p-6 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
               
-              {/* Contact Card */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="p-4 rounded-2xl bg-gray-50 border border-gray-100 space-y-2.5">
-                  <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wide">Contact Information</h4>
-                  <div className="text-xs space-y-1">
-                    <p><span className="font-semibold text-gray-500">Email: </span><a href={`mailto:${selectedLead.user_email}`} className="text-blue-600 hover:underline">{selectedLead.user_email}</a></p>
-                    <p><span className="font-semibold text-gray-500">Phone: </span>{selectedLead.user_phone || "—"}</p>
-                  </div>
+              {/* Header */}
+              <div className="flex justify-between items-start border-b pb-4 mb-4">
+                <div>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-[#E40229]">
+                    Interactive Tool Submission Details
+                  </span>
+                  <h3 className="text-xl font-extrabold text-gray-800 mt-1">
+                    {lead.user_name}
+                  </h3>
                 </div>
-
-                <div className="p-4 rounded-2xl bg-gray-50 border border-gray-100 space-y-2.5">
-                  <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wide">Submission Meta</h4>
-                  <div className="text-xs space-y-1">
-                    <p><span className="font-semibold text-gray-500">Tool Used: </span><span className="font-bold text-brand-primary">{selectedLead.tool_name}</span></p>
-                    <p><span className="font-semibold text-gray-500">Submitted: </span>{format(new Date(selectedLead.created_at), "MMM d, yyyy h:mm a")}</p>
-                  </div>
-                </div>
+                <button
+                  onClick={() => setSelectedLead(null)}
+                  className="p-1.5 hover:bg-gray-100 rounded-xl transition-colors text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
 
-              {/* Assessment details */}
-              <div className="p-5 rounded-2xl border border-gray-100 bg-gray-50 space-y-4">
-                <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wide flex items-center gap-1.5 border-b pb-2">
-                  <Info className="w-4 h-4 text-brand-primary" /> Assessment & Calculation Results
-                </h4>
-
-                {/* PR Points Calculator Results */}
-                {(selectedLead.tool_name === "PR Calculator" || selectedLead.tool_name === "PR Points Calculator") && (
-                  <div className="space-y-4">
-                    <div className="bg-brand-soft border border-brand-primary/10 p-4 rounded-xl text-center">
-                      <p className="text-xs font-bold text-gray-500 uppercase">Calculated PR Score</p>
-                      <h3 className="text-3xl font-black text-brand-accent mt-1">
-                        {(selectedLead.results?.totalPoints as number) ?? 0} Points
-                      </h3>
+              {/* Scrollable Contents */}
+              <div className="space-y-6 overflow-y-auto flex-1 pr-1 font-sans text-sm text-gray-700">
+                
+                {/* Contact Card */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="p-4 rounded-2xl bg-gray-50 border border-gray-100 space-y-2.5">
+                    <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wide">Contact Information</h4>
+                    <div className="text-xs space-y-1">
+                      <p><span className="font-semibold text-gray-500">Email: </span><a href={`mailto:${lead.user_email}`} className="text-blue-600 hover:underline">{lead.user_email}</a></p>
+                      <p><span className="font-semibold text-gray-500">Phone: </span>{lead.user_phone || "—"}</p>
                     </div>
+                  </div>
 
-                    <div className="border border-gray-100 rounded-xl overflow-hidden bg-white">
-                      <table className="w-full text-left text-xs">
-                        <thead className="bg-gray-50 border-b border-gray-100 font-bold text-gray-500">
-                          <tr>
-                            <th className="px-4 py-2.5">Category</th>
-                            <th className="px-4 py-2.5">User Selection</th>
-                            <th className="px-4 py-2.5 text-right">Points</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                          {(selectedLead.results?.breakdown as Array<{ category: string, selection: string, points: number }>)?.map((item, i) => (
-                            <tr key={i} className="hover:bg-gray-50/50">
-                              <td className="px-4 py-2.5 font-semibold text-brand-primary">{item.category}</td>
-                              <td className="px-4 py-2.5 text-gray-600">{item.selection}</td>
-                              <td className="px-4 py-2.5 text-right font-bold text-brand-accent">+{item.points}</td>
+                  <div className="p-4 rounded-2xl bg-gray-50 border border-gray-100 space-y-2.5">
+                    <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wide">Submission Meta</h4>
+                    <div className="text-xs space-y-1">
+                      <p><span className="font-semibold text-gray-500">Tool Used: </span><span className="font-bold text-brand-primary">{lead.tool_name}</span></p>
+                      <p><span className="font-semibold text-gray-500">Submitted: </span>{format(new Date(lead.created_at), "MMM d, yyyy h:mm a")}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Assessment details */}
+                <div className="p-5 rounded-2xl border border-gray-100 bg-gray-50 space-y-4">
+                  <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wide flex items-center gap-1.5 border-b pb-2">
+                    <Info className="w-4 h-4 text-brand-primary" /> Assessment & Calculation Results
+                  </h4>
+
+                  {/* PR Points Calculator Results */}
+                  {(lead.tool_name === "PR Calculator" || lead.tool_name === "PR Points Calculator") && (
+                    <div className="space-y-4">
+                      <div className="bg-brand-soft border border-brand-primary/10 p-4 rounded-xl text-center">
+                        <p className="text-xs font-bold text-gray-500 uppercase">Calculated PR Score</p>
+                        <h3 className="text-3xl font-black text-brand-accent mt-1">
+                          {Number(results.totalPoints || 0)} Points
+                        </h3>
+                      </div>
+
+                      <div className="border border-gray-100 rounded-xl overflow-hidden bg-white">
+                        <table className="w-full text-left text-xs">
+                          <thead className="bg-gray-50 border-b border-gray-100 font-bold text-gray-500">
+                            <tr>
+                              <th className="px-4 py-2.5">Category</th>
+                              <th className="px-4 py-2.5">User Selection</th>
+                              <th className="px-4 py-2.5 text-right">Points</th>
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                )}
-
-                {/* Eligibility Checker Results */}
-                {selectedLead.tool_name === "Eligibility Checker" && (
-                  <div className="space-y-4">
-                    <div className={`p-4 rounded-xl text-center border font-bold text-sm ${
-                      selectedLead.results?.status === "eligible" ? "bg-green-50 border-green-100 text-green-800"
-                      : selectedLead.results?.status === "warning" ? "bg-amber-50 border-amber-100 text-amber-800"
-                      : "bg-red-50 border-red-100 text-red-800"
-                    }`}>
-                      {selectedLead.results?.status === "eligible" ? "Likely Eligible for Skilled Visas"
-                       : selectedLead.results?.status === "warning" ? "Needs Review / Potential Issues"
-                       : "High Risk / Likely Not Eligible"}
-                    </div>
-
-                    <div className="space-y-2">
-                      <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">Key Assessment Notes:</p>
-                      <div className="space-y-2">
-                        {(selectedLead.results?.issues as string[])?.length > 0 ? (
-                          (selectedLead.results?.issues as string[]).map((issue, i) => (
-                            <div key={i} className="flex gap-2 text-xs bg-white border border-gray-100 rounded-lg p-2.5 text-gray-700">
-                              <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
-                              <span>{issue}</span>
-                            </div>
-                          ))
-                        ) : (
-                          <div className="text-xs text-green-700 font-semibold bg-green-50/50 p-3 rounded-lg border border-green-100">
-                            No major eligibility blockers identified during this initial assessment.
-                          </div>
-                        )}
+                          </thead>
+                          <tbody className="divide-y divide-gray-100">
+                            {(results.breakdown as Array<{ category: string, selection: string, points: number }>)?.map((item, i) => (
+                              <tr key={i} className="hover:bg-gray-50/50">
+                                <td className="px-4 py-2.5 font-semibold text-brand-primary">{item.category}</td>
+                                <td className="px-4 py-2.5 text-gray-600">{item.selection}</td>
+                                <td className="px-4 py-2.5 text-right font-bold text-brand-accent">+{item.points}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {/* Visa Suggestion Quiz Results */}
-                {selectedLead.tool_name === "Visa Suggestion Quiz" && (
-                  <div className="space-y-3">
-                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">Matching Visas Suggestions:</p>
+                  {/* Eligibility Checker Results */}
+                  {lead.tool_name === "Eligibility Checker" && (
+                    <div className="space-y-4">
+                      <div className={`p-4 rounded-xl text-center border font-bold text-sm ${
+                        results.status === "eligible" ? "bg-green-50 border-green-100 text-green-800"
+                        : results.status === "warning" ? "bg-amber-50 border-amber-100 text-amber-800"
+                        : "bg-red-50 border-red-100 text-red-800"
+                      }`}>
+                        {results.status === "eligible" ? "Likely Eligible for Skilled Visas"
+                         : results.status === "warning" ? "Needs Review / Potential Issues"
+                         : "High Risk / Likely Not Eligible"}
+                      </div>
+
+                      <div className="space-y-2">
+                        <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">Key Assessment Notes:</p>
+                        <div className="space-y-2">
+                          {(results.issues as string[])?.length > 0 ? (
+                            (results.issues as string[]).map((issue, i) => (
+                              <div key={i} className="flex gap-2 text-xs bg-white border border-gray-100 rounded-lg p-2.5 text-gray-700">
+                                <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
+                                <span>{issue}</span>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="text-xs text-green-700 font-semibold bg-green-50/50 p-3 rounded-lg border border-green-100">
+                              No major eligibility blockers identified during this initial assessment.
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Visa Suggestion Quiz Results */}
+                  {lead.tool_name === "Visa Suggestion Quiz" && (
                     <div className="space-y-3">
-                      {(selectedLead.results?.suggestions as Array<{ name: string, type: string, desc: string }>)?.map((sug, i) => (
-                        <div key={i} className="p-3 bg-white border border-gray-100 rounded-xl space-y-1">
-                          <div className="flex justify-between items-center">
-                            <span className="font-bold text-brand-primary">{sug.name}</span>
-                            <span className="text-[9px] font-bold uppercase tracking-wider bg-gray-100 text-gray-500 px-2 py-0.5 rounded">
-                              {sug.type}
-                            </span>
-                          </div>
-                          <p className="text-xs text-gray-500 leading-relaxed">{sug.desc}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Subclass 482 checker results */}
-                {(selectedLead.tool_name === "Subclass 482 Eligibility Checker" || selectedLead.tool_name === "Subclass 482 Skills in Demand Visa Eligibility Checker" || selectedLead.results?.quiz_responses) && (
-                  <div className="space-y-4">
-                    <div className="bg-brand-soft border border-brand-primary/10 p-4 rounded-xl text-center bg-blue-50/50">
-                      <p className="text-xs font-bold text-gray-500 uppercase">Calculated Assessment Category</p>
-                      <h3 className="text-base font-extrabold text-[#012269] mt-1">
-                        {String(selectedLead.results?.calculated_category || 'Further Assessment Required').replace(/_/g, ' ')}
-                      </h3>
-                    </div>
-
-                    {/* Metadata attributes */}
-                    <div className="grid grid-cols-2 gap-3 bg-white border border-gray-100 rounded-xl p-3.5 text-xs text-gray-700">
-                      <p><span className="font-bold text-gray-400">Occupation:</span> {String(selectedLead.results?.occupation || 'N/A')}</p>
-                      <p><span className="font-bold text-gray-400">Employer Sponsor:</span> {String(selectedLead.results?.employer_name || 'N/A')}</p>
-                      <p><span className="font-bold text-gray-400">Passport Country:</span> {String(selectedLead.results?.passport_country || 'N/A')}</p>
-                      <p><span className="font-bold text-gray-400">Current Location:</span> {String(selectedLead.results?.current_country || 'N/A')}</p>
-                    </div>
-
-                    {/* Flags */}
-                    <div className="space-y-2">
-                      <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">Identified Assessment Flags:</p>
-                      <div className="space-y-1.5">
-                        {(selectedLead.results?.identified_flags as string[])?.length > 0 ? (
-                          (selectedLead.results?.identified_flags as string[]).map((flag, idx) => (
-                            <div key={idx} className="flex gap-2 text-xs bg-white border border-gray-100 rounded-lg p-2.5 text-gray-700">
-                              <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
-                              <span>{flag}</span>
+                      <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">Matching Visas Suggestions:</p>
+                      <div className="space-y-3">
+                        {(results.suggestions as Array<{ name: string, type: string, desc: string }>)?.map((sug, i) => (
+                          <div key={i} className="p-3 bg-white border border-gray-100 rounded-xl space-y-1">
+                            <div className="flex justify-between items-center">
+                              <span className="font-bold text-brand-primary">{sug.name}</span>
+                              <span className="text-[9px] font-bold uppercase tracking-wider bg-gray-100 text-gray-500 px-2 py-0.5 rounded">
+                                {sug.type}
+                              </span>
                             </div>
-                          ))
-                        ) : (
-                          <div className="text-xs text-green-700 font-semibold bg-green-50/50 p-2.5 rounded-lg border border-green-100">
-                            No compliance, visa refusal, or sponsorship flags identified.
+                            <p className="text-xs text-gray-500 leading-relaxed">{sug.desc}</p>
                           </div>
-                        )}
+                        ))}
                       </div>
                     </div>
+                  )}
 
-                    {/* Raw responses summary */}
-                    {selectedLead.results?.quiz_responses && (
+                  {/* Subclass 482 checker results */}
+                  {(lead.tool_name === "Subclass 482 Eligibility Checker" || lead.tool_name === "Subclass 482 Skills in Demand Visa Eligibility Checker" || results.quiz_responses) && (
+                    <div className="space-y-4">
+                      <div className="bg-brand-soft border border-brand-primary/10 p-4 rounded-xl text-center bg-blue-50/50">
+                        <p className="text-xs font-bold text-gray-500 uppercase">Calculated Assessment Category</p>
+                        <h3 className="text-base font-extrabold text-[#012269] mt-1">
+                          {String(results.calculated_category || 'Further Assessment Required').replace(/_/g, ' ')}
+                        </h3>
+                      </div>
+
+                      {/* Metadata attributes */}
+                      <div className="grid grid-cols-2 gap-3 bg-white border border-gray-100 rounded-xl p-3.5 text-xs text-gray-700">
+                        <p><span className="font-bold text-gray-400">Occupation:</span> {String(results.occupation || 'N/A')}</p>
+                        <p><span className="font-bold text-gray-400">Employer Sponsor:</span> {String(results.employer_name || 'N/A')}</p>
+                        <p><span className="font-bold text-gray-400">Passport Country:</span> {String(results.passport_country || 'N/A')}</p>
+                        <p><span className="font-bold text-gray-400">Current Location:</span> {String(results.current_country || 'N/A')}</p>
+                      </div>
+
+                      {/* Flags */}
                       <div className="space-y-2">
-                        <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">Detailed Quiz Inputs:</p>
-                        <div className="bg-white border border-gray-100 rounded-xl p-3 text-xs space-y-1.5 text-gray-600 font-mono">
-                          {Object.entries(selectedLead.results.quiz_responses as Record<string, unknown>).map(([key, val]) => (
-                            <div key={key} className="flex justify-between border-b border-gray-50 pb-1 last:border-0 last:pb-0">
-                              <span className="capitalize">{key.replace(/_/g, ' ')}:</span>
-                              <span className="font-bold text-brand-primary">{String(val)}</span>
+                        <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">Identified Assessment Flags:</p>
+                        <div className="space-y-1.5">
+                          {(results.identified_flags as string[])?.length > 0 ? (
+                            (results.identified_flags as string[]).map((flag, idx) => (
+                              <div key={idx} className="flex gap-2 text-xs bg-white border border-gray-100 rounded-lg p-2.5 text-gray-700">
+                                <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
+                                <span>{flag}</span>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="text-xs text-green-700 font-semibold bg-green-50/50 p-2.5 rounded-lg border border-green-100">
+                              No compliance, visa refusal, or sponsorship flags identified.
                             </div>
-                          ))}
+                          )}
                         </div>
                       </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
 
-            {/* Footer */}
-            <div className="flex gap-3 justify-end pt-4 border-t mt-4">
-              <button
-                type="button"
-                onClick={() => setSelectedLead(null)}
-                className="px-5 py-2.5 text-xs font-extrabold text-white bg-[#012269] hover:bg-[#012269]/90 border rounded-xl transition-all uppercase tracking-wider"
-              >
-                Close Details
-              </button>
+                      {/* Raw responses summary */}
+                      {results.quiz_responses && (
+                        <div className="space-y-2">
+                          <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">Detailed Quiz Inputs:</p>
+                          <div className="bg-white border border-gray-100 rounded-xl p-3 text-xs space-y-1.5 text-gray-600 font-mono">
+                            {Object.entries(results.quiz_responses as Record<string, unknown>).map(([key, val]) => (
+                              <div key={key} className="flex justify-between border-b border-gray-50 pb-1 last:border-0 last:pb-0">
+                                <span className="capitalize">{key.replace(/_/g, ' ')}:</span>
+                                <span className="font-bold text-brand-primary">{String(val)}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="flex gap-3 justify-end pt-4 border-t mt-4">
+                <button
+                  type="button"
+                  onClick={() => setSelectedLead(null)}
+                  className="px-5 py-2.5 text-xs font-extrabold text-white bg-[#012269] hover:bg-[#012269]/90 border rounded-xl transition-all uppercase tracking-wider"
+                >
+                  Close Details
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   )
 }

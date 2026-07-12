@@ -787,58 +787,85 @@ export default function SignPage() {
   // ─────────────────────────────────────────────────────────────────
 
   const brandHeader = (
-    <header className="flex items-center justify-center gap-3 py-5">
-      <div className="w-9 h-9 bg-gradient-to-br from-[#D4AF37] to-[#b89230] rounded-xl flex items-center justify-center shadow-lg">
-        <ShieldCheck className="w-5.5 h-5.5 text-white" />
+    <header className="flex items-center justify-center gap-3 py-4">
+      <div className="w-40 h-40 rounded-full overflow-hidden border border-gray-200 bg-white flex items-center justify-center shadow-sm shrink-0">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/images/logobgwhite.jpg"
+          alt="Migration Republic Logo"
+          className="w-full h-full object-cover"
+        />
       </div>
       <div>
-        <p className="text-xs font-bold text-[#D4AF37] uppercase tracking-widest leading-none">Migration Republic</p>
-        <p className="text-[10px] text-gray-400 leading-tight mt-0.5">Secure Document Signing Portal</p>
+        <p className="text-sm font-black text-[#012269] uppercase tracking-widest leading-none">
+          Migration Republic
+        </p>
+        <p className="text-[9px] text-gray-500 leading-tight mt-1">
+          Secure Document Signing Portal
+        </p>
       </div>
     </header>
   )
 
-  // LOADING state
+  const brandHeaderDark = (
+    <header className="flex items-center justify-center gap-3 py-4">
+      <div className="w-40 h-40 rounded-full overflow-hidden border border-gray-200 bg-white flex items-center justify-center shadow-sm shrink-0">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/images/logobgwhite.jpg"
+          alt="Migration Republic Logo"
+          className="w-full h-full object-cover"
+        />
+      </div>
+      <div>
+        <p className="text-sm font-black text-white uppercase tracking-widest leading-none">
+          Migration Republic
+        </p>
+        <p className="text-[9px] text-gray-300 leading-tight mt-1">
+          Secure Document Signing Portal
+        </p>
+      </div>
+    </header>
+  )
+
   if (pageState === 'loading') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#030E1E] via-[#071426] to-[#030E1E] flex flex-col items-center justify-center p-4">
+      <div className="min-h-screen bg-[#f8fafc] flex flex-col items-center justify-center p-4">
         {brandHeader}
         <div className="flex flex-col items-center gap-4 mt-8">
-          <div className="w-14 h-14 rounded-full border-4 border-[#D4AF37]/30 border-t-[#D4AF37] animate-spin" />
-          <p className="text-gray-400 text-sm font-medium">Loading your document…</p>
+          <div className="w-14 h-14 rounded-full border-4 border-[#012269]/20 border-t-[#012269] animate-spin" />
+          <p className="text-gray-500 text-sm font-semibold">Loading your document…</p>
         </div>
       </div>
     )
   }
 
-  // ERROR state
   if (pageState === 'error') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#030E1E] via-[#071426] to-[#030E1E] flex flex-col items-center justify-center p-4">
+      <div className="min-h-screen bg-[#f8fafc] flex flex-col items-center justify-center p-4">
         {brandHeader}
-        <div className="max-w-md w-full bg-[#07162c] border border-red-800/40 rounded-3xl p-8 text-center shadow-2xl mt-4">
-          <div className="w-16 h-16 bg-red-500/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <XCircle className="w-9 h-9 text-red-400" />
+        <div className="max-w-md w-full bg-white border border-red-200 rounded-3xl p-8 text-center shadow-xl mt-4">
+          <div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-red-200">
+            <XCircle className="w-9 h-9 text-red-600" />
           </div>
-          <h2 className="text-xl font-bold text-white mb-2">Portal Error</h2>
-          <p className="text-gray-400 text-sm leading-relaxed">{errorMsg}</p>
+          <h2 className="text-xl font-bold text-[#012269] mb-2">Portal Error</h2>
+          <p className="text-gray-600 text-sm leading-relaxed">{errorMsg}</p>
           <p className="text-gray-500 text-xs mt-4">Please contact Migration Republic support if you believe this link is valid.</p>
         </div>
       </div>
     )
   }
 
-  // EXPIRED state
   if (pageState === 'expired') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#030E1E] via-[#071426] to-[#030E1E] flex flex-col items-center justify-center p-4">
+      <div className="min-h-screen bg-[#f8fafc] flex flex-col items-center justify-center p-4">
         {brandHeader}
-        <div className="max-w-md w-full bg-[#07162c] border border-yellow-800/40 rounded-3xl p-8 text-center shadow-2xl mt-4">
-          <div className="w-16 h-16 bg-yellow-500/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <Clock className="w-9 h-9 text-yellow-400" />
+        <div className="max-w-md w-full bg-white border border-yellow-200 rounded-3xl p-8 text-center shadow-xl mt-4">
+          <div className="w-16 h-16 bg-yellow-50 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-yellow-200">
+            <Clock className="w-9 h-9 text-yellow-600" />
           </div>
-          <h2 className="text-xl font-bold text-white mb-2">Signing Link Expired</h2>
-          <p className="text-gray-400 text-sm leading-relaxed">
+          <h2 className="text-xl font-bold text-[#012269] mb-2">Signing Link Expired</h2>
+          <p className="text-gray-600 text-sm leading-relaxed">
             This signature link expired on {requestData?.expiresAt ? new Date(requestData.expiresAt).toLocaleDateString('en-AU', { dateStyle: 'long' }) : 'a previous date'}.
           </p>
           <p className="text-gray-500 text-xs mt-4">Please request Migration Republic to send a fresh invitation link.</p>
@@ -847,18 +874,17 @@ export default function SignPage() {
     )
   }
 
-  // ALREADY SIGNED state
   if (pageState === 'already_signed') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#030E1E] via-[#071426] to-[#030E1E] flex flex-col items-center justify-center p-4">
+      <div className="min-h-screen bg-[#f8fafc] flex flex-col items-center justify-center p-4">
         {brandHeader}
-        <div className="max-w-md w-full bg-[#07162c] border border-green-800/40 rounded-3xl p-8 text-center shadow-2xl mt-4">
-          <div className="w-16 h-16 bg-green-500/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <CheckCircle2 className="w-9 h-9 text-green-400" />
+        <div className="max-w-md w-full bg-white border border-green-200 rounded-3xl p-8 text-center shadow-xl mt-4">
+          <div className="w-16 h-16 bg-green-50 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-green-200">
+            <CheckCircle2 className="w-9 h-9 text-green-600" />
           </div>
-          <h2 className="text-xl font-bold text-white mb-2">Document Signed</h2>
-          <p className="text-gray-400 text-sm leading-relaxed">
-            Thank you. This document was successfully signed by <strong className="text-white">{requestData?.signerName}</strong> on{' '}
+          <h2 className="text-xl font-bold text-[#012269] mb-2">Document Signed</h2>
+          <p className="text-gray-600 text-sm leading-relaxed">
+            Thank you. This document was successfully signed by <strong className="text-gray-900">{requestData?.signerName}</strong> on{' '}
             {requestData?.signedAt ? new Date(requestData.signedAt).toLocaleString('en-AU') : 'a previous date'}.
           </p>
           <p className="text-gray-500 text-xs mt-4">A copy of the finalized PDF was sent to {requestData?.signerEmail}.</p>
@@ -867,72 +893,50 @@ export default function SignPage() {
     )
   }
 
-  // DECLINED state
   if (pageState === 'declined') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#030E1E] via-[#071426] to-[#030E1E] flex flex-col items-center justify-center p-4">
+      <div className="min-h-screen bg-[#f8fafc] flex flex-col items-center justify-center p-4">
         {brandHeader}
-        <div className="max-w-md w-full bg-[#07162c] border border-gray-700 rounded-3xl p-8 text-center shadow-2xl mt-4">
-          <div className="w-16 h-16 bg-gray-700/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <XCircle className="w-9 h-9 text-gray-400" />
+        <div className="max-w-md w-full bg-white border border-gray-200 rounded-3xl p-8 text-center shadow-xl mt-4">
+          <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-gray-200">
+            <XCircle className="w-9 h-9 text-gray-500" />
           </div>
-          <h2 className="text-xl font-bold text-white mb-2">Workflow Declined</h2>
-          <p className="text-gray-400 text-sm">You declined to sign this document. We have recorded your choice and informed the agent.</p>
+          <h2 className="text-xl font-bold text-[#012269] mb-2">Workflow Declined</h2>
+          <p className="text-gray-600 text-sm">You declined to sign this document. We have recorded your choice and informed the agent.</p>
         </div>
       </div>
     )
   }
 
-  // SUBMITTING status loader
   if (pageState === 'submitting') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#030E1E] via-[#071426] to-[#030E1E] flex flex-col items-center justify-center p-4">
+      <div className="min-h-screen bg-[#f8fafc] flex flex-col items-center justify-center p-4">
         {brandHeader}
         <div className="flex flex-col items-center gap-4 mt-8">
-          <div className="w-16 h-16 rounded-full border-4 border-[#D4AF37]/30 border-t-[#D4AF37] animate-spin" />
-          <p className="text-gray-400 text-sm font-medium">Embedding signature &amp; compiling final PDF…</p>
-          <p className="text-gray-600 text-xs">Please do not close this window.</p>
+          <div className="w-16 h-16 rounded-full border-4 border-[#012269]/20 border-t-[#012269] animate-spin" />
+          <p className="text-gray-600 text-sm font-semibold">Embedding signature &amp; compiling final PDF…</p>
+          <p className="text-gray-500 text-xs">Please do not close this window.</p>
         </div>
       </div>
     )
   }
 
-  // SUCCESS completion page
   if (pageState === 'success') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#030E1E] via-[#071426] to-[#030E1E] flex flex-col items-center justify-center p-4">
+      <div className="min-h-screen bg-[#f8fafc] flex flex-col items-center justify-center p-4">
         {brandHeader}
-        <div className="max-w-md w-full bg-[#07162c] border border-green-700/40 rounded-3xl p-8 text-center shadow-2xl mt-4 relative overflow-hidden">
+        <div className="max-w-md w-full bg-white border border-gray-200 rounded-3xl p-8 text-center shadow-xl mt-4 relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-b from-green-500/5 to-transparent pointer-events-none" />
-          <div className="w-20 h-20 bg-gradient-to-br from-green-500/20 to-green-400/5 rounded-full flex items-center justify-center mx-auto mb-5 border border-green-500/30">
-            <CheckCircle2 className="w-11 h-11 text-green-400" />
+          <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-5 border border-green-200">
+            <CheckCircle2 className="w-11 h-11 text-green-600" />
           </div>
-          <h2 className="text-2xl font-extrabold text-white mb-2">Signature Confirmed!</h2>
-          <p className="text-gray-300 text-sm leading-relaxed mb-1">
-            Thank you, <strong className="text-white">{requestData?.signerName}</strong>.
+          <h2 className="text-2xl font-extrabold text-[#012269] mb-3">Signature Confirmed!</h2>
+          <p className="text-gray-600 text-sm leading-relaxed mb-4">
+            Thank you, <strong className="text-gray-900">{requestData?.signerName}</strong>. Your signature has been successfully applied to the document.
           </p>
-          <p className="text-gray-400 text-sm leading-relaxed">
-            <strong className="text-white">{requestData?.documentName}</strong> has been signed and finalized.
+          <p className="text-gray-600 text-sm leading-relaxed">
+            A copy of the completed document <strong>&quot;{requestData?.documentName}&quot;</strong> has been emailed to you and sent to our registered migration agent for verification and visa processing.
           </p>
-          <div className="mt-6 bg-[#0c1e35] rounded-2xl p-4 text-left space-y-2.5 border border-gray-800">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-green-400 shrink-0" />
-              <span className="text-xs text-gray-300">Signature placed at exact coordinates</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-green-400 shrink-0" />
-              <span className="text-xs text-gray-300">IP address &amp; User-Agent logged in trail</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-green-400 shrink-0" />
-              <span className="text-xs text-gray-300">Final PDF copy generated</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-green-400 shrink-0" />
-              <span className="text-xs text-gray-300">Email confirmation dispatched</span>
-            </div>
-          </div>
-          <p className="text-gray-600 text-xs mt-5">You may now close this browser tab.</p>
         </div>
       </div>
     )
@@ -940,22 +944,22 @@ export default function SignPage() {
 
   // ─── READY / MAIN SIGNING SCREEN ──────────────────────────────────
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#030E1E] via-[#071426] to-[#030E1E] flex flex-col font-sans">
+    <div className="min-h-screen bg-[#f8fafc] flex flex-col font-sans text-gray-800">
 
       {/* Brand header */}
-      <div className="shrink-0 bg-[#07162c]/80 border-b border-gray-800/80 backdrop-blur-md sticky top-0 z-30 px-6">
+      <div className="shrink-0 bg-[#012269] border-b-2 border-[#e40229] sticky top-0 z-30 px-6">
         <div className="max-w-6xl mx-auto flex items-center justify-between py-1.5">
-          {brandHeader}
+          {brandHeaderDark}
           <div className="flex gap-2">
             <button
               onClick={handleDecline}
-              className="px-4 py-2 border border-gray-700 hover:border-red-800 hover:text-red-400 rounded-xl text-xs font-bold uppercase tracking-wider transition-all"
+              className="px-4 py-2 border border-white/20 text-white/80 hover:text-white hover:bg-white/10 rounded-xl text-xs font-bold uppercase tracking-wider transition-all"
             >
               Decline Sign
             </button>
             <button
               onClick={handleSubmitSignature}
-              className="px-5 py-2 bg-gradient-to-r from-[#D4AF37] to-[#b89230] hover:from-[#bfa032] hover:to-[#a07820] text-[#030E1E] text-xs font-black rounded-xl uppercase tracking-wider shadow-lg shadow-[#D4AF37]/15 transition-all"
+              className="px-5 py-2 bg-[#e40229] hover:bg-[#e40229]/90 text-white text-xs font-black rounded-xl uppercase tracking-wider shadow-lg shadow-[#e40229]/15 transition-all"
             >
               Sign &amp; Submit
             </button>
@@ -967,11 +971,11 @@ export default function SignPage() {
       <div className="flex-grow max-w-6xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-4 gap-6 overflow-hidden">
 
         {/* Left Side: Document Viewer (Vertical scroll of canvases) */}
-        <div className="lg:col-span-3 overflow-y-auto space-y-6 max-h-[calc(100vh-160px)] pr-2 select-none relative bg-gray-950 p-6 rounded-3xl border border-gray-800">
+        <div className="lg:col-span-3 overflow-y-auto space-y-6 max-h-[calc(100vh-160px)] pr-2 select-none relative bg-gray-100 p-6 rounded-3xl border border-gray-200 shadow-inner">
           {!pdfjsLoaded || !pdfUrl ? (
             <div className="flex flex-col items-center justify-center py-24 text-center">
-              <Loader2 className="w-10 h-10 animate-spin text-[#D4AF37] mb-3" />
-              <p className="text-gray-400 text-sm">Rendering document pages…</p>
+              <Loader2 className="w-10 h-10 animate-spin text-[#012269] mb-3" />
+              <p className="text-gray-500 text-sm">Rendering document pages…</p>
             </div>
           ) : (
             Array.from({ length: totalPages || 1 }).map((_, idx) => {
@@ -1103,35 +1107,35 @@ export default function SignPage() {
         <div className="lg:col-span-1 flex flex-col gap-5 max-h-[calc(100vh-160px)] overflow-y-auto pr-1">
 
           {/* Doc Banner */}
-          <div className="bg-[#07162c] border border-gray-800 rounded-2xl p-4 shadow-xl">
+          <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 bg-[#D4AF37]/10 rounded-xl flex items-center justify-center border border-[#D4AF37]/20 shrink-0">
-                <FileText className="w-5.5 h-5.5 text-[#D4AF37]" />
+              <div className="w-10 h-10 bg-[#012269]/10 rounded-xl flex items-center justify-center border border-[#012269]/20 shrink-0">
+                <FileText className="w-5.5 h-5.5 text-[#012269]" />
               </div>
               <div className="min-w-0">
                 <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Document name</p>
-                <h2 className="text-sm font-bold text-white leading-tight truncate">{requestData?.documentName}</h2>
-                <p className="text-[10px] text-gray-400 mt-1">Pending your signature</p>
+                <h2 className="text-sm font-bold text-[#012269] leading-tight truncate">{requestData?.documentName}</h2>
+                <p className="text-[10px] text-gray-500 mt-1">Pending your signature</p>
               </div>
             </div>
           </div>
 
           {/* Form Widgets Status */}
-          <div className="bg-[#07162c] border border-gray-800 rounded-2xl p-4 shadow-xl">
-            <h3 className="text-xs font-extrabold text-gray-400 uppercase tracking-widest mb-3 border-b border-gray-800 pb-2 flex items-center gap-1.5">
-              <CheckSquare className="w-3.5 h-3.5 text-blue-400" /> Completion Status
+          <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+            <h3 className="text-xs font-extrabold text-[#012269] uppercase tracking-widest mb-3 border-b border-gray-100 pb-2 flex items-center gap-1.5">
+              <CheckSquare className="w-3.5 h-3.5 text-[#012269]" /> Completion Status
             </h3>
 
             <div className="space-y-3.5">
               {/* Signature captured checklist item */}
               <div className="flex items-center justify-between text-xs">
-                <span className="text-gray-400">Drawn Signature:</span>
+                <span className="text-gray-600">Drawn Signature:</span>
                 {signatureDataUrl ? (
-                  <span className="text-green-400 font-bold flex items-center gap-1 shrink-0">
+                  <span className="text-green-600 font-bold flex items-center gap-1 shrink-0">
                     <CheckCircle2 className="w-3.5 h-3.5" /> Captured
                   </span>
                 ) : (
-                  <span className="text-amber-400 font-semibold flex items-center gap-1 shrink-0">
+                  <span className="text-amber-600 font-semibold flex items-center gap-1 shrink-0">
                     <AlertTriangle className="w-3.5 h-3.5" /> Required
                   </span>
                 )}
@@ -1140,13 +1144,13 @@ export default function SignPage() {
               {/* Text box variables status */}
               {signFields.filter(f => f.type === 'text').map((field, idx) => (
                 <div key={field.id} className="flex items-center justify-between text-xs">
-                  <span className="text-gray-400 truncate max-w-[50%]">Text box #{idx + 1}:</span>
+                  <span className="text-gray-600 truncate max-w-[50%]">Text box #{idx + 1}:</span>
                   {field.value && String(field.value).trim() ? (
-                    <span className="text-green-400 font-bold flex items-center gap-1 shrink-0">
+                    <span className="text-green-600 font-bold flex items-center gap-1 shrink-0">
                       <CheckCircle2 className="w-3.5 h-3.5" /> Filled
                     </span>
                   ) : (
-                    <span className="text-amber-400 font-semibold flex items-center gap-1 shrink-0">
+                    <span className="text-amber-600 font-semibold flex items-center gap-1 shrink-0">
                       <AlertTriangle className="w-3.5 h-3.5" /> Required
                     </span>
                   )}
@@ -1156,7 +1160,7 @@ export default function SignPage() {
               <button
                 type="button"
                 onClick={() => setIsSigModalOpen(true)}
-                className="w-full py-2 border border-blue-500 bg-blue-500/5 hover:bg-blue-500/10 text-blue-400 text-xs font-bold rounded-xl transition-all uppercase tracking-wider"
+                className="w-full py-2 border border-[#012269]/30 bg-[#012269]/5 hover:bg-[#012269]/10 text-[#012269] text-xs font-bold rounded-xl transition-all uppercase tracking-wider"
               >
                 {signatureDataUrl ? 'Change Signature' : 'Draw Signature'}
               </button>
@@ -1164,9 +1168,9 @@ export default function SignPage() {
           </div>
 
           {/* Legal and Terms Approval */}
-          <div className="bg-[#07162c] border border-gray-800 rounded-2xl p-4 shadow-xl space-y-4">
-            <h3 className="text-xs font-extrabold text-gray-400 uppercase tracking-widest border-b border-gray-800 pb-2 flex items-center gap-1.5">
-              <ShieldCheck className="w-3.5 h-3.5 text-[#D4AF37]" /> Dynamic Consent
+          <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm space-y-4">
+            <h3 className="text-xs font-extrabold text-[#012269] uppercase tracking-widest border-b border-gray-100 pb-2 flex items-center gap-1.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-[#e40229]" /> Dynamic Consent
             </h3>
 
             <label className="flex items-start gap-2.5 cursor-pointer group">
@@ -1174,16 +1178,16 @@ export default function SignPage() {
                 type="checkbox"
                 checked={agreedToTerms}
                 onChange={e => setAgreedToTerms(e.target.checked)}
-                className="mt-0.5 w-4.5 h-4.5 rounded border-gray-700 bg-[#0c1e35] text-[#D4AF37] accent-[#D4AF37] cursor-pointer"
+                className="mt-0.5 w-4.5 h-4.5 rounded border-gray-300 bg-white text-[#e40229] accent-[#e40229] cursor-pointer"
               />
-              <span className="text-[10px] text-gray-400 leading-relaxed group-hover:text-gray-300 transition-colors">
-                I, <strong className="text-white">{requestData?.signerName}</strong>, confirm that I have reviewed the document and agree that my placed coordinates signatures constitute a legally binding electronic execution.
+              <span className="text-[10px] text-gray-600 leading-relaxed group-hover:text-gray-800 transition-colors">
+                I, <strong className="text-gray-900">{requestData?.signerName}</strong>, confirm that I have reviewed the document and agree that my placed coordinates signatures constitute a legally binding electronic execution.
               </span>
             </label>
 
             <button
               onClick={handleSubmitSignature}
-              className="w-full py-3.5 bg-gradient-to-r from-[#D4AF37] to-[#b89230] hover:from-[#bfa032] hover:to-[#a07820] text-[#030E1E] text-xs font-black rounded-xl uppercase tracking-widest shadow-lg shadow-[#D4AF37]/15 transition-all"
+              className="w-full py-3.5 bg-[#e40229] hover:bg-[#e40229]/90 text-white text-xs font-black rounded-xl uppercase tracking-widest shadow-lg shadow-[#e40229]/15 transition-all"
             >
               Sign &amp; Finalize Document
             </button>

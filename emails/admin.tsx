@@ -2,7 +2,7 @@ import * as React from "react";
 
 interface AdminEmailProps {
   type: "signature" | "booking";
-  
+
   // Signature props
   signerName?: string;
   documentName?: string;
@@ -54,18 +54,18 @@ export default function AdminEmail({
           textAlign: "center",
           borderBottom: "2px solid #D4AF37",
         }}>
-          <img 
-            src="https://immigrationagentnearme.com/images/logo.jpg" 
-            alt="Migration Republic" 
+          <img
+            src="https://immigrationagentnearme.com/images/logobgwhite.jpg"
+            alt="Migration Republic"
             style={{
-              width: "70px",
-              height: "70px",
+              width: "100px",
+              height: "100px",
               borderRadius: "50%",
-              border: "2px solid #D4AF37",
+              border: "2px solid #FFFFFF",
               display: "block",
               margin: "0 auto 12px auto",
               objectFit: "cover",
-            }} 
+            }}
           />
           <div style={{
             color: "#ffffff",
@@ -139,7 +139,7 @@ export default function AdminEmail({
 
               {downloadLink && (
                 <div style={{ textAlign: "center", margin: "25px 0" }}>
-                  <a 
+                  <a
                     href={downloadLink}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -213,7 +213,7 @@ export default function AdminEmail({
 
               {meetLink && (
                 <div style={{ textAlign: "center", margin: "25px 0" }}>
-                  <a 
+                  <a
                     href={meetLink}
                     target="_blank"
                     rel="noopener noreferrer"

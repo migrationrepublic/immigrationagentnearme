@@ -1,17 +1,25 @@
 "use server";
 
 import { supabaseServer, createClientForAction } from "@/lib/supabase-server";
+import { z } from "zod";
+
+// Zod Validation Schemas
+const DateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format (must be YYYY-MM-DD)");
+
+const AvailabilityUpdateSchema = z.object({
+  date: DateSchema,
+  blockedTimes: z.array(z.string().regex(/^\d{2}:\d{2}:\d{2}$/, "Invalid time format (must be HH:mm:ss)")),
+});
 
 export async function checkIsAdminAction() {
   try {
     const supabase = await createClientForAction();
-    const { data: { session } } = await supabase.auth.getSession();
-    const user = session?.user;
-    
-    if (!user) {
-      const { data: { user: authUser } } = await supabase.auth.getUser();
-      if (!authUser) return { isAdmin: false };
-      return await processUser(authUser);
+    // Use getUser() which validates the token with the Auth server (secure)
+    // getSession() reads directly from cookies and is NOT authenticated
+    const { data: { user }, error } = await supabase.auth.getUser();
+
+    if (error || !user) {
+      return { isAdmin: false };
     }
 
     return await processUser(user);
@@ -29,7 +37,7 @@ async function processUser(user: { id: string }) {
     .eq("id", user.id)
     .maybeSingle();
 
-  return { 
+  return {
     isAdmin: !!admin,
   };
 }
@@ -69,7 +77,51 @@ export async function getToolLeadsAction() {
   return data;
 }
 
-export async function getAvailabilityForDateAction(date: string) {
+export async function getWebsiteLeadsAction() {
+  const isAdmin = await verifyAdmin();
+  if (!isAdmin) {
+    throw new Error("Unauthorized: You are not an admin.");
+  }
+
+  const { data, error } = await supabaseServer
+    .from("website_leads")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+  return data;
+}
+
+export async function updateWebsiteLeadStatusAction(idInput: string, statusInput: string, notesInput?: string) {
+  const isAdmin = await verifyAdmin();
+  if (!isAdmin) {
+    throw new Error("Unauthorized: You are not an admin.");
+  }
+
+  const id = z.string().uuid("Invalid lead ID").parse(idInput);
+  const status = z.string().min(1).parse(statusInput);
+  const notes = notesInput !== undefined ? z.string().nullable().parse(notesInput) : undefined;
+
+  const updateFields: any = { status, updated_at: new Date().toISOString() };
+  if (notes !== undefined) {
+    updateFields.notes = notes;
+  }
+
+  const { data, error } = await supabaseServer
+    .from("website_leads")
+    .update(updateFields)
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return { success: true, lead: data };
+}
+
+export async function getAvailabilityForDateAction(dateInput: string) {
+  // Validate input
+  const date = DateSchema.parse(dateInput);
+
   const isAdmin = await verifyAdmin();
   if (!isAdmin) {
     throw new Error("Unauthorized: You are not an admin.");
@@ -93,60 +145,53 @@ export async function getAvailabilityForDateAction(date: string) {
     .eq("is_booked", true);
 
   if (error) throw error;
-  
+
   // A slot is "manually blocked" if it's in the availability table but NOT in real bookings
   const allBlocked = data.map((d) => d.time);
   const manuallyBlockedTimes = allBlocked.filter((t) => !bookedTimes.includes(t));
 
-  return { 
+  return {
     blockedTimes: manuallyBlockedTimes,
-    bookedTimes 
+    bookedTimes
   };
 }
 
-export async function updateAvailabilityAction(date: string, blockedTimes: string[]) {
+export async function updateAvailabilityAction(dateInput: string, blockedTimesInput: string[]) {
+  // Validate inputs
+  const validated = AvailabilityUpdateSchema.parse({
+    date: dateInput,
+    blockedTimes: blockedTimesInput,
+  });
+
   const isAdmin = await verifyAdmin();
   if (!isAdmin) {
     throw new Error("Unauthorized: You are not an admin.");
   }
 
-  // 1. Delete existing manual blocks for this date (where is_booked = true)
-  // Wait, if it's an actual booking, we don't want to delete it.
-  // Actually, how do we distinguish manual admin blocks from actual client bookings?
-  // Currently, `is_booked` just means it's booked. 
-  // If an admin manually blocks, it sets `is_booked = true`.
-  // If a client books, it also sets `is_booked = true`.
-  // Wait, if a client books, there is a record in `bookings` table.
-  // We can just query `bookings` to see which slots have real bookings.
-  // Then we delete from `availability` where date = date and time is NOT in the real bookings list.
-  // Then we insert the new blockedTimes.
-  
-  // Actually, to make it bulletproof, we can just fetch real bookings for the date
+  // Fetch real bookings to protect them from deletion
   const { data: realBookings, error: bookingsError } = await supabaseServer
     .from("bookings")
     .select("time")
-    .eq("date", date)
+    .eq("date", validated.date)
     .not("status", "eq", "cancelled");
-    
+
   if (bookingsError) throw bookingsError;
   const bookedTimes = new Set(realBookings.map(b => b.time));
 
-  // Remove any blocked times that are actually booked by clients, to prevent admins from un-blocking them by accident
-  // Or rather, we should just let the client bookings be preserved.
-  // First, delete ALL availability records for this date
+  // Delete all availability records for this date
   const { error: deleteError } = await supabaseServer
     .from("availability")
     .delete()
-    .eq("date", date);
+    .eq("date", validated.date);
 
   if (deleteError) throw deleteError;
 
-  // Now, we need to insert real bookings AND the new blockedTimes
-  const timesToInsert = new Set([...bookedTimes, ...blockedTimes]);
-  
+  // Insert real bookings AND the new blockedTimes
+  const timesToInsert = new Set([...bookedTimes, ...validated.blockedTimes]);
+
   if (timesToInsert.size > 0) {
     const insertData = Array.from(timesToInsert).map((time) => ({
-      date,
+      date: validated.date,
       time,
       is_booked: true,
     }));

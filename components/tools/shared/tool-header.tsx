@@ -23,6 +23,7 @@ export function ToolHeader({ title, description }: ToolHeaderProps) {
               width={120}
               height={120}
               className="relative rounded-full shadow-xl border-4 border-white"
+              style={{ width: 'auto', height: 'auto' }}
             />
           </div>
         </Link>

@@ -1,4 +1,4 @@
-export function generateLocalBusinessSchema(city: string, content: any) {
+export function generateLocalBusinessSchema(city: string, content: { meta: { description: string } }) {
   const cityName = city.charAt(0).toUpperCase() + city.slice(1);
   return {
     "@context": "https://schema.org",

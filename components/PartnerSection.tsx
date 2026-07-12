@@ -60,20 +60,20 @@ export default function PartnerSection() {
           </div>
 
           <div className="lg:w-1/2 w-full">
-            <div className="relative group overflow-hidden rounded-3xl border-8 border-white shadow-2xl skew-y-1 hover:skew-y-0 transition-transform duration-700">
-               <div className="absolute inset-0 bg-gradient-to-tr from-brand-primary/20 to-transparent z-10"></div>
-               <Image 
-                 src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=1476" 
-                 alt="Professional Migration Agents" 
-                 width={1476}
-                 height={500}
-                 className="w-full h-[500px] object-cover group-hover:scale-110 transition-transform duration-1000"
-               />
-               <div className="absolute bottom-8 left-8 right-8 bg-white/90 backdrop-blur-md p-8 rounded-2xl border border-white/50 z-20 shadow-xl">
-                  <p className="text-brand-heading font-extrabold text-2xl mb-2">Expert Advice You Can Count On</p>
-                  <p className="text-brand-gray italic">"Connecting you with practitioners who live and breathe Australian immigration law."</p>
-               </div>
-            </div>
+             <div className="relative h-[500px] w-full group overflow-hidden rounded-3xl border-8 border-white shadow-2xl skew-y-1 hover:skew-y-0 transition-transform duration-700">
+                <div className="absolute inset-0 bg-gradient-to-tr from-brand-primary/20 to-transparent z-10"></div>
+                <Image 
+                  src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=1476" 
+                  alt="Professional Migration Agents" 
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  className="object-cover group-hover:scale-110 transition-transform duration-1000"
+                />
+                <div className="absolute bottom-8 left-8 right-8 bg-white/90 backdrop-blur-md p-8 rounded-2xl border border-white/50 z-20 shadow-xl">
+                   <p className="text-brand-heading font-extrabold text-2xl mb-2">Expert Advice You Can Count On</p>
+                   <p className="text-brand-gray italic">"Connecting you with practitioners who live and breathe Australian immigration law."</p>
+                </div>
+             </div>
           </div>
         </div>
       </div>

@@ -1,9 +1,11 @@
 "use server";
 
-import { supabaseServer } from "@/lib/supabase-server";
+import { BookingService } from "@/lib/services/booking.service";
+import { EmailService } from "@/lib/services/email.service";
 import { stripe } from "@/lib/stripe";
 import { z } from "zod";
 import { headers } from "next/headers";
+import { env } from "@/lib/env";
 
 // Define the schema for booking input
 const BookingSchema = z.object({
@@ -19,169 +21,74 @@ const BookingSchema = z.object({
 export type BookingInput = z.infer<typeof BookingSchema>;
 
 export async function getPlans() {
-  const { data, error } = await supabaseServer
-    .from("plans")
-    .select("*")
-    .eq("is_active", true)
-    .order("price_aud", { ascending: true });
-
-  if (error) {
-    console.error("Error fetching plans:", error);
+  try {
+    return await BookingService.getPlans();
+  } catch (error) {
+    console.error("Action getPlans error:", error);
     return [];
   }
-  return data;
 }
 
 export async function getPlan(id: string) {
-  const { data, error } = await supabaseServer
-    .from("plans")
-    .select("*")
-    .eq("id", id)
-    .single();
-
-  if (error) {
-    console.error("Error fetching plan:", error);
+  try {
+    return await BookingService.getPlanById(id);
+  } catch (error) {
+    console.error("Action getPlan error:", error);
     return null;
   }
-  return data;
 }
 
 export async function getPlanBySlug(slug: string) {
-  const { data, error } = await supabaseServer
-    .from("plans")
-    .select("*")
-    .eq("slug", slug)
-    .single();
-
-  if (error) {
-    console.error("Error fetching plan by slug:", error);
+  try {
+    return await BookingService.getPlanBySlug(slug);
+  } catch (error) {
+    console.error("Action getPlanBySlug error:", error);
     return null;
   }
-  return data;
 }
 
 export async function getAvailableSlots(date: string) {
-  // Format: YYYY-MM-DD
-  const defaultSlots = [
-    "09:00:00",
-    "10:00:00",
-    "11:00:00",
-    "13:00:00",
-    "14:00:00",
-    "15:00:00",
-    "16:00:00",
-  ];
-
-  // 1. Fetch booked slots from availability table
-  const { data, error } = await supabaseServer
-    .from("availability")
-    .select("time")
-    .eq("date", date)
-    .eq("is_booked", true);
-
-  if (error) {
-    console.error("Error fetching slots:", error);
-    return defaultSlots;
+  try {
+    return await BookingService.getAvailableSlots(date);
+  } catch (error) {
+    console.error("Action getAvailableSlots error:", error);
+    return [];
   }
-
-  const bookedTimes = new Set(data?.map((slot) => slot.time) || []);
-
-  // 2. Filter default slots to remove booked ones
-  let availableSlots = defaultSlots.filter((time) => !bookedTimes.has(time));
-
-  // 3. If date is today, filter out slots that are less than 2 hours in the future (Melbourne Time)
-  const melbourneNowStr = new Date().toLocaleString("en-US", { timeZone: "Australia/Melbourne" });
-  const melbourneNow = new Date(melbourneNowStr);
-  
-  const yyyy = melbourneNow.getFullYear();
-  const mm = String(melbourneNow.getMonth() + 1).padStart(2, '0');
-  const dd = String(melbourneNow.getDate()).padStart(2, '0');
-  const melbourneTodayStr = `${yyyy}-${mm}-${dd}`;
-
-  if (date === melbourneTodayStr) {
-    const twoHoursInMs = 2 * 60 * 60 * 1000;
-    availableSlots = availableSlots.filter((timeStr) => {
-      const [sh, sm, ss] = timeStr.split(':').map(Number);
-      const slotDate = new Date(melbourneNow);
-      slotDate.setHours(sh, sm, ss, 0);
-      return (slotDate.getTime() - melbourneNow.getTime()) >= twoHoursInMs;
-    });
-  }
-
-  return availableSlots;
 }
-
-import { sendBookingConfirmation, sendAdminAlert } from "@/lib/email";
 
 export async function createCheckoutSession(input: BookingInput) {
   try {
     const validatedData = BookingSchema.parse(input);
 
-    // 1. Fetch the plan details to get the price and name
-    const plan = await getPlan(validatedData.planId);
+    // 1. Fetch plan
+    const plan = await BookingService.getPlanById(validatedData.planId);
     if (!plan) {
       throw new Error("Plan not found");
     }
 
-    // 2. Verify the slot is still available (prevent double booking at checkout start)
-    const { data: slotData, error: slotError } = await supabaseServer
-      .from("availability")
-      .select("is_booked")
-      .eq("date", validatedData.date)
-      .eq("time", validatedData.time)
-      .maybeSingle();
-
-    if (slotError) {
-      console.error("Error fetching availability:", slotError);
-      throw new Error("Could not verify slot availability.");
-    }
-
-    // If slot exists and is booked, reject
-    if (slotData && slotData.is_booked) {
-      throw new Error("This time slot is no longer available.");
-    }
-
     const host = (await headers()).get("host");
     const protocol = process.env.NODE_ENV === "development" ? "http" : "https";
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || `${protocol}://${host}`;
-    const hasStripeKey = process.env.STRIPE_SECRET_KEY && process.env.STRIPE_SECRET_KEY.startsWith('sk_');
+    const appUrl = env.APP_URL || `${protocol}://${host}`;
+    const hasStripeKey = env.STRIPE_KEY && env.STRIPE_KEY.startsWith("sk_");
 
     // BYPASS STRIPE FOR TESTING OR "FREE" MODE
     if (!hasStripeKey || plan.price_aud === 0) {
       const mockSessionId = "mock_session_" + Math.random().toString(36).substring(7);
       
-      // Insert Booking
-      const { error: insertError } = await supabaseServer.from("bookings").insert([{
+      // Call Booking Service
+      await BookingService.createBooking({
         name: validatedData.name,
         email: validatedData.email,
         phone: validatedData.phone,
         plan_id: validatedData.planId,
         date: validatedData.date,
         time: validatedData.time,
-        notes: validatedData.notes,
-        status: "confirmed",
+        notes: validatedData.notes || "",
         stripe_session_id: mockSessionId,
-      }]);
+      });
 
-      if (insertError) {
-        console.error("Error saving mock booking:", insertError);
-        throw new Error(`Failed to save booking: ${insertError.message}`);
-      }
-
-      // Upsert Availability
-      const { error: upsertError } = await supabaseServer.from("availability").upsert({
-        date: validatedData.date,
-        time: validatedData.time,
-        is_booked: true
-      }, { onConflict: "date, time" });
-
-      if (upsertError) {
-        console.error("Error updating availability:", upsertError);
-        // We don't throw here to avoid failing the whole process if just availability update fails
-      }
-
-      // Send Emails
-      await sendBookingConfirmation(
+      // Send Emails via Email Service
+      await EmailService.sendBookingConfirmation(
         validatedData.email,
         validatedData.name,
         plan.name,
@@ -190,7 +97,7 @@ export async function createCheckoutSession(input: BookingInput) {
         validatedData.phone
       );
       
-      await sendAdminAlert(
+      await EmailService.sendAdminBookingAlert(
         validatedData.name,
         validatedData.email,
         plan.name,
@@ -203,7 +110,7 @@ export async function createCheckoutSession(input: BookingInput) {
       return { url: `${appUrl}/success?session_id=${mockSessionId}` };
     }
 
-    // 3. NORMAL STRIPE FLOW
+    // 2. NORMAL STRIPE FLOW
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       customer_email: validatedData.email,
@@ -228,7 +135,7 @@ export async function createCheckoutSession(input: BookingInput) {
         name: validatedData.name,
         email: validatedData.email,
         phone: validatedData.phone,
-        notes: (validatedData.notes || "").substring(0, 490), // Limit length for metadata
+        notes: (validatedData.notes || "").substring(0, 490),
       },
       success_url: `${appUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${appUrl}/book/${plan.id}?canceled=true`,
@@ -243,8 +150,7 @@ export async function createCheckoutSession(input: BookingInput) {
   } catch (error) {
     console.error("Checkout error:", error);
     return {
-      error:
-        error instanceof Error ? error.message : "An unknown error occurred",
+      error: error instanceof Error ? error.message : "An unknown error occurred",
     };
   }
 }
@@ -265,13 +171,12 @@ export async function handleSuccessfulPaymentAction(sessionId: string) {
       throw new Error("Session ID is required");
     }
 
-    // 1. Retrieve Checkout Session from Stripe
+    // Retrieve Session from Stripe to verify payment metadata
     const session = await stripe.checkout.sessions.retrieve(sessionId);
     if (!session) {
       throw new Error("Session not found in Stripe");
     }
 
-    // 2. Validate Payment Status
     if (session.payment_status !== "paid") {
       return { success: false, error: `Session payment status is ${session.payment_status}` };
     }
@@ -288,88 +193,38 @@ export async function handleSuccessfulPaymentAction(sessionId: string) {
       return { success: false, error: "Required metadata is missing in the checkout session" };
     }
 
-    // 3. Prevent Duplicate Booking
-    const { data: existingBooking, error: checkError } = await supabaseServer
-      .from("bookings")
-      .select("id")
-      .eq("stripe_session_id", sessionId)
-      .maybeSingle();
+    // Confirm booking using BookingService
+    const confirmed = await BookingService.confirmBookingPayment(sessionId);
 
-    if (checkError) {
-      console.error("Error checking existing booking in action:", checkError);
+    // If it was already confirmed or mock session was pre-filled, we check if it already existed
+    if (confirmed) {
+      // Send Confirmation and Admin Emails
+      try {
+        await EmailService.sendBookingConfirmation(
+          metadata.email,
+          metadata.name,
+          metadata.planName || "Consultation",
+          metadata.date,
+          metadata.time,
+          metadata.phone || ""
+        );
+
+        await EmailService.sendAdminBookingAlert(
+          metadata.name,
+          metadata.email,
+          metadata.planName || "Consultation",
+          metadata.date,
+          metadata.time,
+          metadata.phone || "",
+          metadata.notes || ""
+        );
+      } catch (emailError) {
+        console.error("Email delivery failed in backup action:", emailError);
+      }
     }
 
-    if (existingBooking) {
-      console.log(`Booking already exists for session (processed via action backup): ${sessionId}`);
-      return { success: true, alreadyExists: true };
-    }
-
-    // 4. Insert Booking into bookings table
-    const { error: bookingError } = await supabaseServer
-      .from("bookings")
-      .insert([
-        {
-          name: metadata.name,
-          email: metadata.email,
-          phone: metadata.phone || "",
-          plan_id: metadata.planId,
-          date: metadata.date,
-          time: metadata.time,
-          notes: metadata.notes || "",
-          status: "confirmed",
-          stripe_session_id: sessionId,
-        },
-      ]);
-
-    if (bookingError) {
-      console.error("Booking insert failed in backup action:", bookingError);
-      throw new Error(`Failed to create booking database entry: ${bookingError.message}`);
-    }
-
-    // 5. Mark Slot As Booked in availability table
-    const { error: availabilityError } = await supabaseServer
-      .from("availability")
-      .upsert(
-        {
-          date: metadata.date,
-          time: metadata.time,
-          is_booked: true,
-        },
-        {
-          onConflict: "date,time",
-        }
-      );
-
-    if (availabilityError) {
-      console.error("Availability update failed in backup action:", availabilityError);
-    }
-
-    // 6. Send Confirmation and Admin Emails
-    try {
-      await sendBookingConfirmation(
-        metadata.email,
-        metadata.name,
-        metadata.planName || "Consultation",
-        metadata.date,
-        metadata.time,
-        metadata.phone || ""
-      );
-
-      await sendAdminAlert(
-        metadata.name,
-        metadata.email,
-        metadata.planName || "Consultation",
-        metadata.date,
-        metadata.time,
-        metadata.phone || "",
-        metadata.notes || ""
-      );
-    } catch (emailError) {
-      console.error("Email delivery failed in backup action:", emailError);
-    }
-
-    console.log(`Booking processed successfully via backup action: ${sessionId}`);
-    return { success: true, processedNow: true };
+    console.log(`Booking payment checked successfully: ${sessionId}`);
+    return { success: true };
   } catch (error) {
     console.error("Backup booking processing failed:", error);
     return {
@@ -378,4 +233,3 @@ export async function handleSuccessfulPaymentAction(sessionId: string) {
     };
   }
 }
-

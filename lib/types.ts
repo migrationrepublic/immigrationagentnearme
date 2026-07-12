@@ -1,4 +1,13 @@
+export * from "./types/booking";
+export * from "./types/websiteLead";
+export * from "./types/document";
+export * from "./types/signature";
+export * from "./types/toolLead";
+export * from "./types/pdfjs";
+
+
 export interface Plan {
+
   id: string;
   name: string;
   price_aud: number;
@@ -7,30 +16,18 @@ export interface Plan {
   description?: string;
 }
 
-export interface Booking {
+
+export interface AuditLog {
   id: string;
-  name: string;
-  email: string;
-  phone: string;
-  plan_id: string;
-  date: string;
-  time: string;
-  notes: string;
-  status: 'pending' | 'confirmed' | 'cancelled';
-  stripe_session_id?: string;
-  created_at?: string;
-  plans?: {
-    name: string;
-  };
+  user_id?: string;
+  action: string;
+  entity_type: string;
+  entity_id: string;
+  details?: Record<string, unknown>;
+  created_at: string;
 }
 
-export interface ToolLead {
+export interface StripeEvent {
   id: string;
-  first_name: string;
-  last_name: string;
-  email: string;
-  phone: string;
-  tool_type: string;
-  results: any;
   created_at: string;
 }

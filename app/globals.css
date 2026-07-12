@@ -36,6 +36,52 @@
   --radius-xl: 1rem;
   --radius-2xl: 1.5rem;
   --radius-3xl: 2rem;
+
+  /* ── Admin Panel Design Tokens ─────────────────────────────────────────── */
+  /* These tokens power the entire admin panel. Change one value here and    */
+  /* every admin page updates automatically.                                  */
+
+  /* Sidebar */
+  --color-admin-sidebar:       #012269;   /* deep navy sidebar */
+  --color-admin-sidebar-text:  #ffffff;
+  --color-admin-nav-active:    #e40229;   /* red active nav item */
+  --color-admin-nav-hover:     rgba(255,255,255,0.10);
+
+  /* Page & cards */
+  --color-admin-page:          #F9FAFC;   /* light grey page bg */
+  --color-admin-card:          #ffffff;   /* white cards */
+  --color-admin-card-border:   #e5e7eb;   /* gray-200 border */
+  --color-admin-table-head:    #F9FAFC;   /* thead row bg */
+  --color-admin-row-hover:     rgba(249,250,252,0.50); /* row hover */
+
+  /* Typography */
+  --color-admin-heading:       #012269;   /* navy headings */
+  --color-admin-subtext:       #6b7280;   /* gray-500 subtext */
+  --color-admin-muted:         #9ca3af;   /* gray-400 muted */
+
+  /* Inputs */
+  --color-admin-input-bg:      #F9FAFC;
+  --color-admin-input-border:  #e5e7eb;
+  --color-admin-input-focus:   #012269;
+
+  /* Accent colours */
+  --color-admin-navy:          #012269;
+  --color-admin-red:           #e40229;
+  --color-admin-gold:          #D4AF37;
+
+  /* Status badges */
+  --color-badge-success-bg:    #f0fdf4;
+  --color-badge-success-text:  #166534;
+  --color-badge-success-border:#bbf7d0;
+  --color-badge-warn-bg:       #fffbeb;
+  --color-badge-warn-text:     #92400e;
+  --color-badge-warn-border:   #fde68a;
+  --color-badge-error-bg:      #fff1f2;
+  --color-badge-error-text:    #9f1239;
+  --color-badge-error-border:  #fecdd3;
+  --color-badge-info-bg:       #eff6ff;
+  --color-badge-info-text:     #1e40af;
+  --color-badge-info-border:   #bfdbfe;
 }
 
 :root {
@@ -103,6 +149,234 @@
   
   .glass-card {
     @apply bg-white/80 backdrop-blur-md border border-white/20 shadow-xl;
+  }
+}
+
+@layer utilities {
+  /* ── Admin Reusable Components ─────────────────────────────────────────── */
+
+  /* Page wrapper */
+  .admin-page {
+    @apply space-y-8;
+  }
+
+  /* Page heading block */
+  .admin-heading {
+    @apply text-3xl font-extrabold tracking-tight;
+    color: var(--color-admin-heading);
+  }
+  .admin-subheading {
+    @apply text-sm mt-1;
+    color: var(--color-admin-subtext);
+  }
+
+  /* White card panel */
+  .admin-card {
+    @apply bg-white rounded-2xl border shadow-sm;
+    border-color: var(--color-admin-card-border);
+  }
+
+  /* Card with inner padding */
+  .admin-card-padded {
+    @apply bg-white rounded-2xl border shadow-sm p-6;
+    border-color: var(--color-admin-card-border);
+  }
+
+  /* Table wrapper card */
+  .admin-table-card {
+    @apply bg-white rounded-2xl border shadow-sm overflow-hidden;
+    border-color: var(--color-admin-card-border);
+  }
+
+  /* Table thead */
+  .admin-thead {
+    @apply text-xs font-bold uppercase tracking-wider border-b;
+    background-color: var(--color-admin-table-head);
+    color: var(--color-admin-subtext);
+    border-color: var(--color-admin-card-border);
+  }
+  .admin-thead th {
+    @apply px-6 py-4;
+  }
+
+  /* Table tbody row */
+  .admin-tbody {
+    @apply divide-y;
+    --tw-divide-opacity: 1;
+    divide-color: var(--color-admin-card-border);
+  }
+  .admin-tr {
+    @apply transition-colors;
+  }
+  .admin-tr:hover {
+    background-color: var(--color-admin-row-hover);
+  }
+  .admin-td {
+    @apply px-6 py-4 text-sm;
+  }
+
+  /* Text helpers */
+  .admin-label {
+    @apply text-xs font-bold uppercase tracking-widest;
+    color: var(--color-admin-muted);
+  }
+  .admin-value {
+    @apply font-extrabold text-3xl tabular-nums;
+    color: var(--color-admin-heading);
+  }
+  .admin-cell-primary {
+    @apply font-bold text-sm;
+    color: var(--color-admin-heading);
+  }
+  .admin-cell-muted {
+    @apply text-xs;
+    color: var(--color-admin-subtext);
+  }
+
+  /* Inputs & Selects */
+  .admin-input, .admin-select {
+    @apply w-full px-4 py-2.5 rounded-xl border text-sm outline-none transition-all;
+    background-color: var(--color-admin-input-bg);
+    border-color: var(--color-admin-input-border);
+    color: var(--color-admin-heading);
+  }
+  .admin-input:focus, .admin-select:focus {
+    border-color: var(--color-admin-input-focus);
+    @apply ring-0;
+  }
+
+  /* Toolbar row (search + filters) */
+  .admin-toolbar {
+    @apply bg-white rounded-2xl border shadow-sm p-6 flex flex-col md:flex-row gap-4 justify-between items-center;
+    border-color: var(--color-admin-card-border);
+  }
+
+  /* Primary action button */
+  .admin-btn-primary {
+    @apply flex items-center gap-2 px-5 py-2.5 font-bold rounded-xl text-sm uppercase tracking-wider transition-all shadow-md;
+    background-color: var(--color-admin-navy);
+    color: #ffffff;
+  }
+  .admin-btn-primary:hover {
+    background-color: color-mix(in srgb, var(--color-admin-navy), black 15%);
+  }
+
+  /* Danger button */
+  .admin-btn-danger {
+    @apply flex items-center gap-2 px-5 py-2.5 font-bold rounded-xl text-sm transition-all;
+    background-color: var(--color-admin-red);
+    color: #ffffff;
+  }
+  .admin-btn-danger:hover {
+    background-color: color-mix(in srgb, var(--color-admin-red), black 10%);
+  }
+
+  /* Gold action button */
+  .admin-btn-gold {
+    @apply flex items-center gap-2 px-5 py-2.5 font-bold rounded-xl text-sm transition-all shadow-md uppercase tracking-wider;
+    background-color: var(--color-admin-gold);
+    color: #030E1E;
+  }
+  .admin-btn-gold:hover {
+    background-color: color-mix(in srgb, var(--color-admin-gold), black 12%);
+  }
+
+  /* Ghost icon button */
+  .admin-btn-icon {
+    @apply p-2 rounded-xl border transition-all;
+    border-color: var(--color-admin-card-border);
+    color: var(--color-admin-subtext);
+  }
+  .admin-btn-icon:hover {
+    background-color: var(--color-admin-table-head);
+    color: var(--color-admin-heading);
+  }
+
+  /* Status badges */
+  .admin-badge {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border;
+  }
+  .admin-badge-success {
+    background-color: var(--color-badge-success-bg);
+    color: var(--color-badge-success-text);
+    border-color: var(--color-badge-success-border);
+  }
+  .admin-badge-warn {
+    background-color: var(--color-badge-warn-bg);
+    color: var(--color-badge-warn-text);
+    border-color: var(--color-badge-warn-border);
+  }
+  .admin-badge-error {
+    background-color: var(--color-badge-error-bg);
+    color: var(--color-badge-error-text);
+    border-color: var(--color-badge-error-border);
+  }
+  .admin-badge-info {
+    background-color: var(--color-badge-info-bg);
+    color: var(--color-badge-info-text);
+    border-color: var(--color-badge-info-border);
+  }
+  .admin-badge-navy {
+    background-color: color-mix(in srgb, var(--color-admin-navy), white 90%);
+    color: var(--color-admin-navy);
+    border-color: color-mix(in srgb, var(--color-admin-navy), white 70%);
+  }
+
+  /* Error alert bar */
+  .admin-error-bar {
+    @apply flex items-center gap-2 p-4 rounded-2xl border text-sm font-semibold;
+    background-color: var(--color-badge-error-bg);
+    color: var(--color-badge-error-text);
+    border-color: var(--color-badge-error-border);
+  }
+
+  /* Empty state */
+  .admin-empty {
+    @apply bg-white rounded-2xl border shadow-sm p-12 text-center flex flex-col items-center justify-center;
+    border-color: var(--color-admin-card-border);
+  }
+  .admin-empty-icon {
+    @apply w-16 h-16 mb-4;
+    color: var(--color-admin-card-border);
+  }
+  .admin-empty-title {
+    @apply text-xl font-bold mb-2;
+    color: var(--color-admin-heading);
+  }
+  .admin-empty-text {
+    @apply text-sm max-w-sm;
+    color: var(--color-admin-subtext);
+  }
+
+  /* Modal overlay */
+  .admin-modal-overlay {
+    @apply fixed inset-0 z-50 flex items-center justify-center p-4;
+  }
+  .admin-modal-backdrop {
+    @apply fixed inset-0 bg-black/40 backdrop-blur-sm;
+  }
+  .admin-modal-box {
+    @apply relative w-full max-w-md bg-white border rounded-3xl p-6 shadow-2xl;
+    border-color: var(--color-admin-card-border);
+  }
+  .admin-modal-title {
+    @apply text-lg font-bold mb-2;
+    color: var(--color-admin-heading);
+  }
+
+  /* Section heading inside a card */
+  .admin-section-title {
+    @apply text-base font-bold flex items-center gap-2 mb-4;
+    color: var(--color-admin-heading);
+  }
+
+  /* Loader center */
+  .admin-loader {
+    @apply flex justify-center items-center;
+  }
+  .admin-loader-icon {
+    @apply w-10 h-10 animate-spin;
+    color: var(--color-admin-navy);
   }
 }
 

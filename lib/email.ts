@@ -1,9 +1,10 @@
 import { Resend } from 'resend'
+import { env } from './env'
 
-export const resend = new Resend(process.env.RESEND_API_KEY!)
+export const resend = new Resend(env.RESEND_KEY)
 
-const fromEmail = process.env.EMAIL_FROM!
-const adminEmail = process.env.ADMIN_EMAIL!
+const fromEmail = env.EMAIL_FROM
+const adminEmail = env.ADMIN_EMAIL
 
 export function wrapEmailTemplate(contentHtml: string): string {
   return `
@@ -58,7 +59,7 @@ export async function sendBookingConfirmation(
 ) {
   try {
     const isVideoConsultation = planName.toLowerCase().includes("video") || planName.toLowerCase().includes("online");
-    const meetLink = process.env.MICROSOFT_MEET_LINK || "https://teams.live.com/meet/939983663000?p=pxeipOrwss1489LTOJ";
+    const meetLink = env.MICROSOFT_MEET_LINK;
 
     const videoLinkSection = isVideoConsultation ? `
       <div style="background-color: #f0f4ff; border-left: 4px solid #030E1E; padding: 15px; border-radius: 6px; margin: 20px 0;">
@@ -123,7 +124,7 @@ export async function sendAdminAlert(
 ) {
   try {
     const isVideoConsultation = planName.toLowerCase().includes("video") || planName.toLowerCase().includes("online");
-    const meetLink = process.env.MICROSOFT_MEET_LINK || "https://teams.live.com/meet/939983663000?p=pxeipOrwss1489LTOJ";
+    const meetLink = env.MICROSOFT_MEET_LINK;
 
     const videoLinkRow = isVideoConsultation ? `
       <tr style="border-bottom: 1px solid #f1f5f9;">

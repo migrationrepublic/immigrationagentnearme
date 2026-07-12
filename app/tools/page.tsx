@@ -46,6 +46,7 @@ export default function ToolsDirectoryPage() {
                 width={100} 
                 height={100} 
                 className="rounded-full border-4 border-white/20 relative"
+                style={{ width: 'auto', height: 'auto' }}
               />
             </div>
           </Link>

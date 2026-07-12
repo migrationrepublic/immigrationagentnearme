@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { env } from "@/lib/env";
 
 const SYSTEM_INSTRUCTION = `You are the official AI assistant for Migration Republic (also operating as immigrationagentnearme.com).
 Your goal is to be a professional, warm, supportive, and highly knowledgeable advisor for users navigating the Australian visa and migration process.
@@ -51,11 +52,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid or empty messages array" }, { status: 400 });
     }
 
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = env.GOOGLE_API_KEY;
     if (!apiKey) {
-      console.error("GEMINI_API_KEY is not defined in environment variables.");
+      console.error("GOOGLE_API_KEY is not defined in environment variables.");
       return NextResponse.json({ error: "API Key Configuration Error. Please contact site administrator." }, { status: 500 });
     }
+
 
     // Format chat history for Gemini REST API
     const contents = messages.map((msg: { role: string; content: string }) => ({

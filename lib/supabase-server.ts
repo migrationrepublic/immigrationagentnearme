@@ -1,16 +1,14 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { createClient } from '@supabase/supabase-js'
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+import { env } from './env'
 
 // 1. Standard Client for Auth (reads cookies)
 export async function createClientForAction() {
   const cookieStore = await cookies()
 
-  return createServerClient(supabaseUrl, supabaseAnonKey, {
+  return createServerClient(env.SUPABASE_URL, env.SUPABASE_KEY, {
+
     cookies: {
       getAll() {
         return cookieStore.getAll()
@@ -31,11 +29,12 @@ export async function createClientForAction() {
 }
 
 // 2. God-Mode Client (Service Role) - Keep this for bypassing RLS in actions
-export const supabaseServer = createClient(supabaseUrl, supabaseServiceRoleKey, {
+export const supabaseServer = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
   auth: {
     persistSession: false,
     autoRefreshToken: false,
     detectSessionInUrl: false,
   },
 })
+
 

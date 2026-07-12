@@ -6,11 +6,13 @@ import {
   sendAdminAlert,
 } from "@/lib/email";
 import Stripe from "stripe";
+import { env } from "@/lib/env";
 
 export async function POST(req: Request) {
   const body = await req.text();
   const sig = req.headers.get("stripe-signature");
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  const webhookSecret = env.STRIPE_WEBHOOK_SECRET;
+
 
   // -------------------------------
   // Validate Required Values

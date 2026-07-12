@@ -28,6 +28,14 @@ const tools = [
     href: '/tools/visa-quiz',
     color: 'bg-purple-50',
   },
+  {
+    id: 'subclass-482-checker',
+    title: 'Subclass 482 Eligibility',
+    description: 'Check your eligibility criteria for the Subclass 482 Skills in Demand Visa.',
+    icon: <ClipboardCheck className="w-8 h-8 text-amber-600" />,
+    href: '/tools/subclass-482-checker',
+    color: 'bg-amber-50',
+  },
 ];
 
 export default function ToolsDirectoryPage() {
@@ -61,7 +69,7 @@ export default function ToolsDirectoryPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-20 -mt-16 relative z-20">
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
           {tools.map((tool) => (
             <Link 
               key={tool.id} 

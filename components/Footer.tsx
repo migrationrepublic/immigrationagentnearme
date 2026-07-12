@@ -139,6 +139,7 @@ export default function Footer() {
                   { name: "PR Points Calculator", href: "/tools/pr-calculator" },
                   { name: "Eligibility Checker", href: "/tools/eligibility-checker" },
                   { name: "Visa Selection Quiz", href: "/tools/visa-quiz" },
+                  { name: "Subclass 482 Checker", href: "/tools/subclass-482-checker" },
                 ].map((tool) => (
                   <li key={tool.name} className="group/link overflow-hidden">
                     <Link

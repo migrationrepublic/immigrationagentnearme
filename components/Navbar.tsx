@@ -78,6 +78,12 @@ export default function Navbar() {
                 >
                   Visa Selection Quiz
                 </Link>
+                <Link
+                  href="/tools/subclass-482-checker"
+                  className="flex items-center gap-3 px-4 py-3 hover:bg-brand-primary/5 rounded-xl text-brand-heading font-medium transition-colors"
+                >
+                  Subclass 482 Checker
+                </Link>
               </div>
             </div>
           </div>

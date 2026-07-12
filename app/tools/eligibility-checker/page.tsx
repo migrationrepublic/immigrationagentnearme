@@ -34,8 +34,31 @@ export default function EligibilityCheckerPage() {
       issues.push("A formal qualification or skills assessment is mandatory for skilled migration.");
     }
 
+    if (!submitted) {
+      return (
+        <div className="space-y-6">
+          <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex gap-3">
+            <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-blue-800 font-semibold">
+              Please enter your contact details below to instantly view your eligibility results.
+            </p>
+          </div>
+          <LeadForm 
+            toolName="Eligibility Checker" 
+            results={{ status, issues }} 
+            onSuccess={() => setSubmitted(true)} 
+          />
+        </div>
+      );
+    }
+
     return (
       <div className="space-y-8">
+        <div className="bg-green-50 border border-green-100 rounded-xl p-6 text-center">
+          <h4 className="font-bold text-green-900">Thank you! Your details have been submitted.</h4>
+          <p className="text-green-700 text-sm mt-1">Below are your initial eligibility checker results:</p>
+        </div>
+
         {/* Status Display */}
         <div className={`flex flex-col items-center justify-center p-8 rounded-2xl border-2 ${
           status === 'eligible' ? 'bg-green-50 border-green-100' : 
@@ -75,19 +98,6 @@ export default function EligibilityCheckerPage() {
             </p>
           )}
         </div>
-
-        {!submitted ? (
-          <LeadForm 
-            toolName="Eligibility Checker" 
-            results={{ status, issues }} 
-            onSuccess={() => setSubmitted(true)} 
-          />
-        ) : (
-          <div className="bg-green-50 border border-green-100 rounded-xl p-6 text-center">
-            <h4 className="font-bold text-green-900">Your assessment has been saved!</h4>
-            <p className="text-green-700 text-sm mt-1">A migration agent will review your profile and contact you with the best path forward.</p>
-          </div>
-        )}
 
         <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex gap-3">
           <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />

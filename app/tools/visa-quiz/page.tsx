@@ -5,7 +5,7 @@ import { MultiStepTool } from '@/components/tools/shared/multi-step-tool';
 import { visaQuizData } from '@/lib/tools/visa-quiz-data';
 import { LeadForm } from '@/components/tools/shared/lead-form';
 import { ToolHeader } from '@/components/tools/shared/tool-header';
-import { Sparkles, GraduationCap, Briefcase, Heart, Building2, Palmtree } from 'lucide-react';
+import { Sparkles, GraduationCap, Briefcase, Heart, Building2, Palmtree, Info } from 'lucide-react';
 
 export default function VisaQuizPage() {
   const [submitted, setSubmitted] = useState(false);
@@ -62,8 +62,31 @@ export default function VisaQuizPage() {
       desc: s.desc
     }));
 
+    if (!submitted) {
+      return (
+        <div className="space-y-6">
+          <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex gap-3">
+            <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-blue-800 font-semibold">
+              Please enter your contact details below to instantly view your personalized visa recommendations.
+            </p>
+          </div>
+          <LeadForm
+            toolName="Visa Suggestion Quiz"
+            results={{ suggestions: suggestionsForDb }}
+            onSuccess={() => setSubmitted(true)}
+          />
+        </div>
+      );
+    }
+
     return (
       <div className="space-y-8">
+        <div className="bg-green-50 border border-green-100 rounded-xl p-6 text-center">
+          <h4 className="font-bold text-green-900">Thank you! Your preferences have been saved.</h4>
+          <p className="text-green-700 text-sm mt-1">Below are the visa options matching your migration goals:</p>
+        </div>
+
         <h4 className="text-xl font-bold text-brand-primary">Based on your goals, we suggest exploring:</h4>
 
         <div className="grid gap-6">
@@ -84,19 +107,6 @@ export default function VisaQuizPage() {
             </div>
           ))}
         </div>
-
-        {!submitted ? (
-          <LeadForm
-            toolName="Visa Suggestion Quiz"
-            results={{ suggestions: suggestionsForDb }}
-            onSuccess={() => setSubmitted(true)}
-          />
-        ) : (
-          <div className="bg-green-50 border border-green-100 rounded-xl p-6 text-center">
-            <h4 className="font-bold text-green-900">Your preferences have been saved!</h4>
-            <p className="text-green-700 text-sm mt-1">Our specialists will review your choices and send you more info on these visas.</p>
-          </div>
-        )}
       </div>
     );
   };

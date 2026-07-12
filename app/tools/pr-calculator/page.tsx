@@ -27,8 +27,31 @@ export default function PRCalculatorPage() {
       });
     });
 
+    if (!submitted) {
+      return (
+        <div className="space-y-6">
+          <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex gap-3">
+            <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-blue-800 font-semibold">
+              Please enter your contact details below to instantly calculate and view your PR points score.
+            </p>
+          </div>
+          <LeadForm 
+            toolName="PR Calculator" 
+            results={{ totalPoints, breakdown }} 
+            onSuccess={() => setSubmitted(true)} 
+          />
+        </div>
+      );
+    }
+
     return (
       <div className="space-y-8">
+        <div className="bg-green-50 border border-green-100 rounded-xl p-6 text-center">
+          <h4 className="font-bold text-green-900">Thank you! Your details have been submitted.</h4>
+          <p className="text-green-700 text-sm mt-1">Below is your estimated PR Points breakdown:</p>
+        </div>
+
         {/* Score Display */}
         <div className="flex flex-col items-center justify-center p-8 bg-brand-soft rounded-2xl border-2 border-brand-primary/10">
           <span className="text-brand-primary/60 font-semibold uppercase tracking-widest text-sm mb-2">Your Estimated Score</span>
@@ -94,19 +117,6 @@ export default function PRCalculatorPage() {
             </tfoot>
           </table>
         </div>
-
-        {!submitted ? (
-          <LeadForm 
-            toolName="PR Calculator" 
-            results={{ totalPoints, breakdown }} 
-            onSuccess={() => setSubmitted(true)} 
-          />
-        ) : (
-          <div className="bg-green-50 border border-green-100 rounded-xl p-6 text-center">
-            <h4 className="font-bold text-green-900">Your results have been saved!</h4>
-            <p className="text-green-700 text-sm mt-1">Our migration agents will review your profile and contact you soon.</p>
-          </div>
-        )}
 
         <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex gap-3">
           <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />

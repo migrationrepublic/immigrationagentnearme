@@ -69,12 +69,12 @@ export default function ToolsDirectoryPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-20 -mt-16 relative z-20">
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
           {tools.map((tool) => (
             <Link 
               key={tool.id} 
               href={tool.href}
-              className="group bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-2xl hover:shadow-brand-primary/10 transition-all duration-500 flex flex-col items-center text-center"
+              className="group bg-white p-6 sm:p-8 rounded-[2.5rem] border border-gray-100 shadow-2xl hover:shadow-brand-primary/10 transition-all duration-500 flex flex-col items-center text-center"
             >
               <div className={`${tool.color} w-24 h-24 rounded-3xl flex items-center justify-center mb-8 group-hover:rotate-6 transition-transform duration-500`}>
                 {tool.icon}

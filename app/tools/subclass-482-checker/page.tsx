@@ -306,7 +306,7 @@ export default function Subclass482CheckerPage() {
         )}
 
         <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden min-h-[450px] flex flex-col">
-          <div className="p-8 md:p-12 flex-1">
+          <div className="p-5 sm:p-8 md:p-12 flex-1">
 
             {/* STEP 1: Employer Sponsorship */}
             {step === 1 && (
@@ -458,7 +458,7 @@ export default function Subclass482CheckerPage() {
                     <label className="block text-sm font-semibold text-gray-700 mb-3">
                       How much relevant work experience do you have?
                     </label>
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
                       {[
                         { label: 'Less than 1 year', value: 'less-1' },
                         { label: '1 - 3 years', value: '1-3' },
@@ -484,7 +484,7 @@ export default function Subclass482CheckerPage() {
                     <label className="block text-sm font-semibold text-gray-700 mb-3">
                       Was this experience gained within the last 5 years?
                     </label>
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
                       {[
                         { label: 'Yes, fully recency', value: 'yes' },
                         { label: 'Partially within 5 yrs', value: 'partly' },
@@ -510,7 +510,7 @@ export default function Subclass482CheckerPage() {
                     <label className="block text-sm font-semibold text-gray-700 mb-3">
                       What is/was the primary type of this employment?
                     </label>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
                       {[
                         { label: 'Full-time', value: 'full-time' },
                         { label: 'Part-time', value: 'part-time' },
@@ -569,7 +569,7 @@ export default function Subclass482CheckerPage() {
                 <h2 className="text-2xl md:text-3xl font-bold text-brand-primary mb-6">
                   Do you hold qualifications related to your nominated occupation?
                 </h2>
-                <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
                   {[
                     { label: 'Yes, I hold related qualifications', value: 'yes' },
                     { label: 'No formal qualifications', value: 'no' }
@@ -644,7 +644,7 @@ export default function Subclass482CheckerPage() {
                 <h2 className="text-2xl md:text-3xl font-bold text-brand-primary mb-6">
                   Where are you currently located?
                 </h2>
-                <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
                   {[
                     { label: 'Outside Australia', value: 'outside' },
                     { label: 'Inside Australia', value: 'australia' }
@@ -673,7 +673,7 @@ export default function Subclass482CheckerPage() {
                     <label className="block text-sm font-semibold text-gray-700">
                       What is your current Australian Visa Subclass?
                     </label>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 sm:gap-3">
                       {[
                         { label: 'Student (500)', value: 'student' },
                         { label: 'Working Holiday (417/462)', value: 'working-holiday' },
@@ -1021,7 +1021,7 @@ export default function Subclass482CheckerPage() {
 
           {/* Footer Navigation (For steps 1-8) */}
           {step <= totalSteps && (
-            <div className="px-8 py-6 bg-gray-50 border-t border-gray-100 flex justify-between">
+            <div className="px-4 sm:px-8 py-4 sm:py-6 bg-gray-50 border-t border-gray-100 flex justify-between">
               <Button
                 type="button"
                 variant="ghost"

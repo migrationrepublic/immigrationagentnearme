@@ -91,28 +91,28 @@ export default function PRCalculatorPage() {
         </div>
 
         {/* Breakdown Table */}
-        <div className="overflow-hidden border border-gray-100 rounded-xl">
-          <table className="w-full text-left">
+        <div className="overflow-hidden border border-gray-100 rounded-xl overflow-x-auto">
+          <table className="w-full text-left min-w-[500px] sm:min-w-0">
             <thead className="bg-gray-50 border-b border-gray-100">
               <tr>
-                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Category</th>
-                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Your Selection</th>
-                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Points</th>
+                <th className="px-3 sm:px-6 py-3 sm:py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Category</th>
+                <th className="px-3 sm:px-6 py-3 sm:py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Your Selection</th>
+                <th className="px-3 sm:px-6 py-3 sm:py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Points</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {breakdown.map((item, idx) => (
                 <tr key={idx} className="hover:bg-brand-soft/30 transition-colors">
-                  <td className="px-6 py-4 text-sm font-medium text-brand-primary">{item.category}</td>
-                  <td className="px-6 py-4 text-sm text-gray-500">{item.selection}</td>
-                  <td className="px-6 py-4 text-sm font-bold text-brand-accent text-right">+{item.points}</td>
+                  <td className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-medium text-brand-primary">{item.category}</td>
+                  <td className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-500">{item.selection}</td>
+                  <td className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-bold text-brand-accent text-right">+{item.points}</td>
                 </tr>
               ))}
             </tbody>
             <tfoot className="bg-brand-primary text-white font-bold">
               <tr>
-                <td className="px-6 py-4" colSpan={2}>Estimated Total Points</td>
-                <td className="px-6 py-4 text-right text-xl">{totalPoints}</td>
+                <td className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm" colSpan={2}>Estimated Total Points</td>
+                <td className="px-3 sm:px-6 py-3 sm:py-4 text-right text-base sm:text-xl">{totalPoints}</td>
               </tr>
             </tfoot>
           </table>

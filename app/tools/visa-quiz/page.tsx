@@ -91,18 +91,18 @@ export default function VisaQuizPage() {
 
         <div className="grid gap-6">
           {suggestions.map((visa, idx) => (
-            <div key={idx} className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm flex items-start gap-5 hover:shadow-md transition-shadow">
+            <div key={idx} className="bg-white border border-gray-100 rounded-2xl p-4 sm:p-6 shadow-sm flex flex-col sm:flex-row items-start gap-4 sm:gap-5 hover:shadow-md transition-shadow">
               <div className="w-12 h-12 bg-brand-soft rounded-xl flex items-center justify-center flex-shrink-0">
                 {visa.icon}
               </div>
-              <div className="flex-1">
-                <div className="flex justify-between items-center mb-1">
-                  <h5 className="text-lg font-bold text-brand-primary">{visa.name}</h5>
-                  <span className="text-[10px] font-bold uppercase tracking-wider bg-gray-100 text-gray-500 px-2 py-1 rounded">
+              <div className="flex-1 w-full">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1.5 sm:gap-2 mb-2 sm:mb-1">
+                  <h5 className="text-base sm:text-lg font-bold text-brand-primary leading-tight">{visa.name}</h5>
+                  <span className="text-[10px] font-bold uppercase tracking-wider bg-gray-100 text-gray-500 px-2 py-1 rounded w-fit">
                     {visa.type}
                   </span>
                 </div>
-                <p className="text-gray-600 text-sm leading-relaxed">{visa.desc}</p>
+                <p className="text-gray-600 text-xs sm:text-sm leading-relaxed">{visa.desc}</p>
               </div>
             </div>
           ))}

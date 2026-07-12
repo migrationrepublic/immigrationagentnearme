@@ -60,7 +60,7 @@ export default function EligibilityCheckerPage() {
         </div>
 
         {/* Status Display */}
-        <div className={`flex flex-col items-center justify-center p-8 rounded-2xl border-2 ${
+        <div className={`flex flex-col items-center justify-center p-6 sm:p-8 rounded-2xl border-2 ${
           status === 'eligible' ? 'bg-green-50 border-green-100' : 
           status === 'warning' ? 'bg-amber-50 border-amber-100' : 'bg-red-50 border-red-100'
         }`}>

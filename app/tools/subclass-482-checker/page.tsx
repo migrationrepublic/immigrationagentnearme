@@ -489,7 +489,7 @@ export default function Subclass482CheckerPage() {
                       {[
                         { label: 'Yes, fully recency', value: 'yes' },
                         { label: 'Partially within 5 yrs', value: 'partly' },
-                        { label: 'no, longer ago', value: 'no' }
+                        { label: 'No', value: 'no' }
                       ].map(opt => (
                         <button
                           key={opt.value}

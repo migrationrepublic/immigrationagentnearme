@@ -60,7 +60,7 @@ export function ToolHeader({ title, description }: ToolHeaderProps) {
           <ArrowLeft className="w-4 h-4" /> Back to Tools
         </Link>
 
-        <h1 className="text-3xl md:text-5xl lg:text-6xl font-black text-brand-primary tracking-tight mb-4 max-w-4xl">
+        <h1 className="text-2xl xs:text-3xl md:text-5xl lg:text-6xl font-extrabold text-brand-primary tracking-tight mb-4 max-w-4xl px-2">
           {formatTitle(title)}
         </h1>
         <p className="max-w-2xl mx-auto text-base md:text-lg text-gray-600 font-medium leading-relaxed">

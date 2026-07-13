@@ -347,7 +347,7 @@ export default function Subclass482CheckerPage() {
   const { resultType, flags } = processAssessment();
 
   return (
-    <div className="min-h-screen bg-brand-soft/30 py-12 px-4 sm:px-6 lg:px-8" suppressHydrationWarning>
+    <div className="min-h-screen bg-brand-soft/30 pt-12 pb-32 px-4 sm:px-6 lg:px-8" suppressHydrationWarning>
       <div className="max-w-4xl mx-auto">
         <ToolHeader
           title="Subclass 482 Visa Eligibility Checker"
@@ -1077,23 +1077,23 @@ export default function Subclass482CheckerPage() {
 
           {/* Footer Navigation (For steps 1-8) */}
           {step <= totalSteps && (
-            <div className="px-4 sm:px-8 py-4 sm:py-6 bg-gray-50 border-t border-gray-100 flex justify-between">
+            <div className="px-4 sm:px-8 py-4 sm:py-6 bg-gray-50 border-t border-gray-100 flex justify-between items-center gap-3">
               <Button
                 type="button"
                 variant="ghost"
                 onClick={handleBack}
                 disabled={step === 1}
-                className="text-gray-500 hover:text-brand-primary disabled:opacity-0"
+                className="text-gray-500 hover:text-brand-primary disabled:opacity-0 px-5 py-3 text-sm font-semibold rounded-xl transition-all"
               >
-                <ChevronLeft className="w-4 h-4 mr-2" /> Back
+                <ChevronLeft className="w-4 h-4 mr-1.5" /> Back
               </Button>
 
               <Button
                 type="button"
                 onClick={handleNext}
-                className="bg-brand-primary hover:bg-brand-primary/90 text-white font-bold px-6"
+                className="bg-[#012269] hover:bg-[#012269]/95 text-white font-bold px-8 py-3.5 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 active:scale-95 flex items-center justify-center min-w-[120px] text-sm uppercase tracking-wider"
               >
-                Next <ChevronRight className="w-4 h-4 ml-2" />
+                Next <ChevronRight className="w-4 h-4 ml-1.5" />
               </Button>
             </div>
           )}

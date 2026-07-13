@@ -23,6 +23,7 @@ const CSOL_OCCUPATIONS = [
   { name: "Software Engineer", code: "261313" },
   { name: "Registered Nurse (General)", code: "254499" },
   { name: "Chef", code: "351311" },
+  { name: "Cook", code: "351411" },
   { name: "Accountant (General)", code: "221111" },
   { name: "Civil Engineer", code: "233211" },
   { name: "ICT Business Analyst", code: "261111" },
@@ -251,7 +252,7 @@ export default function Subclass482CheckerPage() {
       results: {
         passport_country: formData.get('passport_country') as string,
         current_country: formData.get('current_country') as string,
-        occupation: formData.get('occupation') as string,
+        occupation: responses.occupation === 'other' ? 'Other/Not Listed' : responses.occupation === 'manual' ? 'Unsure/Requires Review' : (responses.occupation || 'N/A'),
         employer_name: formData.get('employer') as string || 'N/A',
         consent_given: formData.get('consent') === 'on' ? 'Yes' : 'No',
         quiz_responses: responses,
@@ -316,17 +317,17 @@ export default function Subclass482CheckerPage() {
                 </h2>
                 <div className="grid gap-4">
                   {[
-                    { label: 'Yes, I have an employer willing to sponsor me', value: 'yes' },
-                    { label: 'My employer is considering sponsoring me', value: 'maybe' },
-                    { label: 'No, I do not have a sponsoring employer', value: 'no' }
+                    { label: 'Yes', value: 'yes' },
+                    { label: 'My employer may sponsor me', value: 'maybe' },
+                    { label: 'No', value: 'no' }
                   ].map((opt) => (
                     <button
                       key={opt.value}
                       type="button"
                       onClick={() => handleSelectOption('sponsorship', opt.value)}
                       className={`flex items-center justify-between p-5 rounded-xl border-2 text-left transition-all ${responses.sponsorship === opt.value
-                          ? "border-brand-primary bg-brand-soft text-brand-primary shadow-sm"
-                          : "border-gray-100 hover:border-brand-primary/20 text-gray-700"
+                        ? "border-brand-primary bg-brand-soft text-brand-primary shadow-sm"
+                        : "border-gray-100 hover:border-brand-primary/20 text-gray-700"
                         }`}
                     >
                       <span className="font-medium text-base">{opt.label}</span>
@@ -405,8 +406,8 @@ export default function Subclass482CheckerPage() {
                       setSearchQuery('Other / Not Listed');
                     }}
                     className={`w-full flex items-center justify-between p-4 rounded-xl border-2 text-left transition-all ${responses.occupation === 'other'
-                        ? "border-brand-primary bg-brand-soft text-brand-primary shadow-sm"
-                        : "border-gray-100 hover:border-brand-primary/20 text-gray-700"
+                      ? "border-brand-primary bg-brand-soft text-brand-primary shadow-sm"
+                      : "border-gray-100 hover:border-brand-primary/20 text-gray-700"
                       }`}
                   >
                     <div>
@@ -423,8 +424,8 @@ export default function Subclass482CheckerPage() {
                       setSearchQuery('Manual Review Needed');
                     }}
                     className={`w-full flex items-center justify-between p-4 rounded-xl border-2 text-left transition-all ${responses.occupation === 'manual'
-                        ? "border-brand-primary bg-brand-soft text-brand-primary shadow-sm"
-                        : "border-gray-100 hover:border-brand-primary/20 text-gray-700"
+                      ? "border-brand-primary bg-brand-soft text-brand-primary shadow-sm"
+                      : "border-gray-100 hover:border-brand-primary/20 text-gray-700"
                       }`}
                   >
                     <div>
@@ -469,8 +470,8 @@ export default function Subclass482CheckerPage() {
                           type="button"
                           onClick={() => handleSelectOption('experience', opt.value)}
                           className={`p-3 text-sm rounded-xl border-2 font-medium ${responses.experience === opt.value
-                              ? "border-brand-primary bg-brand-soft text-brand-primary"
-                              : "border-gray-100 hover:border-brand-primary/20 text-gray-700"
+                            ? "border-brand-primary bg-brand-soft text-brand-primary"
+                            : "border-gray-100 hover:border-brand-primary/20 text-gray-700"
                             }`}
                         >
                           {opt.label}
@@ -488,15 +489,15 @@ export default function Subclass482CheckerPage() {
                       {[
                         { label: 'Yes, fully recency', value: 'yes' },
                         { label: 'Partially within 5 yrs', value: 'partly' },
-                        { label: 'No, longer ago', value: 'no' }
+                        { label: 'no, longer ago', value: 'no' }
                       ].map(opt => (
                         <button
                           key={opt.value}
                           type="button"
                           onClick={() => handleSelectOption('recency', opt.value)}
                           className={`p-3 text-sm rounded-xl border-2 font-medium ${responses.recency === opt.value
-                              ? "border-brand-primary bg-brand-soft text-brand-primary"
-                              : "border-gray-100 hover:border-brand-primary/20 text-gray-700"
+                            ? "border-brand-primary bg-brand-soft text-brand-primary"
+                            : "border-gray-100 hover:border-brand-primary/20 text-gray-700"
                             }`}
                         >
                           {opt.label}
@@ -522,8 +523,8 @@ export default function Subclass482CheckerPage() {
                           type="button"
                           onClick={() => handleSelectOption('exp_type', opt.value)}
                           className={`p-3 text-sm rounded-xl border-2 font-medium ${responses.exp_type === opt.value
-                              ? "border-brand-primary bg-brand-soft text-brand-primary"
-                              : "border-gray-100 hover:border-brand-primary/20 text-gray-700"
+                            ? "border-brand-primary bg-brand-soft text-brand-primary"
+                            : "border-gray-100 hover:border-brand-primary/20 text-gray-700"
                             }`}
                         >
                           {opt.label}
@@ -544,7 +545,7 @@ export default function Subclass482CheckerPage() {
                 <div className="grid gap-4">
                   {[
                     { label: 'I have IELTS 5 in each band (or equivalent test score)', value: 'ielts-5' },
-                    { label: 'I may qualify for an exemption (e.g. passport holder of UK, US, CA, NZ, IE)', value: 'exemption' },
+                    { label: 'I may qualify for an exemption (e.g. passport holder of UK, US, CA, NZ, IRL)', value: 'exemption' },
                     { label: 'I have not completed an approved English test yet', value: 'none' }
                   ].map((opt) => (
                     <button
@@ -552,8 +553,8 @@ export default function Subclass482CheckerPage() {
                       type="button"
                       onClick={() => handleSelectOption('english', opt.value)}
                       className={`flex items-center justify-between p-5 rounded-xl border-2 text-left transition-all ${responses.english === opt.value
-                          ? "border-brand-primary bg-brand-soft text-brand-primary shadow-sm"
-                          : "border-gray-100 hover:border-brand-primary/20 text-gray-700"
+                        ? "border-brand-primary bg-brand-soft text-brand-primary shadow-sm"
+                        : "border-gray-100 hover:border-brand-primary/20 text-gray-700"
                         }`}
                     >
                       <span className="font-medium text-base">{opt.label}</span>
@@ -584,8 +585,8 @@ export default function Subclass482CheckerPage() {
                         }
                       }}
                       className={`flex items-center justify-center p-5 rounded-xl border-2 text-center transition-all font-semibold ${responses.has_qualification === opt.value
-                          ? "border-brand-primary bg-brand-soft text-brand-primary shadow-sm"
-                          : "border-gray-100 hover:border-brand-primary/20 text-gray-700"
+                        ? "border-brand-primary bg-brand-soft text-brand-primary shadow-sm"
+                        : "border-gray-100 hover:border-brand-primary/20 text-gray-700"
                         }`}
                     >
                       <span>{opt.label}</span>
@@ -627,8 +628,8 @@ export default function Subclass482CheckerPage() {
                       type="button"
                       onClick={() => handleSelectOption('skills_assessment', opt.value)}
                       className={`flex items-center justify-between p-5 rounded-xl border-2 text-left transition-all ${responses.skills_assessment === opt.value
-                          ? "border-brand-primary bg-brand-soft text-brand-primary shadow-sm"
-                          : "border-gray-100 hover:border-brand-primary/20 text-gray-700"
+                        ? "border-brand-primary bg-brand-soft text-brand-primary shadow-sm"
+                        : "border-gray-100 hover:border-brand-primary/20 text-gray-700"
                         }`}
                     >
                       <span className="font-medium text-base">{opt.label}</span>
@@ -659,8 +660,8 @@ export default function Subclass482CheckerPage() {
                         }
                       }}
                       className={`flex items-center justify-center p-5 rounded-xl border-2 text-center transition-all font-semibold ${responses.location === opt.value
-                          ? "border-brand-primary bg-brand-soft text-brand-primary shadow-sm"
-                          : "border-gray-100 hover:border-brand-primary/20 text-gray-700"
+                        ? "border-brand-primary bg-brand-soft text-brand-primary shadow-sm"
+                        : "border-gray-100 hover:border-brand-primary/20 text-gray-700"
                         }`}
                     >
                       <span>{opt.label}</span>
@@ -687,8 +688,8 @@ export default function Subclass482CheckerPage() {
                           type="button"
                           onClick={() => handleSelectOption('current_visa', opt.value)}
                           className={`p-3 text-xs rounded-xl border-2 font-semibold ${responses.current_visa === opt.value
-                              ? "border-brand-primary bg-brand-soft text-brand-primary"
-                              : "border-gray-100 hover:border-brand-primary/20 text-gray-700"
+                            ? "border-brand-primary bg-brand-soft text-brand-primary"
+                            : "border-gray-100 hover:border-brand-primary/20 text-gray-700"
                             }`}
                         >
                           {opt.label}
@@ -725,8 +726,8 @@ export default function Subclass482CheckerPage() {
                         type="button"
                         onClick={() => handleToggleHistory(opt.value)}
                         className={`flex items-center justify-between p-4 rounded-xl border-2 text-left transition-all ${isSelected
-                            ? "border-brand-primary bg-brand-soft text-brand-primary shadow-sm font-semibold"
-                            : "border-gray-100 hover:border-brand-primary/20 text-gray-700"
+                          ? "border-brand-primary bg-brand-soft text-brand-primary shadow-sm font-semibold"
+                          : "border-gray-100 hover:border-brand-primary/20 text-gray-700"
                           }`}
                       >
                         <span>{opt.label}</span>
@@ -774,26 +775,14 @@ export default function Subclass482CheckerPage() {
                     </div>
                   </div>
 
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold text-gray-600">Mobile Number</label>
-                      <input
-                        name="phone"
-                        placeholder="Mobile Number"
-                        required
-                        className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold text-gray-600">Nominated Occupation</label>
-                      <input
-                        name="occupation"
-                        defaultValue={responses.occupation === 'other' || responses.occupation === 'manual' ? '' : responses.occupation}
-                        placeholder="e.g. Software Engineer"
-                        required
-                        className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none font-semibold text-gray-700"
-                      />
-                    </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-gray-600">Mobile Number</label>
+                    <input
+                      name="phone"
+                      placeholder="Mobile Number"
+                      required
+                      className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none"
+                    />
                   </div>
 
                   <div className="grid md:grid-cols-2 gap-4">
@@ -818,10 +807,10 @@ export default function Subclass482CheckerPage() {
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-gray-600">Employer Name (Optional)</label>
+                    <label className="text-xs font-bold text-gray-600">Employer Name</label>
                     <input
                       name="employer"
-                      placeholder="Employer Name (Leave blank if none)"
+                      placeholder="Employer Name"
                       className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none"
                     />
                   </div>

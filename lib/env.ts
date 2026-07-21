@@ -25,7 +25,7 @@ const envSchema = z.object({
     ? z.string().min(1, "EMAIL_FROM address is required")
     : z.string().optional(),
   ADMIN_EMAIL: isServer
-    ? z.string().email("Invalid ADMIN_EMAIL address")
+    ? z.string().min(1, "ADMIN_EMAIL is required")
     : z.string().optional(),
   GEMINI_API_KEY: isServer
     ? z.string().min(1, "Gemini API Key is required")

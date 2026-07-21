@@ -5,6 +5,7 @@ export const resend = new Resend(env.RESEND_KEY)
 
 const fromEmail = env.EMAIL_FROM
 const adminEmail = env.ADMIN_EMAIL
+const adminRecipients = adminEmail ? adminEmail.split(',').map(e => e.trim()).filter(Boolean) : []
 
 export function wrapEmailTemplate(contentHtml: string): string {
   return `
@@ -176,7 +177,7 @@ export async function sendAdminAlert(
 
     await resend.emails.send({
       from: `System Notification <${fromEmail}>`,
-      to: adminEmail,
+      to: adminRecipients,
       subject: `New Booking: ${planName} - ${name}`,
       html: htmlContent
     });
@@ -225,7 +226,7 @@ export async function sendToolLeadAdminAlert(
 
     await resend.emails.send({
       from: `System Notification <${fromEmail}>`,
-      to: adminEmail,
+      to: adminRecipients,
       subject: `New Tool Lead: ${toolName} - ${name}`,
       html: htmlContent
     });

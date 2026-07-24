@@ -114,17 +114,17 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* ── Stat Cards ────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-5">
         {statCards.map((c, i) => {
           const Icon = c.icon
           return (
-            <div key={i} className="admin-card p-6 flex items-center justify-between group hover:shadow-md transition-all">
+            <div key={i} className="admin-card p-5 flex items-center justify-between group hover:shadow-md transition-all">
               <div>
-                <p className="admin-label">{c.title}</p>
-                <p className="admin-value mt-2">{c.value}</p>
+                <p className="admin-label text-xs">{c.title}</p>
+                <p className="admin-value text-xl mt-1.5">{c.value}</p>
               </div>
-              <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110 ${c.accent}`}>
-                <Icon className="w-6 h-6" />
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110 shrink-0 ${c.accent}`}>
+                <Icon className="w-5 h-5" />
               </div>
             </div>
           )

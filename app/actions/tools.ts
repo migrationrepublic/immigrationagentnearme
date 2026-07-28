@@ -8,7 +8,7 @@ const ToolLeadSchema = z.object({
   tool_name: z.string().min(1, "Tool name is required"),
   user_name: z.string().min(2, "Name is required"),
   user_email: z.string().email("Invalid email address"),
-  user_phone: z.string().optional(),
+  user_phone: z.string().min(1, "Contact number is required"),
   results: z.record(z.string(), z.unknown()),
 });
 

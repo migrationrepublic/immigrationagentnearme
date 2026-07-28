@@ -46,25 +46,36 @@ export function LeadForm({ toolName, results, onSuccess }: LeadFormProps) {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid md:grid-cols-2 gap-4">
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-gray-600">Full Name *</label>
+            <input
+              name="name"
+              placeholder="Full Name *"
+              required
+              className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-gray-600">Email Address *</label>
+            <input
+              name="email"
+              type="email"
+              placeholder="Email Address *"
+              required
+              className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none"
+            />
+          </div>
+        </div>
+        <div className="space-y-1">
+          <label className="text-xs font-bold text-gray-600">Contact Number *</label>
           <input
-            name="name"
-            placeholder="Full Name"
-            required
-            className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none"
-          />
-          <input
-            name="email"
-            type="email"
-            placeholder="Email Address"
+            name="phone"
+            type="tel"
+            placeholder="Contact Number *"
             required
             className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none"
           />
         </div>
-        <input
-          name="phone"
-          placeholder="Phone Number (Optional)"
-          className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none"
-        />
         
         {error && <p className="text-red-500 text-sm">{error}</p>}
 

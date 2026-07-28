@@ -748,10 +748,11 @@ export default function Subclass482CheckerPage() {
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-gray-600">Mobile Number</label>
+                    <label className="text-xs font-bold text-gray-600">Contact Number *</label>
                     <input
                       name="phone"
-                      placeholder="Mobile Number"
+                      type="tel"
+                      placeholder="Contact / Mobile Number *"
                       required
                       className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none"
                     />

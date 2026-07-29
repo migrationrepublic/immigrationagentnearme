@@ -29,7 +29,7 @@ export default function Hero({ city }: HeroProps = {}) {
   const badges = city?.badges || defaultBadges;
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-brand-primary/5 via-white to-brand-primary/10 pt-32 pb-20 lg:pt-40 lg:pb-28">
+    <section className="relative overflow-hidden bg-gradient-to-br from-brand-primary/5 via-white to-brand-primary/10 pt-10 pb-10 md:pt-22 md:pb-16">
       {/* Background Decorative Shapes */}
       <div className="absolute top-0 right-0 -translate-y-12 translate-x-1/3 w-[800px] h-[800px] bg-brand-primary/5 rounded-full blur-3xl" />
       <div className="absolute bottom-0 left-0 translate-y-1/3 -translate-x-1/3 w-[600px] h-[600px] bg-brand-accent/5 rounded-full blur-3xl" />
@@ -37,16 +37,16 @@ export default function Hero({ city }: HeroProps = {}) {
 
       <div className="container mx-auto px-4 max-w-6xl relative z-10">
         {city?.slug && <Breadcrumbs slug={city.slug} />}
-        <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-20 mt-8">
+        <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12 mt-2">
 
           {/* Text Content */}
           <div className="flex-1 text-center lg:text-left">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-brand-primary/20 text-brand-primary text-sm font-semibold mb-8 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-700">
-              <MapPin className="h-4 w-4" />
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-brand-primary/20 text-brand-primary text-xs md:text-sm font-semibold mb-4 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-700">
+              <MapPin className="h-3.5 w-3.5 text-brand-accent" />
               {city?.name === "Australia" ? "Australia-Wide Support" : `Registered Agents in ${city?.name || "Australia"}`}
             </div>
 
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-brand-heading tracking-tight leading-tight mb-6 animate-in fade-in slide-in-from-bottom-6 duration-700 delay-100">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-5xl font-extrabold text-brand-heading tracking-tight leading-[1.15] mb-4 animate-in fade-in slide-in-from-bottom-6 duration-700 delay-100">
               {city?.h1 || (
                 <>
                   Find a Registered <br className="hidden md:block" />
@@ -58,13 +58,13 @@ export default function Hero({ city }: HeroProps = {}) {
               )}
             </h1>
 
-            <div className="text-lg md:text-xl text-brand-gray mb-8 space-y-4 max-w-xl animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200">
+            <div className="text-base md:text-lg text-brand-gray mb-6 max-w-xl animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200">
               <p className="leading-relaxed">
                 {city?.intro || "Get trusted immigration advice from MARA-registered migration agents helping individuals, couples, students, and employers across Australia."}
               </p>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 animate-in fade-in slide-in-from-bottom-10 duration-700 delay-300">
+            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3.5 animate-in fade-in slide-in-from-bottom-10 duration-700 delay-300">
               <a
                 href="https://migrationrepublic.com.au/book-a-consultation/"
                 target="_blank"
@@ -73,9 +73,9 @@ export default function Hero({ city }: HeroProps = {}) {
               >
                 <Button
                   size="lg"
-                  className="w-full bg-brand-accent hover:bg-brand-accent/90 text-white rounded-full px-8 h-14 text-lg shadow-lg shadow-brand-accent/20 transition-all hover:-translate-y-1"
+                  className="w-full bg-[#E40229] hover:bg-[#c90022] text-white rounded-2xl px-7 h-12 text-base font-bold shadow-lg shadow-brand-accent/25 transition-all hover:-translate-y-0.5 cursor-pointer"
                 >
-                  {city?.cta1 || "Book Consultation"} <ArrowRight className="ml-2 h-5 w-5" />
+                  {city?.cta1 || "Book Consultation"} <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </a>
               <Link
@@ -85,17 +85,17 @@ export default function Hero({ city }: HeroProps = {}) {
                 <Button
                   variant="outline"
                   size="lg"
-                  className="w-full border-2 border-brand-primary text-brand-primary hover:bg-brand-primary/5 rounded-full px-8 h-14 text-lg transition-all hover:-translate-y-1"
+                  className="w-full border-2 border-brand-primary text-brand-primary hover:bg-brand-primary/5 rounded-2xl px-7 h-12 text-base font-bold transition-all hover:-translate-y-0.5"
                 >
                   {city?.cta2 || "Free Visa Assessment"}
                 </Button>
               </Link>
             </div>
 
-            <div className="mt-10 grid grid-cols-2 gap-4 animate-in fade-in duration-700 delay-500">
+            <div className="mt-6 grid grid-cols-2 gap-3 animate-in fade-in duration-700 delay-500">
               {badges.map((badge, idx) => (
-                <div key={idx} className="flex items-center gap-2 text-sm text-gray-700 font-medium">
-                  <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0" />
+                <div key={idx} className="flex items-center gap-2 text-xs md:text-sm text-gray-700 font-medium">
+                  <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0" />
                   {badge}
                 </div>
               ))}

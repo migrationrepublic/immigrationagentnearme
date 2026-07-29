@@ -28,7 +28,7 @@ export default async function BlogPage() {
         <section className="relative py-24 bg-brand-heading overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-brand-primary/20 to-transparent opacity-50" />
           <div className="absolute top-0 right-0 w-96 h-96 bg-brand-accent/10 rounded-full blur-3xl -mr-48 -mt-48" />
-          
+
           <div className="container mx-auto px-4 relative z-10 text-center max-w-4xl">
             <div className="inline-block px-4 py-2 bg-brand-accent/20 border border-brand-accent/30 rounded-full text-brand-accent text-sm font-bold uppercase tracking-[0.2em] mb-6">
               Migration Insights
@@ -37,7 +37,7 @@ export default async function BlogPage() {
               Latest <span className="text-brand-accent">Migration News</span> & Updates
             </h1>
             <p className="text-white/70 text-lg md:text-xl leading-relaxed max-w-2xl mx-auto">
-              Your trusted source for Australian immigration news, visa policy changes, 
+              Your trusted source for Australian immigration news, visa policy changes,
               and professional guidance from registered migration experts.
             </p>
           </div>
@@ -64,23 +64,23 @@ export default async function BlogPage() {
         {/* CTA section */}
         <section className="py-24 bg-white">
           <div className="container mx-auto px-4 max-w-5xl">
-             <div className="bg-brand-primary rounded-[3rem] p-12 text-center text-white relative overflow-hidden shadow-2xl shadow-brand-primary/20">
-                <div className="absolute top-0 left-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -ml-32 -mt-32" />
-                <div className="relative z-10">
-                  <h2 className="text-3xl md:text-4xl font-extrabold mb-6">Need Professional Advice?</h2>
-                  <p className="text-white/80 text-lg mb-10 max-w-2xl mx-auto">
-                    Speak with our MARA registered agents today for a comprehensive evaluation of your visa options and a clear path forward.
-                  </p>
-                  <a 
-                    href="https://migrationrepublic.com.au/book-a-consultation/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-block bg-brand-accent hover:bg-brand-accent/90 text-white font-bold py-4 px-10 rounded-full transition-all hover:scale-105 shadow-xl shadow-brand-accent/30"
-                  >
-                    Book A Consultation
-                  </a>
-                </div>
-             </div>
+            <div className="bg-brand-primary rounded-[3rem] p-12 text-center text-white relative overflow-hidden shadow-2xl shadow-brand-primary/20">
+              <div className="absolute top-0 left-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -ml-32 -mt-32" />
+              <div className="relative z-10">
+                <h2 className="text-3xl md:text-4xl font-extrabold mb-6 text-white">Need Professional Advice?</h2>
+                <p className="text-white/80 text-lg mb-10 max-w-2xl mx-auto">
+                  Speak with our MARA registered agents today for a comprehensive evaluation of your visa options and a clear path forward.
+                </p>
+                <a
+                  href="https://migrationrepublic.com.au/book-a-consultation/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-block bg-brand-accent hover:bg-brand-accent/90 text-white font-bold py-4 px-10 rounded-full transition-all hover:scale-105 shadow-xl shadow-brand-accent/30"
+                >
+                  Book A Consultation
+                </a>
+              </div>
+            </div>
           </div>
         </section>
       </main>

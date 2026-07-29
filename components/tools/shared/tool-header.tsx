@@ -40,13 +40,13 @@ export function ToolHeader({ title, description }: ToolHeaderProps) {
         <Link href="/" className="mb-8 group">
           <div className="relative">
             <div className="absolute -inset-4 bg-brand-primary/5 rounded-full blur-xl group-hover:bg-brand-primary/10 transition-all"></div>
-            <div className="w-32 h-32 rounded-full border-4 border-white shadow-xl overflow-hidden relative flex items-center justify-center bg-white">
+            <div className="w-32 h-32 rounded-full border-4 border-white shadow-xl overflow-hidden relative flex items-center justify-center bg-white p-2">
               <Image
-                src="/images/logobgwhite.jpg"
+                src="/images/logobgre.png"
                 alt="Migration Republic Logo"
                 width={160}
                 height={160}
-                className="object-contain scale-140 transition-transform duration-500 group-hover:scale-150"
+                className="object-contain scale-110 transition-transform duration-500 group-hover:scale-125"
                 priority
               />
             </div>

@@ -42,10 +42,7 @@ export default function BlogCard({ post }: BlogCardProps) {
             {formattedDate}
           </span>
           <span className="w-1 h-1 bg-gray-300 rounded-full" />
-          <span className="flex items-center gap-1 uppercase tracking-wider">
-            <User className="w-3 h-3 text-brand-accent" />
-            {authorName}
-          </span>
+
         </div>
 
         <h3
@@ -59,7 +56,7 @@ export default function BlogCard({ post }: BlogCardProps) {
         />
 
         <div className="flex items-center text-brand-primary font-bold text-sm">
-          Read Story
+          Read More...
           <ArrowRight className="ml-2 w-4 h-4 transition-transform duration-300 group-hover:translate-x-2" />
         </div>
       </div>

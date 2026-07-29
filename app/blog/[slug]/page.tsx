@@ -85,32 +85,20 @@ export default async function BlogPostPage({ params }: PostPageProps) {
           <section className="relative py-24 bg-brand-heading overflow-hidden">
             <div className="absolute inset-0 bg-brand-primary opacity-20" />
             <div className="container mx-auto px-4 relative z-10 max-w-4xl">
-              <Link 
-                href="/blog" 
-                className="inline-flex items-center gap-2 text-white/60 hover:text-brand-accent transition-colors mb-12 font-medium"
-              >
-                <ArrowLeft className="w-4 h-4" /> Back to blog
-              </Link>
-
-              <h1 
-                className="text-4xl md:text-6xl font-extrabold text-white mb-8 leading-tight"
+              <h1
+                className="text-2xl md:text-4xl font-extrabold text-white mb-8 leading-tight"
                 dangerouslySetInnerHTML={{ __html: post.title.rendered }}
               />
 
-              <div className="flex flex-wrap items-center gap-6 text-white/70 text-sm md:text-base font-medium">
-                <div className="flex items-center gap-2">
-                  <div className="w-10 h-10 rounded-full bg-brand-accent/20 flex items-center justify-center text-brand-accent">
-                    <User className="w-5 h-5" />
-                  </div>
-                  <span>{authorName}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-5 h-5 text-brand-accent" />
+              <div className="flex flex-wrap items-center gap-3 sm:gap-6 text-white/70 text-xs sm:text-sm font-medium">
+                <div className="flex items-center gap-1.5">
+                  <Calendar className="w-4 h-4 text-brand-accent" />
                   <span>{formattedDate}</span>
                 </div>
-                <div className="flex items-center gap-2">
-                   <Clock className="w-5 h-5 text-brand-accent" />
-                   <span>5 min read</span>
+                <span className="text-white/30 hidden sm:inline">•</span>
+                <div className="flex items-center gap-1.5">
+                  <Clock className="w-4 h-4 text-brand-accent" />
+                  <span>5 min read</span>
                 </div>
               </div>
             </div>
@@ -118,8 +106,8 @@ export default async function BlogPostPage({ params }: PostPageProps) {
 
           {/* Featured Image */}
           {featuredImage && (
-            <div className="container mx-auto px-4 -mt-16 relative z-20 max-w-5xl">
-              <div className="relative h-[25rem] md:h-[40rem] w-full rounded-[3rem] overflow-hidden shadow-2xl border-4 border-white">
+            <div className="container mx-auto px-4 -mt-8 md:-mt-12 relative z-20 max-w-5xl">
+              <div className="relative h-[13rem] sm:h-[22rem] md:h-[28rem] lg:h-[32rem] w-full rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl border-4 border-white">
                 <Image
                   src={featuredImage}
                   alt={post.title.rendered}
@@ -132,7 +120,7 @@ export default async function BlogPostPage({ params }: PostPageProps) {
           )}
 
           {/* Article Content */}
-          <section className="py-20 bg-white">
+          <section className="py-8 sm:py-12 md:py-14 bg-white">
             <div className="container mx-auto px-4 max-w-4xl">
               <WPContentRenderer html={post.content.rendered} />
             </div>
@@ -140,29 +128,33 @@ export default async function BlogPostPage({ params }: PostPageProps) {
         </article>
 
         {/* Similar Posts / Footer CTA */}
-        <section className="py-24 bg-gray-50 border-t border-gray-100">
-           <div className="container mx-auto px-4 text-center max-w-4xl">
-              <h2 className="text-3xl font-extrabold text-brand-heading mb-6">Stay Informed About Australian Immigration</h2>
-              <p className="text-brand-gray text-lg mb-12 italic">
-                &quot;Our mission is to simplify the complex world of migration, one client at a time.&quot;
-              </p>
-              <div className="flex flex-wrap justify-center gap-6">
-                <a 
-                  href="https://migrationrepublic.com.au/book-a-consultation/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-brand-primary hover:bg-brand-primary/90 text-white font-bold py-4 px-10 rounded-full transition-all shadow-xl shadow-brand-primary/20"
-                >
-                  Apply For A Visa
-                </a>
-                <Link 
-                  href="/blog"
-                  className="bg-white hover:bg-gray-50 text-brand-heading border border-gray-200 font-bold py-4 px-10 rounded-full transition-all shadow-sm"
-                >
-                  View All News
-                </Link>
-              </div>
-           </div>
+        <section className="py-10 md:py-16 bg-gray-50 border-t border-gray-100">
+          <div className="container mx-auto px-4 text-center max-w-3xl">
+            <h2 className="text-2xl md:text-3xl font-extrabold text-brand-heading mb-3">
+              Stay Informed About Australian Immigration
+            </h2>
+            <p className="text-brand-gray text-sm md:text-base mb-6 italic">
+              &quot;Our mission is to simplify the complex world of migration, one client at a time.&quot;
+            </p>
+            <div className="flex flex-col sm:flex-row justify-center gap-3.5 max-w-md mx-auto sm:max-w-none">
+              <a
+                href="https://migrationrepublic.com.au/book-a-consultation/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full sm:w-auto bg-[#E40229] hover:bg-[#c90022] text-white font-bold py-3 px-8 rounded-2xl transition-all shadow-lg shadow-brand-accent/20 cursor-pointer text-sm md:text-base"
+              >
+                Book Consultation
+              </a>
+              <a
+                href="https://migrationrepublic.com.au/contact/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full sm:w-auto bg-white hover:bg-gray-50 text-brand-heading border border-gray-200 font-bold py-3 px-8 rounded-2xl transition-all shadow-sm text-sm md:text-base"
+              >
+                Contact Us
+              </a>
+            </div>
+          </div>
         </section>
       </main>
       <Footer />

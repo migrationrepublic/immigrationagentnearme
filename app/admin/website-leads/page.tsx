@@ -106,6 +106,8 @@ export default function WebsiteLeadsPage() {
 
   const newCount = leads.filter(l => (l.status || "new") === "new").length
   const contactedCount = leads.filter(l => l.status === "contacted").length
+  const inProgressCount = leads.filter(l => l.status === "in_progress").length
+  const archivedCount = leads.filter(l => l.status === "archived").length
   const totalCount = leads.length
 
   const getStatusBadgeClass = (status: string) => {
@@ -124,7 +126,7 @@ export default function WebsiteLeadsPage() {
   }
 
   return (
-    <div className="admin-page">
+    <div className="admin-page space-y-6">
       {/* Title + Filters */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
@@ -132,7 +134,7 @@ export default function WebsiteLeadsPage() {
             <Globe className="w-7 h-7" style={{ color: 'var(--color-admin-gold)' }} />
             Website Contact Leads
           </h1>
-          <p className="admin-subheading">Leads submitted via contact forms on migrationrepublic.com.au</p>
+          <p className="admin-subheading">Inquiries submitted via contact forms on migrationrepublic.com.au</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
           {/* Search Input */}
@@ -140,7 +142,7 @@ export default function WebsiteLeadsPage() {
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--color-admin-muted)' }} />
             <input
               type="text"
-              placeholder="Search leads..."
+              placeholder="Search website leads..."
               value={search}
               onChange={e => setSearch(e.target.value)}
               className="admin-input pl-9 w-full"
@@ -153,35 +155,76 @@ export default function WebsiteLeadsPage() {
             onChange={e => setStatusFilter(e.target.value)}
             className="admin-select w-full sm:w-44"
           >
-            <option value="all">All Statuses</option>
-            <option value="new">New</option>
-            <option value="contacted">Contacted</option>
-            <option value="in_progress">In Progress</option>
-            <option value="archived">Archived</option>
+            <option value="all">All Statuses ({totalCount})</option>
+            <option value="new">New ({newCount})</option>
+            <option value="contacted">Contacted ({contactedCount})</option>
+            <option value="in_progress">In Progress ({inProgressCount})</option>
+            <option value="archived">Archived ({archivedCount})</option>
           </select>
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        {[
-          { label: 'Total Leads', value: totalCount, icon: Users, accent: 'text-[#012269] bg-[#012269]/8 border border-[#012269]/15' },
-          { label: 'New Leads', value: newCount, icon: Calendar, accent: 'text-amber-700 bg-amber-50 border border-amber-200' },
-          { label: 'Contacted Leads', value: contactedCount, icon: Globe, accent: 'text-green-700 bg-green-50 border border-green-200' },
-        ].map((s, i) => {
-          const Icon = s.icon
-          return (
-            <div key={i} className="admin-card p-6 flex items-center justify-between group hover:shadow-md transition-all">
-              <div>
-                <p className="admin-label">{s.label}</p>
-                <p className="admin-value mt-2">{s.value}</p>
-              </div>
-              <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110 ${s.accent}`}>
-                <Icon className="w-5 h-5" />
-              </div>
-            </div>
-          )
-        })}
+      {/* Clean Corporate KPI Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+        {/* Total Leads */}
+        <div
+          onClick={() => setStatusFilter("all")}
+          className={`p-4 rounded-xl border bg-white shadow-xs cursor-pointer transition-all ${
+            statusFilter === "all" ? "border-slate-900 ring-1 ring-slate-900" : "border-slate-200 hover:border-slate-300"
+          }`}
+        >
+          <p className="text-xs font-medium text-slate-500">Total Leads</p>
+          <p className="text-2xl font-bold text-slate-900 mt-1">{totalCount}</p>
+        </div>
+
+        {/* New Leads */}
+        <div
+          onClick={() => setStatusFilter("new")}
+          className={`p-4 rounded-xl border bg-white shadow-xs cursor-pointer transition-all ${
+            statusFilter === "new" ? "border-slate-900 ring-1 ring-slate-900" : "border-slate-200 hover:border-slate-300"
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-medium text-slate-500">New Action</p>
+            {newCount > 0 && (
+              <span className="w-2 h-2 rounded-full bg-amber-500" />
+            )}
+          </div>
+          <p className="text-2xl font-bold text-slate-900 mt-1">{newCount}</p>
+        </div>
+
+        {/* Contacted */}
+        <div
+          onClick={() => setStatusFilter("contacted")}
+          className={`p-4 rounded-xl border bg-white shadow-xs cursor-pointer transition-all ${
+            statusFilter === "contacted" ? "border-slate-900 ring-1 ring-slate-900" : "border-slate-200 hover:border-slate-300"
+          }`}
+        >
+          <p className="text-xs font-medium text-slate-500">Contacted</p>
+          <p className="text-2xl font-bold text-slate-900 mt-1">{contactedCount}</p>
+        </div>
+
+        {/* In Progress */}
+        <div
+          onClick={() => setStatusFilter("in_progress")}
+          className={`p-4 rounded-xl border bg-white shadow-xs cursor-pointer transition-all ${
+            statusFilter === "in_progress" ? "border-slate-900 ring-1 ring-slate-900" : "border-slate-200 hover:border-slate-300"
+          }`}
+        >
+          <p className="text-xs font-medium text-slate-500">In Progress</p>
+          <p className="text-2xl font-bold text-slate-900 mt-1">{inProgressCount}</p>
+        </div>
+
+        {/* Archived */}
+        <div
+          onClick={() => setStatusFilter("archived")}
+          className={`p-4 rounded-xl border bg-white shadow-xs cursor-pointer transition-all ${
+            statusFilter === "archived" ? "border-slate-900 ring-1 ring-slate-900" : "border-slate-200 hover:border-slate-300"
+          }`}
+        >
+          <p className="text-xs font-medium text-slate-500">Archived</p>
+          <p className="text-2xl font-bold text-slate-900 mt-1">{archivedCount}</p>
+        </div>
       </div>
 
       {/* Table */}

@@ -91,28 +91,23 @@ export default function Footer() {
           <div className="footer-grid">
             <div className="footer-brand">
               <Link href="/" className="flex items-center gap-3 group mb-6">
-                <Image
-                  src="/images/logo.jpg"
-                  alt="Migration Republic"
-                  width={80}
-                  height={80}
-                  className="rounded-full border-2 border-white/10"
-                />
-                <div>
-                  <div className="text-xl font-extrabold text-white leading-tight group-hover:text-brand-accent transition-colors">
-                    Migration Republic
-                  </div>
-                  <div className="text-xs text-brand-accent font-semibold uppercase tracking-widest">
-                    Immigration near me
-                  </div>
+                <div className="w-20 h-20  p-1 flex items-center justify-center shrink-0 ">
+                  <Image
+                    src="/images/logobgwhite.jpg"
+                    alt="Migration Republic"
+                    width={80}
+                    height={80}
+                    className="w-full h-full object-contain rounded-full"
+                  />
                 </div>
+
               </Link>
               <p>
                 MARA-registered migration agents serving all of Australia. Find
                 expert immigration advice near you in Sydney, Melbourne,
                 Brisbane, Perth, Adelaide and beyond.
               </p>
-              <div className="marn-badge">🏛️ MARN: 2518961</div>
+              <div className="marn-badge">🏛️ MARN: 2516981</div>
             </div>
 
             <div className="footer-col">

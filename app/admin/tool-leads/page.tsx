@@ -54,62 +54,137 @@ export default function ToolLeadsPage() {
     fetchLeads()
   }, [])
 
-  const filtered = leads.filter(l =>
-    l.user_name?.toLowerCase().includes(search.toLowerCase()) ||
-    l.user_email?.toLowerCase().includes(search.toLowerCase())
-  )
+  const [toolFilter, setToolFilter] = useState("all")
+
+  const filtered = leads.filter(l => {
+    const matchesSearch =
+      l.user_name?.toLowerCase().includes(search.toLowerCase()) ||
+      l.user_email?.toLowerCase().includes(search.toLowerCase()) ||
+      l.tool_name?.toLowerCase().includes(search.toLowerCase())
+
+    let matchesTool = true
+    if (toolFilter === "pr") {
+      matchesTool = l.tool_name === "PR Calculator" || l.tool_name === "PR Points Calculator"
+    } else if (toolFilter === "482") {
+      matchesTool = l.tool_name?.includes("482")
+    } else if (toolFilter === "eligibility") {
+      matchesTool = l.tool_name === "Eligibility Checker"
+    } else if (toolFilter === "quiz") {
+      matchesTool = l.tool_name === "Visa Suggestion Quiz" || (!l.tool_name?.includes("482") && l.tool_name !== "PR Calculator" && l.tool_name !== "PR Points Calculator" && l.tool_name !== "Eligibility Checker")
+    }
+
+    return matchesSearch && matchesTool
+  })
 
   if (loading) {
     return (
       <div className="admin-loader h-[60vh]">
-        <Loader2 className="admin-loader-icon" />
+        <Loader2 className="admin-loader-icon animate-spin" />
       </div>
     )
   }
 
-  const prCount    = leads.filter(l => l.tool_name === "PR Calculator").length
-  const otherCount = leads.filter(l => l.tool_name !== "PR Calculator").length
+  const prCount          = leads.filter(l => l.tool_name === "PR Calculator" || l.tool_name === "PR Points Calculator").length
+  const count482         = leads.filter(l => l.tool_name?.includes("482")).length
+  const eligibilityCount = leads.filter(l => l.tool_name === "Eligibility Checker").length
+  const quizCount        = leads.filter(l => l.tool_name === "Visa Suggestion Quiz" || (!l.tool_name?.includes("482") && l.tool_name !== "PR Calculator" && l.tool_name !== "PR Points Calculator" && l.tool_name !== "Eligibility Checker")).length
+  const totalCount       = leads.length
 
   return (
-    <div className="admin-page">
-      {/* Title + search */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="admin-page space-y-6">
+      {/* Title + search & tool filter */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="admin-heading flex items-center gap-2">
-            <Users className="w-7 h-7" style={{ color: 'var(--color-admin-navy)' }} />
-            Tool Lead Submissions
+            <Wrench className="w-7 h-7 text-purple-700" />
+            Tool Submissions &amp; Lead KPIs
           </h1>
-          <p className="admin-subheading">Users who engaged with your interactive tools</p>
+          <p className="admin-subheading">Users who completed PR calculations, 482 visa checkers, and eligibility quizzes</p>
         </div>
-        <div className="relative">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--color-admin-muted)' }} />
-          <input
-            type="text"
-            placeholder="Search leads..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="admin-input pl-9 w-56"
-          />
+        <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+          {/* Search Input */}
+          <div className="relative flex-1 sm:w-60">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--color-admin-muted)' }} />
+            <input
+              type="text"
+              placeholder="Search user or email..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="admin-input pl-9 w-full"
+            />
+          </div>
+
+          {/* Tool Filter */}
+          <select
+            value={toolFilter}
+            onChange={e => setToolFilter(e.target.value)}
+            className="admin-select w-full sm:w-52"
+          >
+            <option value="all">All Tools ({totalCount})</option>
+            <option value="pr">PR Calculator ({prCount})</option>
+            <option value="482">Subclass 482 Checker ({count482})</option>
+            <option value="eligibility">Eligibility Checker ({eligibilityCount})</option>
+            <option value="quiz">Visa Quiz ({quizCount})</option>
+          </select>
         </div>
       </div>
 
-      {/* Stat cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        {[
-          { label: 'Total Tool Leads',  value: leads.length,  accent: 'admin-badge-navy' },
-          { label: 'PR Calculator',     value: prCount,       accent: 'admin-badge-info' },
-          { label: 'Other Tools',       value: otherCount,    accent: 'admin-badge-warn' },
-        ].map((s, i) => (
-          <div key={i} className="admin-card p-6 flex items-center justify-between group hover:shadow-md transition-all">
-            <div>
-              <p className="admin-label">{s.label}</p>
-              <p className="admin-value mt-2">{s.value}</p>
-            </div>
-            <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110 ${s.accent}`}>
-              <Wrench className="w-5 h-5" />
-            </div>
-          </div>
-        ))}
+      {/* Clean Corporate Tool KPI Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+        {/* All Tools */}
+        <div
+          onClick={() => setToolFilter("all")}
+          className={`p-4 rounded-xl border bg-white shadow-xs cursor-pointer transition-all ${
+            toolFilter === "all" ? "border-slate-900 ring-1 ring-slate-900" : "border-slate-200 hover:border-slate-300"
+          }`}
+        >
+          <p className="text-xs font-medium text-slate-500">Total Tool Leads</p>
+          <p className="text-2xl font-bold text-slate-900 mt-1">{totalCount}</p>
+        </div>
+
+        {/* PR Calculator */}
+        <div
+          onClick={() => setToolFilter("pr")}
+          className={`p-4 rounded-xl border bg-white shadow-xs cursor-pointer transition-all ${
+            toolFilter === "pr" ? "border-slate-900 ring-1 ring-slate-900" : "border-slate-200 hover:border-slate-300"
+          }`}
+        >
+          <p className="text-xs font-medium text-slate-500">PR Calc</p>
+          <p className="text-2xl font-bold text-slate-900 mt-1">{prCount}</p>
+        </div>
+
+        {/* Subclass 482 */}
+        <div
+          onClick={() => setToolFilter("482")}
+          className={`p-4 rounded-xl border bg-white shadow-xs cursor-pointer transition-all ${
+            toolFilter === "482" ? "border-slate-900 ring-1 ring-slate-900" : "border-slate-200 hover:border-slate-300"
+          }`}
+        >
+          <p className="text-xs font-medium text-slate-500">Subclass 482</p>
+          <p className="text-2xl font-bold text-slate-900 mt-1">{count482}</p>
+        </div>
+
+        {/* Eligibility Checker */}
+        <div
+          onClick={() => setToolFilter("eligibility")}
+          className={`p-4 rounded-xl border bg-white shadow-xs cursor-pointer transition-all ${
+            toolFilter === "eligibility" ? "border-slate-900 ring-1 ring-slate-900" : "border-slate-200 hover:border-slate-300"
+          }`}
+        >
+          <p className="text-xs font-medium text-slate-500">Eligibility Check</p>
+          <p className="text-2xl font-bold text-slate-900 mt-1">{eligibilityCount}</p>
+        </div>
+
+        {/* Visa Quiz */}
+        <div
+          onClick={() => setToolFilter("quiz")}
+          className={`p-4 rounded-xl border bg-white shadow-xs cursor-pointer transition-all ${
+            toolFilter === "quiz" ? "border-slate-900 ring-1 ring-slate-900" : "border-slate-200 hover:border-slate-300"
+          }`}
+        >
+          <p className="text-xs font-medium text-slate-500">Visa Quiz</p>
+          <p className="text-2xl font-bold text-slate-900 mt-1">{quizCount}</p>
+        </div>
       </div>
 
       {/* Table */}

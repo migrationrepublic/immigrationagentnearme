@@ -2,6 +2,7 @@
 
 import { supabaseServer, createClientForAction } from "@/lib/supabase-server";
 import { z } from "zod";
+import { EmailService } from "@/lib/services/email.service";
 
 // Zod Validation Schemas
 const DateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format (must be YYYY-MM-DD)");
@@ -102,7 +103,7 @@ export async function updateWebsiteLeadStatusAction(idInput: string, statusInput
   const status = z.string().min(1).parse(statusInput);
   const notes = notesInput !== undefined ? z.string().nullable().parse(notesInput) : undefined;
 
-  const updateFields: any = { status, updated_at: new Date().toISOString() };
+  const updateFields: Record<string, string | null> = { status, updated_at: new Date().toISOString() };
   if (notes !== undefined) {
     updateFields.notes = notes;
   }
@@ -205,3 +206,164 @@ export async function updateAvailabilityAction(dateInput: string, blockedTimesIn
 
   return { success: true };
 }
+
+const AdminBookingSchema = z.object({
+  name: z.string().min(2, "Name is required"),
+  email: z.string().email("Invalid email address"),
+  phone: z.string().min(5, "Phone number is required"),
+  planId: z.string().uuid("Invalid plan ID"),
+  date: z.string(),
+  time: z.string(),
+  notes: z.string().optional(),
+  status: z.enum(["confirmed", "pending", "cancelled"]).default("confirmed"),
+});
+
+export async function createAdminBookingAction(input: z.infer<typeof AdminBookingSchema>) {
+  const isAdmin = await verifyAdmin();
+  if (!isAdmin) {
+    throw new Error("Unauthorized: You are not an admin.");
+  }
+
+  const validated = AdminBookingSchema.parse(input);
+
+  let formattedTime = validated.time;
+  if (/^\d{2}:\d{2}$/.test(formattedTime)) {
+    formattedTime = `${formattedTime}:00`;
+  }
+
+  const { data, error } = await supabaseServer
+    .from("bookings")
+    .insert([
+      {
+        name: validated.name,
+        email: validated.email,
+        phone: validated.phone,
+        plan_id: validated.planId,
+        date: validated.date,
+        time: formattedTime,
+        notes: validated.notes || "",
+        status: validated.status,
+      },
+    ])
+    .select("*, plans(name)")
+    .single();
+
+  if (error) {
+    console.error("createAdminBookingAction error:", error);
+    throw new Error(`Failed to create booking: ${error.message}`);
+  }
+
+  if (validated.status === "confirmed") {
+    await supabaseServer
+      .from("availability")
+      .upsert(
+        {
+          date: validated.date,
+          time: formattedTime,
+          is_booked: true,
+        },
+        { onConflict: "date,time" }
+      );
+  }
+
+  return { success: true, booking: data };
+}
+
+export async function updateBookingStatusAction(bookingIdInput: string, statusInput: string) {
+  const isAdmin = await verifyAdmin();
+  if (!isAdmin) {
+    throw new Error("Unauthorized: You are not an admin.");
+  }
+
+  const bookingId = z.string().uuid("Invalid booking ID").parse(bookingIdInput);
+  const status = z.enum(["confirmed", "pending", "cancelled"]).parse(statusInput);
+
+  const { data, error } = await supabaseServer
+    .from("bookings")
+    .update({ status })
+    .eq("id", bookingId)
+    .select("*, plans(name)")
+    .single();
+
+  if (error) {
+    console.error("updateBookingStatusAction error:", error);
+    throw new Error(`Failed to update booking status: ${error.message}`);
+  }
+
+  return { success: true, booking: data };
+}
+
+export async function getAdminPlansAction() {
+  const isAdmin = await verifyAdmin();
+  if (!isAdmin) {
+    throw new Error("Unauthorized: You are not an admin.");
+  }
+
+  const { data, error } = await supabaseServer
+    .from("plans")
+    .select("*")
+    .eq("is_active", true)
+    .order("price_aud", { ascending: true });
+
+  if (error) throw error;
+  return data || [];
+}
+
+export async function sendBookingReminderAction(bookingIdInput: string) {
+  const isAdmin = await verifyAdmin();
+  if (!isAdmin) {
+    throw new Error("Unauthorized: You are not an admin.");
+  }
+
+  const bookingId = z.string().uuid("Invalid booking ID").parse(bookingIdInput);
+
+  const { data: booking, error } = await supabaseServer
+    .from("bookings")
+    .select("*, plans(name)")
+    .eq("id", bookingId)
+    .single();
+
+  if (error || !booking) {
+    throw new Error("Booking not found");
+  }
+
+  const planName = booking.plans?.name || "Consultation";
+  await EmailService.sendAppointmentReminder(
+    booking.email,
+    booking.name,
+    planName,
+    booking.date,
+    booking.time
+  );
+
+  return { success: true, message: `Appointment reminder sent to ${booking.email}` };
+}
+
+export async function sendGoogleReviewRequestAction(bookingIdInput: string) {
+  const isAdmin = await verifyAdmin();
+  if (!isAdmin) {
+    throw new Error("Unauthorized: You are not an admin.");
+  }
+
+  const bookingId = z.string().uuid("Invalid booking ID").parse(bookingIdInput);
+
+  const { data: booking, error } = await supabaseServer
+    .from("bookings")
+    .select("*, plans(name)")
+    .eq("id", bookingId)
+    .single();
+
+  if (error || !booking) {
+    throw new Error("Booking not found");
+  }
+
+  await EmailService.sendGoogleReviewRequest(
+    booking.email,
+    booking.name,
+    "https://g.page/r/CblNnrjAvvg5EAI/review"
+  );
+
+  return { success: true, message: `Google review request sent to ${booking.email}` };
+}
+
+

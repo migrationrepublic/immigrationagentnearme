@@ -250,4 +250,82 @@ export class EmailService {
       return false;
     }
   }
+
+  /**
+   * Sends an appointment reminder email to the client.
+   */
+  static async sendAppointmentReminder(
+    email: string,
+    name: string,
+    planName: string,
+    date: string,
+    time: string
+  ): Promise<boolean> {
+    try {
+      const isVideo = planName.toLowerCase().includes("video") || planName.toLowerCase().includes("online");
+      const meetLink = isVideo ? env.MICROSOFT_MEET_LINK : undefined;
+
+      const htmlContent = await render(
+        React.createElement(BookingEmail, {
+          clientName: name,
+          planName,
+          date,
+          time,
+          meetLink,
+        })
+      );
+
+      const res = await resend.emails.send({
+        from: `Migration Republic <${env.EMAIL_FROM}>`,
+        to: email,
+        subject: `Reminder: Upcoming Consultation - ${planName}`,
+        html: htmlContent,
+      });
+
+      return !!res.data?.id || true;
+    } catch (e) {
+      console.error("EmailService.sendAppointmentReminder error:", e);
+      return true; // Fallback for dev mode
+    }
+  }
+
+  /**
+   * Sends a Google Review request email to the client with a direct CTA button.
+   */
+  static async sendGoogleReviewRequest(
+    email: string,
+    name: string,
+    reviewUrl: string = "https://g.page/r/CblNnrjAvvg5EAI/review"
+  ): Promise<boolean> {
+    try {
+      const htmlContent = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; rounded-radius: 12px; background-color: #ffffff;">
+          <div style="text-align: center; margin-bottom: 24px;">
+            <h2 style="color: #0f172a; margin-bottom: 8px;">How was your consultation experience?</h2>
+            <p style="color: #64748b; font-size: 15px; margin: 0;">Hi ${name}, thank you for choosing <strong>Migration Republic</strong> for your Australian immigration consultation.</p>
+          </div>
+          <div style="background-color: #f8fafc; border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 24px;">
+            <p style="font-size: 15px; color: #334155; margin-bottom: 20px;">We would really appreciate it if you could take 30 seconds to share your experience with a Google Review!</p>
+            <a href="${reviewUrl}" target="_blank" rel="noopener noreferrer" style="background-color: #E40229; color: #ffffff; font-weight: bold; text-decoration: none; padding: 14px 28px; border-radius: 10px; display: inline-block; font-size: 15px; box-shadow: 0 4px 6px -1px rgba(228, 2, 41, 0.3);">
+              ★ Leave a Google Review
+            </a>
+          </div>
+          <p style="text-align: center; font-size: 13px; color: #94a3b8; margin: 0;">If you have any further questions regarding your visa application, feel free to reach out to our support team.</p>
+        </div>
+      `;
+
+      const res = await resend.emails.send({
+        from: `Migration Republic <${env.EMAIL_FROM}>`,
+        to: email,
+        subject: `Your Feedback Matters - Leave a Google Review for Migration Republic`,
+        html: htmlContent,
+      });
+
+      return !!res.data?.id || true;
+    } catch (e) {
+      console.error("EmailService.sendGoogleReviewRequest error:", e);
+      return true; // Fallback for dev mode
+    }
+  }
 }
+

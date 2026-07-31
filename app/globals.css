@@ -157,46 +157,46 @@
 
   /* Page wrapper */
   .admin-page {
-    @apply space-y-8;
+    @apply space-y-6 sm:space-y-8 w-full max-w-full overflow-x-hidden;
   }
 
   /* Page heading block */
   .admin-heading {
-    @apply text-3xl font-extrabold tracking-tight;
+    @apply text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight;
     color: var(--color-admin-heading);
   }
   .admin-subheading {
-    @apply text-sm mt-1;
+    @apply text-xs sm:text-sm mt-0.5 sm:mt-1;
     color: var(--color-admin-subtext);
   }
 
   /* White card panel */
   .admin-card {
-    @apply bg-white rounded-2xl border shadow-sm;
+    @apply bg-white rounded-2xl border shadow-sm w-full max-w-full overflow-hidden;
     border-color: var(--color-admin-card-border);
   }
 
   /* Card with inner padding */
   .admin-card-padded {
-    @apply bg-white rounded-2xl border shadow-sm p-6;
+    @apply bg-white rounded-2xl border shadow-sm p-4 sm:p-6 w-full max-w-full;
     border-color: var(--color-admin-card-border);
   }
 
   /* Table wrapper card */
   .admin-table-card {
-    @apply bg-white rounded-2xl border shadow-sm overflow-hidden;
+    @apply bg-white rounded-2xl border shadow-sm overflow-hidden w-full max-w-full;
     border-color: var(--color-admin-card-border);
   }
 
   /* Table thead */
   .admin-thead {
-    @apply text-xs font-bold uppercase tracking-wider border-b;
+    @apply text-[11px] sm:text-xs font-bold uppercase tracking-wider border-b;
     background-color: var(--color-admin-table-head);
     color: var(--color-admin-subtext);
     border-color: var(--color-admin-card-border);
   }
   .admin-thead th {
-    @apply px-6 py-4;
+    @apply px-3.5 sm:px-6 py-3 sm:py-4;
   }
 
   /* Table tbody row */
@@ -212,7 +212,7 @@
     background-color: var(--color-admin-row-hover);
   }
   .admin-td {
-    @apply px-6 py-4 text-sm;
+    @apply px-3.5 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm;
   }
 
   /* Text helpers */
@@ -221,11 +221,11 @@
     color: var(--color-admin-muted);
   }
   .admin-value {
-    @apply font-extrabold text-3xl tabular-nums;
+    @apply font-extrabold text-2xl sm:text-3xl tabular-nums;
     color: var(--color-admin-heading);
   }
   .admin-cell-primary {
-    @apply font-bold text-sm;
+    @apply font-bold text-xs sm:text-sm;
     color: var(--color-admin-heading);
   }
   .admin-cell-muted {
@@ -235,7 +235,7 @@
 
   /* Inputs & Selects */
   .admin-input, .admin-select {
-    @apply w-full px-4 py-2.5 rounded-xl border text-sm outline-none transition-all;
+    @apply w-full px-3.5 sm:px-4 py-2.5 rounded-xl border text-xs sm:text-sm outline-none transition-all;
     background-color: var(--color-admin-input-bg);
     border-color: var(--color-admin-input-border);
     color: var(--color-admin-heading);
@@ -247,13 +247,13 @@
 
   /* Toolbar row (search + filters) */
   .admin-toolbar {
-    @apply bg-white rounded-2xl border shadow-sm p-6 flex flex-col md:flex-row gap-4 justify-between items-center;
+    @apply bg-white rounded-2xl border shadow-sm p-4 sm:p-6 flex flex-col md:flex-row gap-3 sm:gap-4 justify-between items-stretch md:items-center w-full max-w-full;
     border-color: var(--color-admin-card-border);
   }
 
   /* Primary action button */
   .admin-btn-primary {
-    @apply flex items-center gap-2 px-5 py-2.5 font-bold rounded-xl text-sm uppercase tracking-wider transition-all shadow-md;
+    @apply flex items-center justify-center gap-2 px-4 sm:px-5 py-2.5 font-bold rounded-xl text-xs sm:text-sm uppercase tracking-wider transition-all shadow-md;
     background-color: var(--color-admin-navy);
     color: #ffffff;
   }

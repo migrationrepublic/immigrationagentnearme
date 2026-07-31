@@ -20,7 +20,9 @@ import {
   CheckCircle2,
   Bell,
   Star,
-  Sparkles
+  Sparkles,
+  Download,
+  FileSpreadsheet
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { Booking, Plan } from '@/lib/types'
@@ -205,6 +207,126 @@ export default function BookingsLeadsPage() {
     }
   }
 
+  function handleExportExcel() {
+    if (filteredBookings.length === 0) {
+      alert('No booking records available to export.')
+      return
+    }
+
+    const todayDate = new Date().toISOString().split('T')[0]
+
+    const excelHtml = `
+      <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+      <head>
+        <meta charset="utf-8" />
+        <!--[if gte mso 9]>
+        <xml>
+          <x:ExcelWorkbook>
+            <x:ExcelWorksheets>
+              <x:ExcelWorksheet>
+                <x:Name>Consultation Bookings</x:Name>
+                <x:WorksheetOptions>
+                  <x:DisplayGridlines/>
+                </x:WorksheetOptions>
+              </x:ExcelWorksheet>
+            </x:ExcelWorksheets>
+          </x:ExcelWorkbook>
+        </xml>
+        <![endif]-->
+        <style>
+          th {
+            background-color: #012269;
+            color: #ffffff;
+            font-weight: bold;
+            font-family: Arial, sans-serif;
+            font-size: 11pt;
+            border: 1px solid #000000;
+            padding: 10px 14px;
+            text-align: left;
+          }
+          td {
+            font-family: Arial, sans-serif;
+            font-size: 10pt;
+            border: 1px solid #d1d5db;
+            padding: 8px 12px;
+            vertical-align: middle;
+          }
+          tr:nth-child(even) {
+            background-color: #f8fafc;
+          }
+          .badge-confirmed {
+            background-color: #d1fae5;
+            color: #065f46;
+            font-weight: bold;
+            text-align: center;
+          }
+          .badge-pending {
+            background-color: #fef3c7;
+            color: #92400e;
+            font-weight: bold;
+            text-align: center;
+          }
+          .badge-cancelled {
+            background-color: #ffe4e6;
+            color: #9f1239;
+            font-weight: bold;
+            text-align: center;
+          }
+        </style>
+      </head>
+      <body>
+        <h2 style="font-family: Arial, sans-serif; color: #012269;">Migration Republic — Consultation Bookings (${todayDate})</h2>
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 220px;">Booking ID</th>
+              <th style="width: 180px;">Client Name</th>
+              <th style="width: 240px;">Email Address</th>
+              <th style="width: 140px;">Phone Number</th>
+              <th style="width: 200px;">Session Option</th>
+              <th style="width: 130px;">Schedule Date</th>
+              <th style="width: 110px;">Schedule Time</th>
+              <th style="width: 140px;">Booking Status</th>
+              <th style="width: 240px;">Stripe Session ID</th>
+              <th style="width: 320px;">Client Notes</th>
+              <th style="width: 180px;">Created At</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${filteredBookings.map(b => {
+              const statusClass = b.status === 'confirmed' ? 'badge-confirmed' : b.status === 'pending' ? 'badge-pending' : 'badge-cancelled'
+              return `
+                <tr>
+                  <td style="font-family: monospace;">${b.id}</td>
+                  <td><strong>${b.name}</strong></td>
+                  <td>${b.email}</td>
+                  <td>${b.phone || '—'}</td>
+                  <td>${b.plans?.name || 'Consultation'}</td>
+                  <td>${b.date}</td>
+                  <td>${b.time}</td>
+                  <td class="${statusClass}">${b.status.toUpperCase()}</td>
+                  <td style="font-family: monospace;">${b.stripe_session_id || 'N/A'}</td>
+                  <td>${b.notes || ''}</td>
+                  <td>${b.created_at ? format(new Date(b.created_at), 'dd MMM yyyy HH:mm') : ''}</td>
+                </tr>
+              `
+            }).join('')}
+          </tbody>
+        </table>
+      </body>
+      </html>
+    `
+
+    const blob = new Blob([excelHtml], { type: 'application/vnd.ms-excel;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.setAttribute('href', url)
+    link.setAttribute('download', `consultation_bookings_${todayDate}.xls`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
   const filteredBookings = bookings.filter(b => {
     const matchesSearch =
       b.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -224,19 +346,28 @@ export default function BookingsLeadsPage() {
 
   return (
     <div className="admin-page space-y-6">
-      {/* Header Title + Create Button */}
+      {/* Header Title + Actions */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="admin-heading">Consultation Bookings</h1>
           <p className="admin-subheading">Manage scheduled client consultations, payments and appointment timelines.</p>
         </div>
-        <button
-          onClick={handleOpenCreateModal}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm text-white shadow-md transition-all bg-[#E40229] hover:bg-[#c80224] shrink-0 cursor-pointer"
-        >
-          <Plus className="w-4 h-4" />
-          Create Booking
-        </button>
+        <div className="grid grid-cols-2 sm:flex sm:items-center gap-2.5 w-full sm:w-auto">
+          <button
+            onClick={handleExportExcel}
+            className="flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 shadow-xs transition-all cursor-pointer"
+          >
+            <Download className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span className="truncate">Export Excel</span>
+          </button>
+          <button
+            onClick={handleOpenCreateModal}
+            className="flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm text-white shadow-md transition-all bg-[#E40229] hover:bg-[#c80224] cursor-pointer"
+          >
+            <Plus className="w-4 h-4 shrink-0" />
+            <span className="truncate">Create Booking</span>
+          </button>
+        </div>
       </div>
 
       {/* Toolbar */}
@@ -266,7 +397,7 @@ export default function BookingsLeadsPage() {
         </div>
       </div>
 
-      {/* Table / States */}
+      {/* Table / Cards / States */}
       {error ? (
         <div className="admin-error-bar">
           <AlertCircle className="w-5 h-5 flex-shrink-0" />
@@ -279,87 +410,137 @@ export default function BookingsLeadsPage() {
           <p className="admin-empty-text">No consultations match your filter criteria or search fields.</p>
         </div>
       ) : (
-        <div className="admin-table-card">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm whitespace-nowrap">
-              <thead className="admin-thead">
-                <tr>
-                  <th>Client Detail</th>
-                  <th>Contact Info</th>
-                  <th>Session Option</th>
-                  <th>Schedule Date</th>
-                  <th>Booking Status</th>
-                  <th className="text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="admin-tbody">
-                {filteredBookings.map(b => (
-                  <tr key={b.id} className="admin-tr">
-                    <td className="admin-td">
-                      <span className="admin-cell-primary block">{b.name}</span>
-                      {b.notes && (
-                        <span className="admin-cell-muted max-w-[250px] truncate block mt-1" title={b.notes}>
-                          Note: {b.notes}
-                        </span>
-                      )}
-                    </td>
-                    <td className="admin-td">
-                      <div className="flex items-center gap-1.5 admin-cell-muted">
-                        <Mail className="w-3.5 h-3.5" style={{ color: 'var(--color-admin-muted)' }} /> {b.email}
-                      </div>
-                      <div className="flex items-center gap-1.5 admin-cell-muted mt-1">
-                        <Phone className="w-3.5 h-3.5" style={{ color: 'var(--color-admin-muted)' }} /> {b.phone}
-                      </div>
-                    </td>
-                    <td className="admin-td">
-                      <span className="admin-badge admin-badge-navy">{b.plans?.name || 'Consultation'}</span>
-                    </td>
-                    <td className="admin-td">
-                      <div className="admin-cell-primary flex items-center gap-1">
-                        <Calendar className="w-3.5 h-3.5" style={{ color: 'var(--color-admin-red)' }} />
-                        {format(new Date(b.date), 'dd MMM yyyy')}
-                      </div>
-                      <div className="admin-cell-muted flex items-center gap-1 mt-1">
-                        <Clock className="w-3.5 h-3.5" style={{ color: 'var(--color-admin-muted)' }} /> {b.time}
-                      </div>
-                    </td>
-                    <td className="admin-td">
-                      <span className={`admin-badge capitalize ${
-                        b.status === 'confirmed'
-                          ? 'admin-badge-success'
-                          : b.status === 'pending'
-                          ? 'admin-badge-warn'
-                          : 'admin-badge-error'
-                      }`}>
-                        {b.status === 'confirmed'
-                          ? <CheckCircle className="w-3.5 h-3.5" />
-                          : b.status === 'pending'
-                          ? <Clock className="w-3.5 h-3.5" />
-                          : <XCircle className="w-3.5 h-3.5" />}
-                        {b.status}
-                      </span>
-                    </td>
-                    <td className="admin-td text-right">
-                      <button 
-                        onClick={() => setSelectedBooking(b)}
-                        className="admin-cell-primary flex items-center gap-1 text-xs ml-auto hover:underline font-bold cursor-pointer" 
-                        style={{ color: 'var(--color-admin-navy)' }}
-                      >
-                        Details <ExternalLink className="w-3 h-3" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        <>
+          {/* Mobile Card List (< md screens) */}
+          <div className="md:hidden space-y-3 w-full">
+            {filteredBookings.map(b => (
+              <div key={b.id} className="p-4 bg-white rounded-2xl border border-slate-200 shadow-xs space-y-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <h4 className="font-extrabold text-slate-900 text-sm truncate">{b.name}</h4>
+                    <p className="text-xs text-slate-500 truncate">{b.email}</p>
+                    {b.phone && <p className="text-xs text-slate-500 truncate">{b.phone}</p>}
+                  </div>
+                  <span className={`admin-badge capitalize shrink-0 ${
+                    b.status === 'confirmed'
+                      ? 'admin-badge-success'
+                      : b.status === 'pending'
+                      ? 'admin-badge-warn'
+                      : 'admin-badge-error'
+                  }`}>
+                    {b.status}
+                  </span>
+                </div>
+
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 text-xs">
+                  <span className="admin-badge admin-badge-navy">{b.plans?.name || 'Consultation'}</span>
+                  <div className="flex items-center gap-2 text-slate-600 font-medium">
+                    <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5 text-red-600" />{format(new Date(b.date), 'dd MMM yyyy')}</span>
+                    <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-slate-400" />{b.time}</span>
+                  </div>
+                </div>
+
+                {b.notes && (
+                  <p className="text-xs text-slate-500 italic bg-slate-50 p-2 rounded-lg truncate">
+                    Note: {b.notes}
+                  </p>
+                )}
+
+                <div className="pt-2 border-t border-slate-100 flex justify-end">
+                  <button
+                    onClick={() => setSelectedBooking(b)}
+                    className="px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs"
+                  >
+                    Details <ExternalLink className="w-3 h-3 text-white" />
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
-        </div>
+
+          {/* Desktop Table View (>= md screens) */}
+          <div className="hidden md:block admin-table-card">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm whitespace-nowrap">
+                <thead className="admin-thead">
+                  <tr>
+                    <th>Client Detail</th>
+                    <th>Contact Info</th>
+                    <th>Session Option</th>
+                    <th>Schedule Date</th>
+                    <th>Booking Status</th>
+                    <th className="text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="admin-tbody">
+                  {filteredBookings.map(b => (
+                    <tr key={b.id} className="admin-tr">
+                      <td className="admin-td">
+                        <span className="admin-cell-primary block">{b.name}</span>
+                        {b.notes && (
+                          <span className="admin-cell-muted max-w-[250px] truncate block mt-1" title={b.notes}>
+                            Note: {b.notes}
+                          </span>
+                        )}
+                      </td>
+                      <td className="admin-td">
+                        <div className="flex items-center gap-1.5 admin-cell-muted">
+                          <Mail className="w-3.5 h-3.5" style={{ color: 'var(--color-admin-muted)' }} /> {b.email}
+                        </div>
+                        <div className="flex items-center gap-1.5 admin-cell-muted mt-1">
+                          <Phone className="w-3.5 h-3.5" style={{ color: 'var(--color-admin-muted)' }} /> {b.phone}
+                        </div>
+                      </td>
+                      <td className="admin-td">
+                        <span className="admin-badge admin-badge-navy">{b.plans?.name || 'Consultation'}</span>
+                      </td>
+                      <td className="admin-td">
+                        <div className="admin-cell-primary flex items-center gap-1">
+                          <Calendar className="w-3.5 h-3.5" style={{ color: 'var(--color-admin-red)' }} />
+                          {format(new Date(b.date), 'dd MMM yyyy')}
+                        </div>
+                        <div className="admin-cell-muted flex items-center gap-1 mt-1">
+                          <Clock className="w-3.5 h-3.5" style={{ color: 'var(--color-admin-muted)' }} /> {b.time}
+                        </div>
+                      </td>
+                      <td className="admin-td">
+                        <span className={`admin-badge capitalize ${
+                          b.status === 'confirmed'
+                            ? 'admin-badge-success'
+                            : b.status === 'pending'
+                            ? 'admin-badge-warn'
+                            : 'admin-badge-error'
+                        }`}>
+                          {b.status === 'confirmed'
+                            ? <CheckCircle className="w-3.5 h-3.5" />
+                            : b.status === 'pending'
+                            ? <Clock className="w-3.5 h-3.5" />
+                            : <XCircle className="w-3.5 h-3.5" />}
+                          {b.status}
+                        </span>
+                      </td>
+                      <td className="admin-td text-right">
+                        <button 
+                          onClick={() => setSelectedBooking(b)}
+                          className="admin-cell-primary flex items-center gap-1 text-xs ml-auto hover:underline font-bold cursor-pointer" 
+                          style={{ color: 'var(--color-admin-navy)' }}
+                        >
+                          Details <ExternalLink className="w-3 h-3" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
       )}
 
       {/* CREATE BOOKING MODAL */}
       {isCreateModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fadeIn">
-          <div className="relative w-full max-w-xl bg-white border rounded-3xl p-6 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/40 backdrop-blur-sm animate-fadeIn">
+          <div className="relative w-full max-w-xl bg-white border rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
             
             {/* Header */}
             <div className="flex justify-between items-start border-b pb-4 mb-4">
@@ -538,8 +719,8 @@ export default function BookingsLeadsPage() {
 
       {/* BOOKING DETAILS MODAL */}
       {selectedBooking && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fadeIn">
-          <div className="relative w-full max-w-2xl bg-white border rounded-3xl p-6 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/40 backdrop-blur-sm animate-fadeIn">
+          <div className="relative w-full max-w-2xl bg-white border rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
             
             {/* Modal Header */}
             <div className="flex justify-between items-start border-b pb-4 mb-4">

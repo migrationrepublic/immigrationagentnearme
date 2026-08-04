@@ -28,7 +28,7 @@ import {
 import { PdfRenderContext, PdfDocument } from '@/lib/types'
 
 // ── Domain field types ──────────────────────────────────────────────────────────
-type FieldType = 'signature' | 'initial' | 'sign_date' | 'full_name' | 'email' | 'checkbox' | 'text'
+type FieldType = 'signature' | 'initial' | 'sign_date' | 'full_name' | 'first_name' | 'last_name' | 'email' | 'checkbox' | 'text'
 
 interface SignField {
   id: string
@@ -39,6 +39,24 @@ interface SignField {
   w: number
   h: number
   value: string | boolean | null
+}
+
+// Overlay inputs sit directly on top of the printed PDF field, so they stay
+// flat (no rounded corners / inner shadow) and hug the field's real size.
+const overlayInputClass = "w-full h-full bg-white/95 border border-blue-500 text-gray-900 text-xs px-1 py-0 outline-none focus:ring-1 focus:ring-blue-500 text-left font-sans font-semibold"
+
+// The native <input type="date"> picker requires ISO (YYYY-MM-DD); the rest
+// of the app (PDF fill, validation) works with the AU display format.
+function ddmmyyyyToIso(value: string): string {
+  const [dd, mm, yyyy] = value.split('/')
+  if (!dd || !mm || !yyyy || yyyy.length !== 4) return ''
+  return `${yyyy}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`
+}
+
+function isoToDdmmyyyy(value: string): string {
+  const [yyyy, mm, dd] = value.split('-')
+  if (!dd || !mm || !yyyy) return ''
+  return `${dd}/${mm}/${yyyy}`
 }
 
 // ── Types ─────────────────────────────────────────────────────────────────
@@ -291,8 +309,8 @@ function SignatureModal({ isOpen, onClose, onConfirm, defaultSignerName = 'Signe
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-      <div className="relative w-full max-w-2xl bg-white border border-gray-200 rounded-3xl p-6 shadow-2xl flex flex-col overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/40 backdrop-blur-sm">
+      <div className="relative w-full max-w-2xl bg-white border border-gray-200 rounded-3xl p-4 sm:p-6 shadow-2xl flex flex-col max-h-[94vh] overflow-y-auto">
 
         {/* Zoho Tabs Selector */}
         <div className="flex border-b border-gray-100 mb-6 gap-6 text-xs font-bold">
@@ -366,10 +384,10 @@ function SignatureModal({ isOpen, onClose, onConfirm, defaultSignerName = 'Signe
         {/* ── CASE B: DRAW TAB ── */}
         {activeTab === 'draw' && (
           <div className="space-y-4">
-            <div className="grid grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
 
               {/* Signature drawing pad */}
-              <div className="col-span-2 space-y-1.5">
+              <div className="sm:col-span-2 space-y-1.5">
                 <div className="flex justify-between items-center text-xs">
                   <span className="font-bold text-gray-500">Signature Pad</span>
                   <button type="button" onClick={handleClearSig} className="text-blue-500 hover:text-blue-700 font-semibold">Clear</button>
@@ -390,7 +408,7 @@ function SignatureModal({ isOpen, onClose, onConfirm, defaultSignerName = 'Signe
               </div>
 
               {/* Initial drawing pad */}
-              <div className="col-span-1 space-y-1.5">
+              <div className="sm:col-span-1 space-y-1.5">
                 <div className="flex justify-between items-center text-xs">
                   <span className="font-bold text-gray-500">Initial Pad</span>
                   <button type="button" onClick={handleClearInit} className="text-blue-500 hover:text-blue-700 font-semibold">Clear</button>
@@ -442,11 +460,11 @@ function SignatureModal({ isOpen, onClose, onConfirm, defaultSignerName = 'Signe
 
         {/* Ink Colors selection & Autofill checkbox (Bottom panel options) */}
         <div className="mt-6 pt-4 border-t border-gray-100 flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between">
-          <div className="flex items-center gap-6">
+          <div className="flex flex-wrap items-center gap-4 sm:gap-6">
 
             {/* Color circles */}
             {activeTab !== 'upload' && (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mr-1">Ink Color</span>
                 {[
                   { hex: '#000000', label: 'Black' },
@@ -727,8 +745,7 @@ export default function SignPage() {
     const missingFields = signFields.filter(f => {
       if (f.type === 'checkbox') return false // Checkboxes are optional / true/false
       if (f.type === 'signature' || f.type === 'initial') return false // Handled above
-      if (f.type === 'email') return false
-      if (f.type === 'full_name' || f.type === 'sign_date') {
+      if (f.type === 'full_name' || f.type === 'first_name' || f.type === 'last_name' || f.type === 'sign_date' || f.type === 'email') {
         // If edited and explicitly cleared (empty string), flag as missing
         return f.value === '';
       }
@@ -787,8 +804,8 @@ export default function SignPage() {
   // ─────────────────────────────────────────────────────────────────
 
   const brandHeader = (
-    <header className="flex items-center justify-center gap-3 py-4">
-      <div className="w-40 h-40 rounded-full overflow-hidden border border-gray-200 bg-white flex items-center justify-center shadow-sm shrink-0">
+    <header className="flex items-center justify-center gap-3 py-4 px-4 text-center sm:text-left">
+      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden border border-gray-200 bg-white flex items-center justify-center shadow-sm shrink-0">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/images/logobgwhite.jpg"
@@ -797,7 +814,7 @@ export default function SignPage() {
         />
       </div>
       <div>
-        <p className="text-sm font-black text-[#012269] uppercase tracking-widest leading-none">
+        <p className="text-xs sm:text-sm font-black text-[#012269] uppercase tracking-widest leading-none">
           Migration Republic
         </p>
         <p className="text-[9px] text-gray-500 leading-tight mt-1">
@@ -808,8 +825,8 @@ export default function SignPage() {
   )
 
   const brandHeaderDark = (
-    <header className="flex items-center justify-center gap-3 py-4">
-      <div className="w-40 h-40 rounded-full overflow-hidden border border-gray-200 bg-white flex items-center justify-center shadow-sm shrink-0">
+    <header className="flex items-center gap-2.5 py-1.5">
+      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full overflow-hidden border border-white/20 bg-white flex items-center justify-center shadow-sm shrink-0">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/images/logobgwhite.jpg"
@@ -817,11 +834,11 @@ export default function SignPage() {
           className="w-full h-full object-cover"
         />
       </div>
-      <div>
-        <p className="text-sm font-black text-white uppercase tracking-widest leading-none">
+      <div className="min-w-0">
+        <p className="text-[11px] sm:text-sm font-black text-white uppercase tracking-widest leading-none truncate">
           Migration Republic
         </p>
-        <p className="text-[9px] text-gray-300 leading-tight mt-1">
+        <p className="text-[8px] sm:text-[9px] text-gray-300 leading-tight mt-1 hidden sm:block">
           Secure Document Signing Portal
         </p>
       </div>
@@ -947,19 +964,20 @@ export default function SignPage() {
     <div className="min-h-screen bg-[#f8fafc] flex flex-col font-sans text-gray-800">
 
       {/* Brand header */}
-      <div className="shrink-0 bg-[#012269] border-b-2 border-[#e40229] sticky top-0 z-30 px-6">
-        <div className="max-w-6xl mx-auto flex items-center justify-between py-1.5">
+      <div className="shrink-0 bg-[#012269] border-b-2 border-[#e40229] sticky top-0 z-30 px-3 sm:px-6">
+        <div className="max-w-6xl mx-auto flex items-center justify-between gap-2 py-1.5">
           {brandHeaderDark}
-          <div className="flex gap-2">
+          <div className="flex gap-1.5 sm:gap-2 shrink-0">
             <button
               onClick={handleDecline}
-              className="px-4 py-2 border border-white/20 text-white/80 hover:text-white hover:bg-white/10 rounded-xl text-xs font-bold uppercase tracking-wider transition-all"
+              className="px-2.5 sm:px-4 py-1.5 sm:py-2 border border-white/20 text-white/80 hover:text-white hover:bg-white/10 rounded-xl text-[10px] sm:text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap"
             >
-              Decline Sign
+              <span className="sm:hidden">Decline</span>
+              <span className="hidden sm:inline">Decline Sign</span>
             </button>
             <button
               onClick={handleSubmitSignature}
-              className="px-5 py-2 bg-[#e40229] hover:bg-[#e40229]/90 text-white text-xs font-black rounded-xl uppercase tracking-wider shadow-lg shadow-[#e40229]/15 transition-all"
+              className="px-3 sm:px-5 py-1.5 sm:py-2 bg-[#e40229] hover:bg-[#e40229]/90 text-white text-[10px] sm:text-xs font-black rounded-xl uppercase tracking-wider shadow-lg shadow-[#e40229]/15 transition-all whitespace-nowrap"
             >
               Sign &amp; Submit
             </button>
@@ -968,10 +986,10 @@ export default function SignPage() {
       </div>
 
       {/* Main portal grid split */}
-      <div className="flex-grow max-w-6xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-4 gap-6 overflow-hidden">
+      <div className="flex-grow max-w-6xl w-full mx-auto p-3 sm:p-4 md:p-6 grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6 lg:overflow-hidden">
 
         {/* Left Side: Document Viewer (Vertical scroll of canvases) */}
-        <div className="lg:col-span-3 overflow-y-auto space-y-6 max-h-[calc(100vh-160px)] pr-2 select-none relative bg-gray-100 p-6 rounded-3xl border border-gray-200 shadow-inner">
+        <div className="lg:col-span-3 lg:overflow-y-auto space-y-6 lg:max-h-[calc(100vh-160px)] lg:pr-2 select-none relative bg-gray-100 p-3 sm:p-6 rounded-2xl sm:rounded-3xl border border-gray-200 shadow-inner">
           {!pdfjsLoaded || !pdfUrl ? (
             <div className="flex flex-col items-center justify-center py-24 text-center">
               <Loader2 className="w-10 h-10 animate-spin text-[#012269] mb-3" />
@@ -1049,7 +1067,7 @@ export default function SignPage() {
                             value={field.value as string || ''}
                             onChange={(e) => handleUpdateFieldValue(field.id, e.target.value)}
                             placeholder="Type text"
-                            className="w-full h-full bg-[#fefefe] border border-blue-400 text-gray-900 text-xs px-1.5 py-0.5 rounded outline-none focus:ring-1 focus:ring-blue-500 text-left font-sans shadow-inner"
+                            className={overlayInputClass}
                           />
                         )}
 
@@ -1060,22 +1078,24 @@ export default function SignPage() {
                               type="checkbox"
                               checked={field.value === true || field.value === 'true'}
                               onChange={(e) => handleUpdateFieldValue(field.id, e.target.checked)}
-                              className="w-5 h-5 border border-blue-400 bg-[#fefefe] rounded accent-blue-500 cursor-pointer shadow-inner"
+                              className="w-full h-full max-w-4 max-h-4 border border-blue-500 bg-white/95 accent-blue-500 cursor-pointer"
                             />
                           </div>
                         )}
 
                         {/* 4. PREFILLED FIELDS (DATE/NAME/EMAIL) */}
-                        {type === 'sign_date' && (
-                          <input
-                            type="text"
-                            required
-                            value={field.value !== null ? (field.value as string) : new Date().toLocaleDateString('en-AU')}
-                            onChange={(e) => handleUpdateFieldValue(field.id, e.target.value)}
-                            placeholder="DD/MM/YYYY"
-                            className="w-full h-full bg-[#fefefe] border border-blue-400 text-gray-900 text-xs px-1.5 py-0.5 rounded outline-none focus:ring-1 focus:ring-blue-500 text-left font-sans shadow-inner font-semibold"
-                          />
-                        )}
+                        {type === 'sign_date' && (() => {
+                          const currentDdmmyyyy = field.value !== null ? (field.value as string) : new Date().toLocaleDateString('en-AU')
+                          return (
+                            <input
+                              type="date"
+                              required
+                              value={ddmmyyyyToIso(currentDdmmyyyy)}
+                              onChange={(e) => handleUpdateFieldValue(field.id, isoToDdmmyyyy(e.target.value))}
+                              className={overlayInputClass}
+                            />
+                          )
+                        })()}
 
                         {type === 'full_name' && (
                           <input
@@ -1084,14 +1104,37 @@ export default function SignPage() {
                             value={field.value !== null ? (field.value as string) : (requestData?.signerName || '')}
                             onChange={(e) => handleUpdateFieldValue(field.id, e.target.value)}
                             placeholder="Full Name"
-                            className="w-full h-full bg-[#fefefe] border border-blue-400 text-gray-900 text-xs px-1.5 py-0.5 rounded outline-none focus:ring-1 focus:ring-blue-500 text-left font-sans shadow-inner font-semibold"
+                            className={overlayInputClass}
                           />
                         )}
 
+                        {(type === 'first_name' || type === 'last_name') && (() => {
+                          const nameParts = (requestData?.signerName || '').trim().split(/\s+/).filter(Boolean)
+                          const defaultValue = type === 'first_name'
+                            ? (nameParts[0] || '')
+                            : (nameParts.length > 1 ? nameParts.slice(1).join(' ') : '')
+
+                          return (
+                            <input
+                              type="text"
+                              required
+                              value={field.value !== null ? (field.value as string) : defaultValue}
+                              onChange={(e) => handleUpdateFieldValue(field.id, e.target.value)}
+                              placeholder={type === 'first_name' ? 'First Name' : 'Last Name'}
+                              className={overlayInputClass}
+                            />
+                          )
+                        })()}
+
                         {type === 'email' && (
-                          <div className="w-full h-full bg-gray-100 border border-gray-300 rounded px-1.5 flex items-center text-gray-600 text-[10px] select-none font-semibold truncate">
-                            {requestData?.signerEmail}
-                          </div>
+                          <input
+                            type="email"
+                            required
+                            value={field.value !== null ? (field.value as string) : (requestData?.signerEmail || '')}
+                            onChange={(e) => handleUpdateFieldValue(field.id, e.target.value)}
+                            placeholder="Email"
+                            className={overlayInputClass}
+                          />
                         )}
 
                       </div>
@@ -1104,7 +1147,7 @@ export default function SignPage() {
         </div>
 
         {/* Right Side: Signer Checklist, Details & Legal Approval */}
-        <div className="lg:col-span-1 flex flex-col gap-5 max-h-[calc(100vh-160px)] overflow-y-auto pr-1">
+        <div className="lg:col-span-1 flex flex-col gap-5 lg:max-h-[calc(100vh-160px)] lg:overflow-y-auto lg:pr-1">
 
           {/* Doc Banner */}
           <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">

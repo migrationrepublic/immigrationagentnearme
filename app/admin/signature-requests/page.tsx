@@ -496,6 +496,62 @@ export default function SignatureRequestsPage() {
     return map[status] ?? 'admin-badge-navy'
   }
 
+  const renderRequestActions = (req: SignatureRequest) => {
+    if (req.status === 'draft') {
+      return (
+        <button
+          onClick={() => router.push(`/admin/pdf-editor?documentId=${req.document_id}`)}
+          className="px-3 py-1.5 bg-blue-50 border border-blue-200 hover:bg-blue-100 text-blue-700 rounded-xl inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide transition-colors"
+          title="Edit layout placement map"
+        >
+          <PenTool className="w-3 h-3" />
+          <span>Edit Layout</span>
+        </button>
+      )
+    }
+
+    if (req.status !== 'signed') {
+      return (
+        <>
+          <button
+            onClick={() => handleCopySigningLink(req)}
+            className="admin-btn-icon inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide px-3 py-1.5"
+            title="Copy client link"
+          >
+            <Copy className="w-3 h-3" />
+            <span>Copy Link</span>
+          </button>
+
+          <button
+            onClick={() => handleSendReminder(req)}
+            disabled={processingId === req.id}
+            className="admin-btn-icon inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide px-3 py-1.5 disabled:opacity-50"
+            title="Send reminder notification"
+          >
+            {processingId === req.id ? (
+              <Loader2 className="w-3 h-3 animate-spin" style={{ color: 'var(--color-admin-gold)' }} />
+            ) : (
+              <Mail className="w-3 h-3" />
+            )}
+            <span>Remind</span>
+          </button>
+        </>
+      )
+    }
+
+    return (
+      <button
+        onClick={() => handleViewSignedFile(req.documents?.file_path || '')}
+        className="px-3 py-1.5 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 text-emerald-700 rounded-xl inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide transition-colors"
+        title="Open signed copy"
+      >
+        <Eye className="w-3 h-3" />
+        <span>View Signed</span>
+        <ExternalLink className="w-2.5 h-2.5" />
+      </button>
+    )
+  }
+
   return (
     <div className="admin-page">
 
@@ -1046,35 +1102,35 @@ export default function SignatureRequestsPage() {
         </div>
       )}
 
-      {/* ── VIEW 3: REQUESTS HISTORY & TRACKING (Original Table) ──────── */}
+      {/* ── VIEW 3: REQUESTS HISTORY & TRACKING ──────── */}
       {viewState === 'history' && (
-        <div className="max-w-6xl mx-auto py-6">
+        <div className="space-y-6">
 
           {/* Header */}
-          <div className="flex justify-between items-start md:items-center flex-col md:flex-row gap-4 mb-8">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setViewState('selection')}
-                className="p-2 border border-gray-800 hover:border-gray-700 bg-[#0a1b32]/40 rounded-xl hover:text-white text-gray-400 transition-colors"
+                className="admin-btn-icon shrink-0"
               >
                 <ArrowLeft className="w-4 h-4" />
               </button>
               <div>
-                <h1 className="text-3xl font-extrabold tracking-tight text-white">Signature Requests History</h1>
-                <p className="text-gray-400 text-sm mt-1.5">Track active workflows, send manual reminders, and view signed client documents.</p>
+                <h1 className="admin-heading">Signature Requests History</h1>
+                <p className="admin-subheading">Track active workflows, send manual reminders, and view signed client documents.</p>
               </div>
             </div>
 
             <button
               onClick={() => { setSigningType('others'); setViewState('setup') }}
-              className="flex items-center gap-2 px-4 py-2.5 bg-[#D4AF37] hover:bg-[#bfa032] text-[#030E1E] font-bold rounded-xl transition-all shadow-md text-sm uppercase tracking-wider"
+              className="admin-btn-gold w-full sm:w-auto justify-center"
             >
               <Plus className="w-4 h-4" /> Request Signature
             </button>
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-4 border-b border-gray-800/80 mb-6 pb-px">
+          <div className="flex items-center gap-1.5 w-full overflow-x-auto pb-1">
             {[
               { key: 'pending', label: 'Pending / Active', count: pendingRequests.length, icon: Clock },
               { key: 'signed', label: 'Completed (Executed)', count: signedRequests.length, icon: CheckCircle },
@@ -1082,132 +1138,122 @@ export default function SignatureRequestsPage() {
               <button
                 key={key}
                 onClick={() => setActiveTab(key as 'pending' | 'signed')}
-                className={`flex items-center gap-2 pb-3 text-sm font-bold border-b-2 px-2 transition-all ${activeTab === key
-                  ? 'border-[#D4AF37] text-white'
-                  : 'border-transparent text-gray-400 hover:text-white'
-                  }`}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 ${
+                  activeTab === key
+                    ? 'bg-[#012269] text-white shadow-xs'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
               >
-                <Icon className="w-4 h-4" /> {label} ({count})
+                <Icon className="w-3.5 h-3.5" /> {label}
+                <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                  activeTab === key ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-700'
+                }`}>
+                  {count}
+                </span>
               </button>
             ))}
           </div>
 
-          {/* Table container */}
+          {/* Table / Cards / States */}
           {loading ? (
-            <div className="flex justify-center items-center py-20">
-              <Loader2 className="w-10 h-10 animate-spin text-[#D4AF37]" />
+            <div className="admin-loader py-16 bg-white rounded-2xl border border-gray-200 shadow-xs">
+              <Loader2 className="admin-loader-icon" />
             </div>
           ) : currentList.length === 0 ? (
-            <div className="bg-[#07162c] rounded-2xl border border-gray-800 shadow-xl p-16 text-center flex flex-col items-center justify-center">
-              <Signature className="w-16 h-16 text-gray-600 mb-4" />
-              <h3 className="text-xl font-bold text-white mb-2">No Signature Requests Found</h3>
-              <p className="text-gray-400 text-sm max-w-sm">
+            <div className="admin-empty">
+              <Signature className="admin-empty-icon" />
+              <h3 className="admin-empty-title">No Signature Requests Found</h3>
+              <p className="admin-empty-text">
                 {activeTab === 'pending'
                   ? 'No pending signature workflows. Click "Request Signature" to begin.'
                   : 'No completed document templates yet.'}
               </p>
             </div>
           ) : (
-            <div className="bg-[#07162c] rounded-2xl border border-gray-800 shadow-xl overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm whitespace-nowrap">
-                  <thead className="bg-[#0c1e35] text-gray-400 text-xs font-bold border-b border-gray-800/80 uppercase tracking-wider">
-                    <tr>
-                      <th className="px-5 py-4">Signer Info</th>
-                      <th className="px-5 py-4">Document Details</th>
-                      <th className="px-5 py-4">Order Status</th>
-                      <th className="px-5 py-4">{activeTab === 'pending' ? 'Created At' : 'Signed At'}</th>
-                      <th className="px-5 py-4 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-800/60">
-                    {currentList.map(req => {
-                      const doc = req.documents
-                      return (
-                        <tr key={req.id} className="hover:bg-white/[0.01] transition-colors">
-                          <td className="px-5 py-4">
-                            <p className="font-semibold text-white">{req.signer_name}</p>
-                            <p className="text-xs text-gray-500 font-mono">{req.signer_email}</p>
+            <>
+              {/* Mobile Card List (< md screens) */}
+              <div className="md:hidden space-y-3 w-full">
+                {currentList.map(req => (
+                  <div key={req.id} className="p-4 bg-white rounded-2xl border border-slate-200 shadow-xs space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <h4 className="font-extrabold text-slate-900 text-sm truncate">{req.signer_name}</h4>
+                        <p className="text-xs text-slate-500 truncate font-mono">{req.signer_email}</p>
+                      </div>
+                      <span className={`admin-badge capitalize shrink-0 ${statusBadge(req.status)}`}>
+                        {req.status === 'draft' ? 'draft' : req.status}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-100 text-xs">
+                      <span className="admin-cell-primary truncate">{req.documents?.name || 'Untitled document'}</span>
+                      <span className="admin-cell-muted font-mono shrink-0">
+                        {req.status === 'signed' && req.signed_at
+                          ? new Date(req.signed_at).toLocaleDateString('en-AU')
+                          : new Date(req.created_at).toLocaleDateString('en-AU')}
+                      </span>
+                    </div>
+
+                    <div className="pt-2 border-t border-slate-100 flex flex-wrap justify-end gap-2">
+                      {renderRequestActions(req)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Desktop Table View (>= md screens) */}
+              <div className="hidden md:block admin-table-card">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm whitespace-nowrap">
+                    <thead className="admin-thead">
+                      <tr>
+                        <th>Signer Info</th>
+                        <th>Document Details</th>
+                        <th>Order Status</th>
+                        <th>{activeTab === 'pending' ? 'Created At' : 'Signed At'}</th>
+                        <th className="text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="admin-tbody">
+                      {currentList.map(req => (
+                        <tr key={req.id} className="admin-tr">
+                          <td className="admin-td">
+                            <span className="admin-cell-primary block">{req.signer_name}</span>
+                            <span className="admin-cell-muted font-mono block mt-1">{req.signer_email}</span>
                           </td>
-                          <td className="px-5 py-4">
-                            <p className="font-semibold text-white text-sm">{doc?.name || 'Untitled document'}</p>
-                            <p className="text-[10px] text-gray-600 font-mono mt-0.5">
+                          <td className="admin-td">
+                            <span className="admin-cell-primary block">{req.documents?.name || 'Untitled document'}</span>
+                            <span className="admin-cell-muted font-mono block mt-1">
                               req_id: {req.id.substring(0, 8)}...
-                            </p>
+                            </span>
                           </td>
-                          <td className="px-5 py-4">
-                            <span className={`px-2.5 py-1 rounded-full text-xs font-bold border capitalize ${statusBadge(req.status)}`}>
+                          <td className="admin-td">
+                            <span className={`admin-badge capitalize ${statusBadge(req.status)}`}>
                               {req.status === 'draft' ? 'draft (in editor)' : req.status}
                             </span>
                             {(req.signing_order ?? 0) > 1 && req.status === 'draft' && (
-                              <span className="text-[10px] text-gray-500 ml-2 block mt-1">
+                              <span className="admin-cell-muted block mt-1">
                                 Wait order: {req.signing_order}
                               </span>
                             )}
                           </td>
-                          <td className="px-5 py-4 text-xs text-gray-400 font-mono">
+                          <td className="admin-td admin-cell-muted font-mono">
                             {req.status === 'signed' && req.signed_at
                               ? new Date(req.signed_at).toLocaleString('en-AU')
                               : new Date(req.created_at).toLocaleString('en-AU')}
                           </td>
-                          <td className="px-5 py-4">
+                          <td className="admin-td text-right">
                             <div className="flex items-center justify-end gap-2">
-                              {req.status === 'draft' ? (
-                                <button
-                                  onClick={() => router.push(`/admin/pdf-editor?documentId=${req.document_id}`)}
-                                  className="px-3 py-1.5 bg-blue-900/40 border border-blue-700 hover:bg-blue-800 text-blue-300 hover:text-white rounded-xl inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider transition-colors"
-                                  title="Edit layout placement map"
-                                >
-                                  <PenTool className="w-3 h-3" />
-                                  <span>Edit Layout</span>
-                                </button>
-                              ) : req.status !== 'signed' ? (
-                                <>
-                                  {/* Copy Link */}
-                                  <button
-                                    onClick={() => handleCopySigningLink(req)}
-                                    className="px-3 py-1.5 border border-gray-800 bg-[#0a1b32]/40 rounded-xl hover:bg-gray-800 text-gray-400 hover:text-white transition-colors inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide"
-                                    title="Copy client link"
-                                  >
-                                    <Copy className="w-3 h-3" />
-                                    <span>Copy Link</span>
-                                  </button>
-
-                                  {/* Send Reminder */}
-                                  <button
-                                    onClick={() => handleSendReminder(req)}
-                                    disabled={processingId === req.id}
-                                    className="px-3 py-1.5 border border-gray-800 bg-[#0a1b32]/40 rounded-xl hover:bg-gray-800 text-gray-400 hover:text-white disabled:opacity-50 transition-colors inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide"
-                                    title="Send reminder notification"
-                                  >
-                                    {processingId === req.id ? (
-                                      <Loader2 className="w-3 h-3 animate-spin text-[#D4AF37]" />
-                                    ) : (
-                                      <Mail className="w-3 h-3" />
-                                    )}
-                                    <span>Remind</span>
-                                  </button>
-                                </>
-                              ) : (
-                                <button
-                                  onClick={() => handleViewSignedFile(doc?.file_path || '')}
-                                  className="px-3 py-1.5 bg-green-950/20 border border-green-800 hover:bg-green-900 text-green-400 hover:text-green-200 rounded-xl inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide transition-colors"
-                                  title="Open signed copy"
-                                >
-                                  <Eye className="w-3 h-3" />
-                                  <span>View Signed</span>
-                                  <ExternalLink className="w-2.5 h-2.5" />
-                                </button>
-                              )}
+                              {renderRequestActions(req)}
                             </div>
                           </td>
                         </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-            </div>
+            </>
           )}
 
         </div>

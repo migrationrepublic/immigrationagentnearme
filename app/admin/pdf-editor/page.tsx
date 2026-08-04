@@ -21,7 +21,6 @@ import {
   Calendar,
   User,
   Mail,
-  Move,
   ZoomIn,
   ZoomOut,
   ChevronLeft,
@@ -49,7 +48,7 @@ interface Toast { id: number; variant: ToastVariant; message: string }
 let toastCounter = 0
 
 // ── Domain types ─────────────────────────────────────────────────────────────
-type FieldType = 'signature' | 'initial' | 'sign_date' | 'full_name' | 'email' | 'checkbox' | 'text'
+type FieldType = 'signature' | 'initial' | 'sign_date' | 'full_name' | 'first_name' | 'last_name' | 'email' | 'checkbox' | 'text'
 
 interface PlacedField {
   id: string
@@ -61,6 +60,10 @@ interface PlacedField {
   h: number
   signer_id: string
   value: string | boolean | null
+}
+
+function generateFieldId(): string {
+  return `field_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`
 }
 
 
@@ -124,16 +127,41 @@ function PDFEditorPage() {
 
   // Signer color badges helper
   const colors = [
-    { bg: 'bg-green-500/10 border-green-500/30 text-green-400', badge: 'green', color: '#10b981', hexBg: 'rgba(16,185,129,0.1)' },
-    { bg: 'bg-orange-500/10 border-orange-500/30 text-orange-400', badge: 'orange', color: '#f97316', hexBg: 'rgba(249,115,22,0.1)' },
-    { bg: 'bg-blue-500/10 border-blue-500/30 text-blue-400', badge: 'blue', color: '#3b82f6', hexBg: 'rgba(59,130,246,0.1)' },
-    { bg: 'bg-purple-500/10 border-purple-500/30 text-purple-400', badge: 'purple', color: '#a855f7', hexBg: 'rgba(168,85,247,0.1)' },
-    { bg: 'bg-rose-500/10 border-rose-500/30 text-rose-400', badge: 'pink', color: '#f43f5e', hexBg: 'rgba(244,63,94,0.1)' }
+    { bg: 'bg-green-500/10 border-green-500/30 text-green-400', badge: 'green', color: '#10b981', hexBg: 'rgba(16,185,129,0.13)', borderColor: '#059669' },
+    { bg: 'bg-orange-500/10 border-orange-500/30 text-orange-400', badge: 'orange', color: '#f97316', hexBg: 'rgba(249,115,22,0.13)', borderColor: '#ea580c' },
+    { bg: 'bg-blue-500/10 border-blue-500/30 text-blue-400', badge: 'blue', color: '#3b82f6', hexBg: 'rgba(59,130,246,0.13)', borderColor: '#2563eb' },
+    { bg: 'bg-purple-500/10 border-purple-500/30 text-purple-400', badge: 'purple', color: '#a855f7', hexBg: 'rgba(168,85,247,0.13)', borderColor: '#9333ea' },
+    { bg: 'bg-rose-500/10 border-rose-500/30 text-rose-400', badge: 'pink', color: '#f43f5e', hexBg: 'rgba(244,63,94,0.13)', borderColor: '#e11d48' }
   ]
 
   const getSignerColor = (signerEmail: string) => {
     const idx = sigRequests.findIndex(r => r.signer_email === signerEmail)
     return colors[idx % colors.length] || colors[0]
+  }
+
+  // Unified field chip icon + short label per field type
+  const fieldIconMap: Record<FieldType, typeof PenTool> = {
+    signature: PenTool,
+    initial: Signature,
+    sign_date: Calendar,
+    full_name: User,
+    first_name: User,
+    last_name: User,
+    email: Mail,
+    checkbox: CheckCircle2,
+    text: FileText,
+  }
+
+  const fieldLabelMap: Record<FieldType, string> = {
+    signature: 'Signature',
+    initial: 'Initial',
+    sign_date: 'Date',
+    full_name: 'Full Name',
+    first_name: 'First Name',
+    last_name: 'Last Name',
+    email: 'Email',
+    checkbox: 'Checkbox',
+    text: 'Text',
   }
 
   // Toast Helpers
@@ -305,6 +333,30 @@ function PDFEditorPage() {
     e.preventDefault()
   }
 
+  // Fixed default sizes as percentages of the page — calibrated to match
+  // real Australian immigration form field widths (Family name / Given
+  // names / Date of birth / Email address rows, signature block, etc.).
+  const getDefaultFieldSizePercent = (type: string) => {
+    switch (type) {
+      case 'signature':
+        return { w: 24, h: 4 }
+      case 'initial':
+        return { w: 8, h: 3 }
+      case 'sign_date':
+        return { w: 15, h: 2 }
+      case 'first_name':
+      case 'last_name':
+        return { w: 28, h: 2 }
+      case 'full_name':
+      case 'email':
+        return { w: 30, h: 2 }
+      case 'checkbox':
+        return { w: 3, h: 2 }
+      default:
+        return { w: 20, h: 2 } // text
+    }
+  }
+
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault()
     const container = e.currentTarget as HTMLDivElement
@@ -317,26 +369,10 @@ function PDFEditorPage() {
     const x = ((e.clientX - rect.left) / rect.width) * 100
     const y = ((e.clientY - rect.top) / rect.height) * 100
 
-    // Set standard size percentages based on type (scaled smaller to fit PDF grids)
-    let w = 15 // Width percentage
-    let h = 3.5  // Height percentage
-
-    if (type === 'signature') {
-      w = 15
-      h = 5
-    } else if (type === 'initial') {
-      w = 8
-      h = 4
-    } else if (type === 'sign_date') {
-      w = 11
-      h = 3.5
-    } else if (type === 'checkbox') {
-      w = 3
-      h = 2.5
-    }
+    const { w, h } = getDefaultFieldSizePercent(type)
 
     const newField: PlacedField = {
-      id: `field_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+      id: generateFieldId(),
       type: type as FieldType,
       page: currentPage,
       x: Math.min(Math.max(0, x - w / 2), 100 - w),
@@ -352,16 +388,46 @@ function PDFEditorPage() {
     showToast('info', `Placed ${type} field on page ${currentPage}.`)
   }
 
+  // Tap-to-place fallback for touch devices, where native HTML5 drag-and-drop
+  // (used by the desktop palette drag) does not fire at all.
+  const handlePaletteItemTap = (type: string) => {
+    if (!activeSignerId) {
+      showToast('error', 'Select a signer before placing a field.')
+      return
+    }
+
+    const { w, h } = getDefaultFieldSizePercent(type)
+    const sameTypeCount = placedFields.filter(f => f.page === currentPage && f.type === type).length
+    const x = Math.min(8 + (sameTypeCount * 4) % 60, 100 - w)
+    const y = Math.min(8 + (sameTypeCount * 6) % 70, 100 - h)
+
+    const newField: PlacedField = {
+      id: generateFieldId(),
+      type: type as FieldType,
+      page: currentPage,
+      x,
+      y,
+      w,
+      h,
+      signer_id: activeSignerId,
+      value: null,
+    }
+
+    setPlacedFields(prev => [...prev, newField])
+    setSelectedFieldId(newField.id)
+    showToast('info', `Placed ${type} field on page ${currentPage}.`)
+  }
+
   // Remove placed field
   const handleRemoveField = (id: string) => {
     setPlacedFields(prev => prev.filter(f => f.id !== id))
   }
 
-  // Placed field reposition dragging refs
+  // Placed field reposition dragging refs (Pointer Events cover mouse, touch and pen)
   const activeDraggingFieldIdRef = useRef<string | null>(null)
   const fieldDragStartPos = useRef<{ clientX: number; clientY: number; fieldX: number; fieldY: number } | null>(null)
 
-  const handleFieldDragStart = (e: React.MouseEvent, field: PlacedField) => {
+  const handleFieldDragStart = (e: React.PointerEvent, field: PlacedField) => {
     e.stopPropagation()
     e.preventDefault()
     activeDraggingFieldIdRef.current = field.id
@@ -374,7 +440,7 @@ function PDFEditorPage() {
   }
 
   // Container level handlers to support smooth dragging without freezing
-  const handleContainerMouseMove = (e: React.MouseEvent) => {
+  const handleContainerMouseMove = (e: React.PointerEvent) => {
     if (!activeDraggingFieldIdRef.current || !fieldDragStartPos.current || !containerRef.current) return
     e.preventDefault()
 
@@ -618,7 +684,7 @@ function PDFEditorPage() {
   // ── RENDER ─────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-[#030E1E] text-white p-6 relative">
+    <div className="min-h-screen bg-[#030E1E] text-white p-3 sm:p-6 relative">
 
       {/* ── Toast Notifications ───────────────────────────────────────────── */}
       <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-2 items-end pointer-events-none">
@@ -651,77 +717,79 @@ function PDFEditorPage() {
         <div className="flex flex-col h-[calc(100vh-50px)]">
 
           {/* Top Navbar */}
-          <div className="bg-[#07162c] border border-gray-800 rounded-2xl p-4 mb-5 flex items-center justify-between shadow-xl flex-shrink-0">
-            <div className="flex items-center gap-3">
+          <div className="bg-[#07162c] border border-gray-800 rounded-2xl p-4 mb-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shadow-xl flex-shrink-0">
+            <div className="flex items-center gap-3 min-w-0">
               <button
                 onClick={() => router.push('/admin/signature-requests')}
-                className="p-2 border border-gray-800 hover:border-gray-700 bg-[#0a1b32]/40 rounded-xl hover:text-white text-gray-400 transition-colors"
+                className="p-2 border border-gray-800 hover:border-gray-700 bg-[#0a1b32]/40 rounded-xl hover:text-white text-gray-400 transition-colors shrink-0"
               >
                 <ArrowLeft className="w-4 h-4" />
               </button>
-              <div>
-                <h1 className="text-lg font-bold text-white leading-tight truncate max-w-md">{pdfDocName}</h1>
-                <p className="text-[10px] text-gray-500 mt-0.5">Drag-and-drop interactive blocks to define signature coordinates.</p>
+              <div className="min-w-0">
+                <h1 className="text-lg font-bold text-white leading-tight truncate max-w-[70vw] sm:max-w-md">{pdfDocName}</h1>
+                <p className="text-[10px] text-gray-500 mt-0.5 hidden sm:block">Drag-and-drop interactive blocks to define signature coordinates.</p>
               </div>
             </div>
 
-            {/* Pagination Controls */}
-            {totalPages > 0 && (
-              <div className="flex items-center gap-3 bg-[#0a1b32]/50 px-3 py-1.5 border border-gray-800 rounded-xl">
-                <button
-                  type="button"
-                  disabled={currentPage === 1}
-                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                  className="p-1 hover:text-white disabled:opacity-30 transition-colors"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
-                <span className="text-xs font-bold font-mono">
-                  Page {currentPage} of {totalPages}
-                </span>
-                <button
-                  type="button"
-                  disabled={currentPage === totalPages}
-                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                  className="p-1 hover:text-white disabled:opacity-30 transition-colors"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
-            )}
-
-            {/* Zoom Controls */}
-            <div className="hidden md:flex items-center gap-2 bg-[#0a1b32]/50 px-3 py-1.5 border border-gray-800 rounded-xl">
-              <button
-                onClick={() => setZoomScale(z => Math.max(0.6, z - 0.1))}
-                className="p-1 text-gray-400 hover:text-white transition-colors"
-              >
-                <ZoomOut className="w-4 h-4" />
-              </button>
-              <span className="text-xs font-bold font-mono w-10 text-center">{Math.round(zoomScale * 100)}%</span>
-              <button
-                onClick={() => setZoomScale(z => Math.min(2.0, z + 0.1))}
-                className="p-1 text-gray-400 hover:text-white transition-colors"
-              >
-                <ZoomIn className="w-4 h-4" />
-              </button>
-            </div>
-
-            <button
-              onClick={handleSendVisualWorkflow}
-              disabled={savingVisualPlacements || loadingVisualDoc}
-              className="flex items-center gap-2 px-5 py-2.5 bg-[#D4AF37] hover:bg-[#bfa032] disabled:opacity-50 text-[#030E1E] text-xs font-black rounded-xl transition-all uppercase tracking-wider shadow-lg shadow-[#D4AF37]/10"
-            >
-              {savingVisualPlacements ? (
-                <>
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" /> Sending…
-                </>
-              ) : (
-                <>
-                  <Send className="w-3.5 h-3.5" /> Send Document
-                </>
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+              {/* Pagination Controls */}
+              {totalPages > 0 && (
+                <div className="flex items-center gap-2 sm:gap-3 bg-[#0a1b32]/50 px-3 py-1.5 border border-gray-800 rounded-xl shrink-0">
+                  <button
+                    type="button"
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    className="p-1 hover:text-white disabled:opacity-30 transition-colors"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  <span className="text-xs font-bold font-mono whitespace-nowrap">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                  <button
+                    type="button"
+                    disabled={currentPage === totalPages}
+                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                    className="p-1 hover:text-white disabled:opacity-30 transition-colors"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
               )}
-            </button>
+
+              {/* Zoom Controls */}
+              <div className="flex items-center gap-2 bg-[#0a1b32]/50 px-3 py-1.5 border border-gray-800 rounded-xl shrink-0">
+                <button
+                  onClick={() => setZoomScale(z => Math.max(0.6, z - 0.1))}
+                  className="p-1 text-gray-400 hover:text-white transition-colors"
+                >
+                  <ZoomOut className="w-4 h-4" />
+                </button>
+                <span className="text-xs font-bold font-mono w-10 text-center">{Math.round(zoomScale * 100)}%</span>
+                <button
+                  onClick={() => setZoomScale(z => Math.min(2.0, z + 0.1))}
+                  className="p-1 text-gray-400 hover:text-white transition-colors"
+                >
+                  <ZoomIn className="w-4 h-4" />
+                </button>
+              </div>
+
+              <button
+                onClick={handleSendVisualWorkflow}
+                disabled={savingVisualPlacements || loadingVisualDoc}
+                className="flex items-center justify-center gap-2 px-5 py-2.5 bg-[#D4AF37] hover:bg-[#bfa032] disabled:opacity-50 text-[#030E1E] text-xs font-black rounded-xl transition-all uppercase tracking-wider shadow-lg shadow-[#D4AF37]/10 shrink-0 w-full sm:w-auto"
+              >
+                {savingVisualPlacements ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" /> Sending…
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-3.5 h-3.5" /> Send Document
+                  </>
+                )}
+              </button>
+            </div>
           </div>
 
           {/* Main Layout Workspace */}
@@ -731,7 +799,7 @@ function PDFEditorPage() {
               <p className="text-sm text-gray-400">Loading document configuration…</p>
             </div>
           ) : (
-            <div className="flex-1 grid grid-cols-1 lg:grid-cols-5 gap-6 overflow-hidden min-h-0">
+            <div className="flex-1 grid grid-cols-1 lg:grid-cols-5 gap-6 overflow-y-auto lg:overflow-hidden min-h-0">
 
               {/* Panel 1: Left Columns (Draggable elements, Active Signer and Document Thumbnails) */}
               <div className="lg:col-span-1 flex flex-col gap-4 overflow-y-auto pr-1">
@@ -789,7 +857,8 @@ function PDFEditorPage() {
                       { type: 'signature', label: 'Signature Box', icon: PenTool },
                       { type: 'initial', label: 'Initial Stamp', icon: Signature },
                       { type: 'sign_date', label: 'Sign Date', icon: Calendar },
-                      { type: 'full_name', label: 'Full Name', icon: User },
+                      { type: 'first_name', label: 'First Name', icon: User },
+                      { type: 'last_name', label: 'Last Name', icon: User },
                       { type: 'email', label: 'Email Text', icon: Mail },
                       { type: 'checkbox', label: 'Checkbox', icon: CheckCircle2 },
                       { type: 'text', label: 'Custom Text Box', icon: FileText }
@@ -800,6 +869,8 @@ function PDFEditorPage() {
                           key={field.type}
                           draggable
                           onDragStart={(e) => handleDragStart(e, field.type)}
+                          onClick={() => handlePaletteItemTap(field.type)}
+                          title="Drag onto the page, or tap to place on mobile"
                           className="flex items-center gap-3 px-3 py-2 bg-[#0a1b32]/60 hover:bg-[#0c1f38] border border-gray-800 hover:border-gray-700 rounded-xl cursor-grab active:cursor-grabbing text-xs text-gray-300 hover:text-white transition-all"
                         >
                           <Icon className="w-4 h-4 text-[#D4AF37] shrink-0" />
@@ -858,9 +929,9 @@ function PDFEditorPage() {
                     ref={containerRef}
                     onDragOver={handleDragOver}
                     onDrop={handleDrop}
-                    onMouseMove={handleContainerMouseMove}
-                    onMouseUp={handleContainerMouseUp}
-                    onMouseLeave={handleContainerMouseUp}
+                    onPointerMove={handleContainerMouseMove}
+                    onPointerUp={handleContainerMouseUp}
+                    onPointerLeave={handleContainerMouseUp}
                     className="relative border border-gray-800 shadow-2xl bg-white select-none shrink-0"
                     style={{
                       width: canvasDimensions?.width ? `${canvasDimensions.width}px` : 'auto',
@@ -869,13 +940,14 @@ function PDFEditorPage() {
                   >
                     <canvas ref={canvasRef} className="block w-full h-full" />
 
-                    {/* Visual elements overlays */}
+                    {/* Visual elements overlays — unified field chip (icon + label + value) */}
                     {placedFields
                       .filter(f => f.page === currentPage)
                       .map(field => {
                         const signer = sigRequests.find(r => r.id === field.signer_id)
                         const signerColor = getSignerColor(signer?.signer_email || '')
                         const isSelected = selectedFieldId === field.id
+                        const FieldIcon = fieldIconMap[field.type] || FileText
 
                         return (
                           <div
@@ -886,38 +958,61 @@ function PDFEditorPage() {
                               top: `${field.y}%`,
                               width: `${field.w}%`,
                               height: `${field.h}%`,
-                              border: isSelected ? `2.5px solid ${signerColor.color}` : `1.5px dashed ${signerColor.color}`,
+                              border: `${isSelected ? 2 : 1}px solid ${signerColor.borderColor}`,
                               backgroundColor: signerColor.hexBg,
-                              color: signerColor.color,
-                              zIndex: isSelected ? 30 : 10
+                              zIndex: isSelected ? 30 : 10,
+                              touchAction: 'none',
                             }}
-                            className="rounded px-1.5 py-1 flex flex-col justify-between cursor-move shadow-md group select-none overflow-hidden"
-                            onMouseDown={(e) => {
+                            className="group rounded-md flex items-center gap-1 cursor-move shadow-sm select-none overflow-hidden"
+                            onPointerDown={(e) => {
                               handleFieldDragStart(e, field)
                               setSelectedFieldId(field.id)
                             }}
                           >
-                            <div className="flex justify-between items-center w-full">
-                              <span className="text-[7.5px] uppercase font-black tracking-wider leading-none truncate max-w-[80%] flex items-center gap-0.5">
-                                <Move className="w-2 h-2 shrink-0" />
-                                {field.type}
-                              </span>
-                              <button
-                                type="button"
-                                onMouseDown={(e) => e.stopPropagation()}
-                                onClick={() => {
-                                  handleRemoveField(field.id)
-                                  if (selectedFieldId === field.id) setSelectedFieldId(null)
-                                }}
-                                className="w-3.5 h-3.5 text-red-500 hover:text-red-400 flex items-center justify-center text-[9px] font-bold leading-none select-none"
+                            <FieldIcon
+                              className="shrink-0"
+                              style={{
+                                width: `${Math.max(10, 13 * zoomScale)}px`,
+                                height: `${Math.max(10, 13 * zoomScale)}px`,
+                                color: signerColor.color,
+                                marginLeft: `${4 * zoomScale}px`,
+                              }}
+                            />
+
+                            <div className="min-w-0 flex-1 leading-tight">
+                              <div
+                                className="uppercase font-bold tracking-wide truncate"
+                                style={{ fontSize: `${Math.max(7, 8 * zoomScale)}px`, color: signerColor.color, opacity: 0.9 }}
                               >
-                                ×
-                              </button>
+                                {fieldLabelMap[field.type] || field.type}
+                              </div>
+                              <div
+                                className="truncate font-medium text-gray-900"
+                                style={{ fontSize: `${Math.max(9, 11.5 * zoomScale)}px` }}
+                              >
+                                {field.type === 'email' ? (signer?.signer_email || 'Signer') : (signer?.signer_name || 'Signer')}
+                              </div>
                             </div>
 
-                            <div className="text-[7px] truncate font-medium text-gray-800 bg-white/80 rounded px-0.5 py-px mt-0.5 border border-gray-300 w-full leading-none">
-                              {signer?.signer_name || 'Signer'}
-                            </div>
+                            <button
+                              type="button"
+                              onPointerDown={(e) => e.stopPropagation()}
+                              onClick={() => {
+                                handleRemoveField(field.id)
+                                if (selectedFieldId === field.id) setSelectedFieldId(null)
+                              }}
+                              className={`shrink-0 flex items-center justify-center rounded-full bg-white/95 text-red-500 hover:text-red-600 hover:bg-white leading-none font-bold transition-opacity select-none ${
+                                isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                              }`}
+                              style={{
+                                width: `${Math.max(12, 14 * zoomScale)}px`,
+                                height: `${Math.max(12, 14 * zoomScale)}px`,
+                                fontSize: `${Math.max(8, 10 * zoomScale)}px`,
+                                marginRight: `${3 * zoomScale}px`,
+                              }}
+                            >
+                              ×
+                            </button>
                           </div>
                         )
                       })}
@@ -944,7 +1039,7 @@ function PDFEditorPage() {
 
                       <div>
                         <span className="text-gray-400 text-[10px] uppercase font-bold block mb-1">Field Type</span>
-                        <span className="px-2 py-0.5 rounded text-[10px] font-bold capitalize bg-gray-800 text-gray-300 border border-gray-700">{field.type}</span>
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-gray-800 text-gray-300 border border-gray-700">{fieldLabelMap[field.type] || field.type}</span>
                       </div>
 
                       {/* Signer Assignment */}

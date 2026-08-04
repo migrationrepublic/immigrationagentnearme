@@ -245,6 +245,19 @@ export class SignatureService {
             font: helveticaFont,
             color: rgb(0.05, 0.05, 0.15),
           });
+        } else if (type === "first_name" || type === "last_name") {
+          const nameParts = (typedRequest.signer_name || "").trim().split(/\s+/).filter(Boolean);
+          const fallback = type === "first_name"
+            ? (nameParts[0] || "")
+            : (nameParts.length > 1 ? nameParts.slice(1).join(" ") : "");
+          const nameText = field.value || fallback;
+          page.drawText(nameText, {
+            x: pdfX + 5,
+            y: pdfY + (pdfH / 2) - 4,
+            size: Math.max(8, pdfH * 0.5),
+            font: helveticaFont,
+            color: rgb(0.05, 0.05, 0.15),
+          });
         } else if (type === "email") {
           const emailText = typedRequest.signer_email;
           page.drawText(emailText, {

@@ -27,6 +27,7 @@ import {
   ChevronRight,
   UserCheck,
   Trash2,
+  GripVertical,
 } from 'lucide-react'
 import { getSignedUrlAction } from '@/app/actions/storage'
 import {
@@ -851,21 +852,21 @@ function PDFEditorPage() {
                 </div>
 
                 {/* 1B. Standard Fields Palette */}
-                <div className="bg-[#07162c] border border-gray-800 rounded-2xl p-4 shadow-xl flex flex-col max-h-64">
+                <div className="bg-[#07162c] border border-gray-800 rounded-2xl p-4 shadow-xl flex flex-col max-h-72">
                   <h3 className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-2 border-b border-gray-800 pb-2 flex items-center gap-1.5">
                     <Settings className="w-3.5 h-3.5 text-[#D4AF37]" /> Standard Fields
                   </h3>
 
-                  <div className="space-y-2 overflow-y-auto pr-1">
+                  <div className="grid grid-cols-2 gap-1.5 overflow-y-auto pr-1">
                     {[
-                      { type: 'signature', label: 'Signature Box', icon: PenTool },
-                      { type: 'initial', label: 'Initial Stamp', icon: Signature },
+                      { type: 'signature', label: 'Signature', icon: PenTool },
+                      { type: 'initial', label: 'Initial', icon: Signature },
                       { type: 'sign_date', label: 'Sign Date', icon: Calendar },
                       { type: 'first_name', label: 'First Name', icon: User },
                       { type: 'last_name', label: 'Last Name', icon: User },
-                      { type: 'email', label: 'Email Text', icon: Mail },
+                      { type: 'email', label: 'Email', icon: Mail },
                       { type: 'checkbox', label: 'Checkbox', icon: CheckCircle2 },
-                      { type: 'text', label: 'Custom Text Box', icon: FileText }
+                      { type: 'text', label: 'Text', icon: FileText }
                     ].map(field => {
                       const Icon = field.icon
                       return (
@@ -875,10 +876,13 @@ function PDFEditorPage() {
                           onDragStart={(e) => handleDragStart(e, field.type)}
                           onClick={() => handlePaletteItemTap(field.type)}
                           title="Drag onto the page, or tap to place on mobile"
-                          className="flex items-center gap-3 px-3 py-2 bg-[#0a1b32]/60 hover:bg-[#0c1f38] border border-gray-800 hover:border-gray-700 rounded-xl cursor-grab active:cursor-grabbing text-xs text-gray-300 hover:text-white transition-all"
+                          className="flex items-center gap-1 pl-1.5 pr-1 py-1.5 bg-[#0a1b32]/60 hover:bg-[#0c1f38] border border-gray-800 hover:border-gray-700 rounded-xl cursor-grab active:cursor-grabbing text-gray-300 hover:text-white transition-all"
                         >
-                          <Icon className="w-4 h-4 text-[#D4AF37] shrink-0" />
-                          <span className="font-semibold">{field.label}</span>
+                          <GripVertical className="w-3 h-3 text-gray-600 shrink-0" />
+                          <span className="text-[11px] font-semibold truncate flex-1">{field.label}</span>
+                          <span className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0 bg-teal-500/15">
+                            <Icon className="w-3.5 h-3.5 text-teal-400" />
+                          </span>
                         </div>
                       )
                     })}
@@ -973,28 +977,37 @@ function PDFEditorPage() {
                               setSelectedFieldId(field.id)
                             }}
                           >
-                            <FieldIcon
-                              className="shrink-0"
-                              style={{
-                                width: `${Math.max(10, 13 * zoomScale)}px`,
-                                height: `${Math.max(10, 13 * zoomScale)}px`,
-                                color: signerColor.color,
-                                marginLeft: `${4 * zoomScale}px`,
-                              }}
-                            />
+                            {/* Icon + label + value only appear on hover/selection — at rest the
+                                field is just a clean, exactly-sized tinted box (Zoho-style), so a
+                                page full of placed fields doesn't turn into label clutter. */}
+                            <div
+                              className={`flex items-center gap-1 flex-1 min-w-0 transition-opacity ${
+                                isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                              }`}
+                            >
+                              <FieldIcon
+                                className="shrink-0"
+                                style={{
+                                  width: `${Math.max(10, 13 * zoomScale)}px`,
+                                  height: `${Math.max(10, 13 * zoomScale)}px`,
+                                  color: signerColor.color,
+                                  marginLeft: `${4 * zoomScale}px`,
+                                }}
+                              />
 
-                            <div className="min-w-0 flex-1 leading-tight">
-                              <div
-                                className="uppercase font-bold tracking-wide truncate"
-                                style={{ fontSize: `${Math.max(7, 8 * zoomScale)}px`, color: signerColor.color, opacity: 0.9 }}
-                              >
-                                {fieldLabelMap[field.type] || field.type}
-                              </div>
-                              <div
-                                className="truncate font-medium text-gray-900"
-                                style={{ fontSize: `${Math.max(9, 11.5 * zoomScale)}px` }}
-                              >
-                                {field.type === 'email' ? (signer?.signer_email || 'Signer') : (signer?.signer_name || 'Signer')}
+                              <div className="min-w-0 flex-1 leading-tight">
+                                <div
+                                  className="uppercase font-bold tracking-wide truncate"
+                                  style={{ fontSize: `${Math.max(7, 8 * zoomScale)}px`, color: signerColor.color, opacity: 0.9 }}
+                                >
+                                  {fieldLabelMap[field.type] || field.type}
+                                </div>
+                                <div
+                                  className="truncate font-medium text-gray-900"
+                                  style={{ fontSize: `${Math.max(9, 11.5 * zoomScale)}px` }}
+                                >
+                                  {field.type === 'email' ? (signer?.signer_email || 'Signer') : (signer?.signer_name || 'Signer')}
+                                </div>
                               </div>
                             </div>
 

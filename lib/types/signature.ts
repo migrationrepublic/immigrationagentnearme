@@ -12,6 +12,8 @@ export interface PlacedFieldData {
   w: number;
   h: number;
   value?: string | boolean | null;
+  /** Optional admin-set caption shown to the signer (e.g. "Business Address") instead of a generic "Text box #1". */
+  label?: string;
 }
 
 export interface SignatureRequest {

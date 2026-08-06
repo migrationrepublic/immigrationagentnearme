@@ -60,6 +60,8 @@ interface PlacedField {
   h: number
   signer_id: string
   value: string | boolean | null
+  /** Optional caption shown to the signer instead of a generic "Text box #1" — most useful on free-text fields. */
+  label?: string
 }
 
 function generateFieldId(): string {
@@ -244,6 +246,7 @@ function PDFEditorPage() {
               h: f.h ?? 8,
               signer_id: req.id,
               value: f.value ?? null,
+              label: f.label,
             })
           })
         }
@@ -498,6 +501,7 @@ function PDFEditorPage() {
             w: parseFloat(f.w.toFixed(2)),
             h: parseFloat(f.h.toFixed(2)),
             value: null as null,
+            label: f.label?.trim() || undefined,
           }))
 
         return {
@@ -1058,6 +1062,21 @@ function PDFEditorPage() {
                             <option key={r.id} value={r.id}>{r.signer_name}</option>
                           ))}
                         </select>
+                      </div>
+
+                      {/* Signer-facing caption — shown to the signer instead of a generic label, especially useful on free-text fields */}
+                      <div className="pt-2 border-t border-gray-800">
+                        <span className="text-gray-400 text-[10px] uppercase font-bold block mb-1">Field Label (shown to signer)</span>
+                        <input
+                          type="text"
+                          value={field.label || ''}
+                          onChange={(e) => {
+                            const val = e.target.value
+                            setPlacedFields(prev => prev.map(f => (f.id === selectedFieldId ? { ...f, label: val } : f)))
+                          }}
+                          placeholder={`e.g. "Business Address" (defaults to "${fieldLabelMap[field.type] || field.type}")`}
+                          className="w-full px-2.5 py-1.5 rounded-lg border border-gray-800 bg-[#0c1e35] outline-none text-white placeholder:text-gray-600 placeholder:text-[10px] focus:border-[#D4AF37]"
+                        />
                       </div>
 
                       {/* Coordinate and Size Adjustments */}

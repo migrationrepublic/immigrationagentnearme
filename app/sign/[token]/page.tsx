@@ -39,11 +39,15 @@ interface SignField {
   w: number
   h: number
   value: string | boolean | null
+  /** Optional admin-set caption (e.g. "Business Address") shown in place of a generic "Text box #1". */
+  label?: string
 }
 
-// Overlay inputs sit directly on top of the printed PDF field, so they stay
-// flat (no rounded corners / inner shadow) and hug the field's real size.
-const overlayInputClass = "w-full h-full bg-white/95 border border-blue-500 text-gray-900 text-xs px-1 py-0 outline-none focus:ring-1 focus:ring-blue-500 text-left font-sans font-semibold"
+// Overlay inputs sit directly inside the PDF's own printed field box, which
+// already has its own outline — so by default they stay borderless/transparent
+// and only pick up a light highlight while focused, instead of drawing a
+// second competing box on top of the document.
+const overlayInputClass = "w-full h-full bg-transparent border-none text-gray-900 text-xs px-0.5 py-0 outline-none focus:bg-blue-50/60 focus:ring-1 focus:ring-blue-300 text-left font-sans font-semibold"
 
 // The native <input type="date"> picker requires ISO (YYYY-MM-DD); the rest
 // of the app (PDF fill, validation) works with the AU display format.
@@ -1020,6 +1024,11 @@ export default function SignPage() {
                     const hasValue = !!field.value
                     const type = field.type.toLowerCase()
 
+                    // Single-line fields should never grow taller than a form line,
+                    // even if the admin's saved box is oversized — otherwise the
+                    // input balloons over the printed row underneath it.
+                    const isSingleLine = ['text', 'sign_date', 'first_name', 'last_name', 'full_name', 'email'].includes(type)
+
                     return (
                       <div
                         key={field.id}
@@ -1029,6 +1038,13 @@ export default function SignPage() {
                           top: `${field.y}%`,
                           width: `${field.w}%`,
                           height: `${field.h}%`,
+                          // Native <input type="date"> refuses to shrink its own
+                          // segments/icon below ~90px and just clips the value
+                          // instead — this is the one field type that needs a
+                          // hard floor to stay legible; everything else should
+                          // render at exactly the size the admin placed it.
+                          minWidth: type === 'sign_date' ? '92px' : undefined,
+                          maxHeight: isSingleLine ? '30px' : undefined,
                         }}
                         className="group select-none"
                       >
@@ -1066,7 +1082,7 @@ export default function SignPage() {
                             required
                             value={field.value as string || ''}
                             onChange={(e) => handleUpdateFieldValue(field.id, e.target.value)}
-                            placeholder="Type text"
+                            placeholder={field.label || 'Type text'}
                             className={overlayInputClass}
                           />
                         )}
@@ -1078,7 +1094,7 @@ export default function SignPage() {
                               type="checkbox"
                               checked={field.value === true || field.value === 'true'}
                               onChange={(e) => handleUpdateFieldValue(field.id, e.target.checked)}
-                              className="w-full h-full max-w-4 max-h-4 border border-blue-500 bg-white/95 accent-blue-500 cursor-pointer"
+                              className="w-full h-full max-w-4 max-h-4 accent-blue-600 cursor-pointer"
                             />
                           </div>
                         )}
@@ -1092,7 +1108,7 @@ export default function SignPage() {
                               required
                               value={ddmmyyyyToIso(currentDdmmyyyy)}
                               onChange={(e) => handleUpdateFieldValue(field.id, isoToDdmmyyyy(e.target.value))}
-                              className={overlayInputClass}
+                              className={`${overlayInputClass} text-[11px] leading-none`}
                             />
                           )
                         })()}
@@ -1187,7 +1203,7 @@ export default function SignPage() {
               {/* Text box variables status */}
               {signFields.filter(f => f.type === 'text').map((field, idx) => (
                 <div key={field.id} className="flex items-center justify-between text-xs">
-                  <span className="text-gray-600 truncate max-w-[50%]">Text box #{idx + 1}:</span>
+                  <span className="text-gray-600 truncate max-w-[50%]">{field.label || `Text box #${idx + 1}`}:</span>
                   {field.value && String(field.value).trim() ? (
                     <span className="text-green-600 font-bold flex items-center gap-1 shrink-0">
                       <CheckCircle2 className="w-3.5 h-3.5" /> Filled

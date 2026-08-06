@@ -21,8 +21,13 @@ import {
   FileText,
   AlertTriangle,
   Clock,
-
   CheckSquare,
+  ZoomIn,
+  ZoomOut,
+  Download,
+  Printer,
+  X,
+  ListChecks,
 } from 'lucide-react'
 
 import { PdfRenderContext, PdfDocument } from '@/lib/types'
@@ -43,11 +48,52 @@ interface SignField {
   label?: string
 }
 
-// Overlay inputs sit directly inside the PDF's own printed field box, which
-// already has its own outline — so by default they stay borderless/transparent
-// and only pick up a light highlight while focused, instead of drawing a
-// second competing box on top of the document.
-const overlayInputClass = "w-full h-full bg-transparent border-none text-gray-900 text-xs px-0.5 py-0 outline-none focus:bg-blue-50/60 focus:ring-1 focus:ring-blue-300 text-left font-sans font-semibold"
+// Overlay inputs sit directly inside the PDF's own printed field box, so the
+// border stays thin and muted (never a bold competing box) — just enough to
+// show the signer at a glance which fields still need attention (teal) vs
+// which are already filled (emerald), matching the field's real placed size.
+const overlayInputClass = "w-full h-full rounded-[3px] text-gray-900 text-xs px-0.5 py-0 outline-none text-left font-sans font-semibold transition-colors"
+
+function overlayFieldClass(filled: boolean): string {
+  return `${overlayInputClass} ${
+    filled
+      ? 'border border-emerald-300/80 bg-emerald-50/40 focus:bg-emerald-50/70 focus:ring-1 focus:ring-emerald-400'
+      : 'border border-teal-300/80 bg-teal-50/20 focus:bg-teal-50/50 focus:ring-1 focus:ring-teal-400'
+  }`
+}
+
+// Fields a signer must complete before submitting (checkboxes stay optional).
+const REQUIRED_FIELD_TYPES: FieldType[] = ['signature', 'initial', 'text', 'sign_date', 'first_name', 'last_name', 'full_name', 'email']
+
+function isFieldFilled(field: SignField): boolean {
+  if (field.type === 'signature' || field.type === 'initial') return !!field.value
+  if (field.type === 'checkbox') return true // optional — never blocks progress
+  if (['full_name', 'first_name', 'last_name', 'sign_date', 'email'].includes(field.type)) {
+    return field.value !== '' && field.value !== null
+  }
+  return !!field.value && String(field.value).trim() !== ''
+}
+
+// Short guided prompt shown in the callout next to the active field.
+function fieldPromptText(type: FieldType): string {
+  switch (type) {
+    case 'signature':
+    case 'initial':
+      return 'Sign here.'
+    case 'sign_date':
+      return 'Enter date.'
+    case 'email':
+      return 'Enter email.'
+    case 'first_name':
+      return 'Enter first name.'
+    case 'last_name':
+      return 'Enter last name.'
+    case 'full_name':
+      return 'Enter full name.'
+    default:
+      return 'Enter text.'
+  }
+}
 
 // The native <input type="date"> picker requires ISO (YYYY-MM-DD); the rest
 // of the app (PDF fill, validation) works with the AU display format.
@@ -541,7 +587,10 @@ export default function SignPage() {
   // Signature captured states
   const [signatureDataUrl, setSignatureDataUrl] = useState<string>('')
   const [isSigModalOpen, setIsSigModalOpen] = useState(false)
-  const [agreedToTerms, setAgreedToTerms] = useState(false)
+
+  // Consent gate — signer must accept the disclosure before any field becomes interactive
+  const [disclosureChecked, setDisclosureChecked] = useState(false)
+  const [disclosureAccepted, setDisclosureAccepted] = useState(false)
 
   // PDFJS rendering states
   const [pdfjsLoaded, setPdfjsLoaded] = useState(false)
@@ -549,9 +598,15 @@ export default function SignPage() {
   const [totalPages, setTotalPages] = useState(0)
   const [renderedPages, setRenderedPages] = useState<Record<number, boolean>>({})
   const [canvasDimensions, setCanvasDimensions] = useState<Record<number, { width: number; height: number }>>({})
+  const [zoomScale, setZoomScale] = useState(1.2)
 
   // Interactive dynamic fields tracking (initialized from request.fields)
   const [signFields, setSignFields] = useState<SignField[]>([])
+
+  // Guided field-by-field navigation
+  const [activeFieldId, setActiveFieldId] = useState<string | null>(null)
+  const fieldRefs = useRef<Record<string, HTMLDivElement | null>>({})
+  const inputRefs = useRef<Record<string, HTMLInputElement | null>>({})
 
   // Show inline error helper
   const showToastError = useCallback((msg: string) => {
@@ -678,7 +733,7 @@ export default function SignPage() {
       }
 
       const page = await pdf.getPage(pageNum)
-      const viewport = page.getViewport({ scale: 1.2 }) // adjust fit
+      const viewport = page.getViewport({ scale: zoomScale })
       const canvas = canvasRefs.current[pageNum]
       if (canvas) {
         const context = canvas.getContext('2d')
@@ -702,7 +757,7 @@ export default function SignPage() {
     } catch (e: unknown) {
       console.error(`Page ${pageNum} render error:`, e)
     }
-  }, [pdfjsLoaded, pdfUrl, pdfDocInstance])
+  }, [pdfjsLoaded, pdfUrl, pdfDocInstance, zoomScale])
 
   // Trigger page render when canvas element mounts
   const handleRefSetup = (pageNum: number, el: HTMLCanvasElement | null) => {
@@ -714,12 +769,78 @@ export default function SignPage() {
     }
   }
 
+  // Re-render every already-mounted page whenever zoom changes
+  useEffect(() => {
+    if (!pdfjsLoaded || !pdfUrl) return
+    Object.keys(canvasRefs.current).forEach(key => {
+      const pageNum = Number(key)
+      if (canvasRefs.current[pageNum]) renderPdfPage(pageNum)
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [zoomScale])
+
   // Update dynamic input field value
   const handleUpdateFieldValue = (id: string, val: string | boolean) => {
     setSignFields(prev =>
       prev.map(f => (f.id === id ? { ...f, value: val } : f))
     )
   }
+
+  // ── Guided field-by-field navigation ──────────────────────────────────────
+  // Every required field in reading order (page, then top-to-bottom, then left-to-right)
+  const orderedRequiredFields = signFields
+    .filter(f => REQUIRED_FIELD_TYPES.includes(f.type))
+    .sort((a, b) => a.page - b.page || a.y - b.y || a.x - b.x)
+  const remainingFieldsCount = orderedRequiredFields.filter(f => !isFieldFilled(f)).length
+
+  const goToField = useCallback((fieldId: string) => {
+    setActiveFieldId(fieldId)
+    const wrapperEl = fieldRefs.current[fieldId]
+    if (wrapperEl) {
+      wrapperEl.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
+    const inputEl = inputRefs.current[fieldId]
+    if (inputEl) {
+      setTimeout(() => inputEl.focus(), 300) // wait for the smooth scroll to settle
+    }
+  }, [])
+
+  const goToNextField = useCallback(() => {
+    const list = orderedRequiredFields
+    if (list.length === 0) return
+    const currentIdx = list.findIndex(f => f.id === activeFieldId)
+    // Prefer the next *unfilled* field so the signer is guided straight to what's left
+    for (let step = 1; step <= list.length; step++) {
+      const idx = (currentIdx + step) % list.length
+      if (!isFieldFilled(list[idx])) { goToField(list[idx].id); return }
+    }
+    // Everything is filled — just step forward in sequence
+    goToField(list[(currentIdx + 1) % list.length].id)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeFieldId, signFields, goToField])
+
+  const goToPrevField = useCallback(() => {
+    const list = orderedRequiredFields
+    if (list.length === 0) return
+    const currentIdx = list.findIndex(f => f.id === activeFieldId)
+    const idx = currentIdx <= 0 ? list.length - 1 : currentIdx - 1
+    goToField(list[idx].id)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeFieldId, signFields, goToField])
+
+  // Jump to the first unfilled required field right after the signer accepts the
+  // disclosure. Triggered from the button's click handler (see below) rather than
+  // an effect, since the field overlays only mount once disclosureAccepted flips
+  // true — a plain click handler can wait a tick for that without a setState-in-effect.
+  const jumpToFirstUnfilledField = useCallback(() => {
+    // Wait for the field overlays to actually mount (they only render once
+    // disclosureAccepted flips true) before trying to scroll to one.
+    setTimeout(() => {
+      const firstUnfilled = orderedRequiredFields.find(f => !isFieldFilled(f))
+      if (firstUnfilled) goToField(firstUnfilled.id)
+    }, 80)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [signFields, goToField])
 
   // Apply signature to elements
   const handleConfirmSignature = (dataUrl: string) => {
@@ -761,8 +882,8 @@ export default function SignPage() {
       return
     }
 
-    if (!agreedToTerms) {
-      alert('Please check the confirmation box below to accept legally binding e-signature terms.')
+    if (!disclosureAccepted) {
+      alert('Please accept the Electronic Record and Signature Disclosure before submitting.')
       return
     }
 
@@ -967,27 +1088,101 @@ export default function SignPage() {
   return (
     <div className="min-h-screen bg-[#f8fafc] flex flex-col font-sans text-gray-800">
 
-      {/* Brand header */}
-      <div className="shrink-0 bg-[#012269] border-b-2 border-[#e40229] sticky top-0 z-30 px-3 sm:px-6">
-        <div className="max-w-6xl mx-auto flex items-center justify-between gap-2 py-1.5">
-          {brandHeaderDark}
-          <div className="flex gap-1.5 sm:gap-2 shrink-0">
+      {disclosureAccepted ? (
+        /* Signing toolbar — fields remaining, zoom, download/print, decline/submit */
+        <div className="shrink-0 bg-[#012269] border-b-2 border-[#e40229] sticky top-0 z-30 px-3 sm:px-6">
+          <div className="max-w-6xl mx-auto flex items-center justify-between gap-2 py-1.5 flex-wrap">
+            {brandHeaderDark}
+
+            <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap justify-end">
+              {/* Fields remaining badge */}
+              <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/10 text-white text-[11px] font-bold">
+                <ListChecks className="w-3.5 h-3.5 text-emerald-300" />
+                Fields remaining: <span className="text-emerald-300">{remainingFieldsCount}</span>
+              </span>
+
+              {/* Zoom controls */}
+              <div className="hidden sm:flex items-center gap-1 bg-white/10 rounded-lg px-1">
+                <button
+                  type="button"
+                  onClick={() => setZoomScale(z => Math.max(0.6, parseFloat((z - 0.1).toFixed(2))))}
+                  className="p-1.5 text-white/70 hover:text-white transition-colors"
+                  title="Zoom out"
+                >
+                  <ZoomOut className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setZoomScale(z => Math.min(2.2, parseFloat((z + 0.1).toFixed(2))))}
+                  className="p-1.5 text-white/70 hover:text-white transition-colors"
+                  title="Zoom in"
+                >
+                  <ZoomIn className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              {/* Download / Print */}
+              <a
+                href={pdfUrl || undefined}
+                download
+                className="hidden sm:flex p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white/80 hover:text-white transition-colors"
+                title="Download original document"
+              >
+                <Download className="w-3.5 h-3.5" />
+              </a>
+              <button
+                type="button"
+                onClick={() => window.print()}
+                className="hidden sm:flex p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white/80 hover:text-white transition-colors"
+                title="Print"
+              >
+                <Printer className="w-3.5 h-3.5" />
+              </button>
+
+              <button
+                onClick={handleDecline}
+                className="px-2.5 sm:px-4 py-1.5 sm:py-2 border border-white/20 text-white/80 hover:text-white hover:bg-white/10 rounded-xl text-[10px] sm:text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap"
+              >
+                <span className="sm:hidden">Decline</span>
+                <span className="hidden sm:inline">Decline Sign</span>
+              </button>
+              <button
+                onClick={handleSubmitSignature}
+                className="px-3 sm:px-5 py-1.5 sm:py-2 bg-[#e40229] hover:bg-[#e40229]/90 text-white text-[10px] sm:text-xs font-black rounded-xl uppercase tracking-wider shadow-lg shadow-[#e40229]/15 transition-all whitespace-nowrap"
+              >
+                Finish
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : (
+        /* Consent gate — must accept the disclosure before any field becomes interactive */
+        <div className="shrink-0 bg-white border-b border-gray-200 sticky top-0 z-30 px-3 sm:px-6 py-3">
+          <div className="max-w-6xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <label className="flex items-start gap-2.5 cursor-pointer text-xs sm:text-sm text-gray-700 group">
+              <input
+                type="checkbox"
+                checked={disclosureChecked}
+                onChange={e => setDisclosureChecked(e.target.checked)}
+                className="mt-0.5 w-4 h-4 rounded border-gray-300 accent-[#012269] cursor-pointer shrink-0"
+              />
+              <span className="group-hover:text-gray-900 transition-colors">
+                I confirm that I have read and understood the{' '}
+                <strong className="text-[#012269] underline decoration-dotted">Electronic Record and Signature Disclosure</strong>
+                {' '}and consent to use electronic records and signatures.
+              </span>
+            </label>
             <button
-              onClick={handleDecline}
-              className="px-2.5 sm:px-4 py-1.5 sm:py-2 border border-white/20 text-white/80 hover:text-white hover:bg-white/10 rounded-xl text-[10px] sm:text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap"
+              type="button"
+              disabled={!disclosureChecked}
+              onClick={() => { setDisclosureAccepted(true); jumpToFirstUnfilledField() }}
+              className="px-5 py-2.5 bg-[#012269] hover:bg-[#012269]/90 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-black rounded-xl uppercase tracking-wider transition-all shrink-0 w-full sm:w-auto"
             >
-              <span className="sm:hidden">Decline</span>
-              <span className="hidden sm:inline">Decline Sign</span>
-            </button>
-            <button
-              onClick={handleSubmitSignature}
-              className="px-3 sm:px-5 py-1.5 sm:py-2 bg-[#e40229] hover:bg-[#e40229]/90 text-white text-[10px] sm:text-xs font-black rounded-xl uppercase tracking-wider shadow-lg shadow-[#e40229]/15 transition-all whitespace-nowrap"
-            >
-              Sign &amp; Submit
+              Agree &amp; Continue
             </button>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Main portal grid split */}
       <div className="flex-grow max-w-6xl w-full mx-auto p-3 sm:p-4 md:p-6 grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6 lg:overflow-hidden">
@@ -1019,19 +1214,24 @@ export default function SignPage() {
                     className="block max-w-full h-auto bg-white"
                   />
 
-                  {/* Render overlays for this page */}
-                  {renderedPages[pNum] && pageFields.map(field => {
+                  {/* Field overlays only appear once the disclosure has been accepted —
+                      before that the signer is just reviewing the plain document. */}
+                  {renderedPages[pNum] && disclosureAccepted && pageFields.map(field => {
                     const hasValue = !!field.value
                     const type = field.type.toLowerCase()
+                    const filled = isFieldFilled(field)
+                    const isActive = activeFieldId === field.id
+                    const isTextLike = ['text', 'sign_date', 'first_name', 'last_name', 'full_name', 'email'].includes(type)
 
                     // Single-line fields should never grow taller than a form line,
                     // even if the admin's saved box is oversized — otherwise the
                     // input balloons over the printed row underneath it.
-                    const isSingleLine = ['text', 'sign_date', 'first_name', 'last_name', 'full_name', 'email'].includes(type)
+                    const isSingleLine = isTextLike
 
                     return (
                       <div
                         key={field.id}
+                        ref={(el) => { fieldRefs.current[field.id] = el }}
                         style={{
                           position: 'absolute',
                           left: `${field.x}%`,
@@ -1045,13 +1245,14 @@ export default function SignPage() {
                           // render at exactly the size the admin placed it.
                           minWidth: type === 'sign_date' ? '92px' : undefined,
                           maxHeight: isSingleLine ? '30px' : undefined,
+                          zIndex: isActive ? 20 : undefined,
                         }}
                         className="group select-none"
                       >
                         {/* 1. SIGNATURE OR INITIAL OVERLAY */}
                         {(type === 'signature' || type === 'initial') && (
                           <div
-                            onClick={() => setIsSigModalOpen(true)}
+                            onClick={() => { setActiveFieldId(field.id); setIsSigModalOpen(true) }}
                             className={`
                               w-full h-full border-2 border-dashed flex flex-col items-center justify-center rounded cursor-pointer transition-all
                               ${hasValue
@@ -1078,12 +1279,14 @@ export default function SignPage() {
                         {/* 2. TEXT BOX WIDGET */}
                         {type === 'text' && (
                           <input
+                            ref={(el) => { inputRefs.current[field.id] = el }}
                             type="text"
                             required
                             value={field.value as string || ''}
                             onChange={(e) => handleUpdateFieldValue(field.id, e.target.value)}
+                            onFocus={() => setActiveFieldId(field.id)}
                             placeholder={field.label || 'Type text'}
-                            className={overlayInputClass}
+                            className={overlayFieldClass(filled)}
                           />
                         )}
 
@@ -1104,23 +1307,27 @@ export default function SignPage() {
                           const currentDdmmyyyy = field.value !== null ? (field.value as string) : new Date().toLocaleDateString('en-AU')
                           return (
                             <input
+                              ref={(el) => { inputRefs.current[field.id] = el }}
                               type="date"
                               required
                               value={ddmmyyyyToIso(currentDdmmyyyy)}
                               onChange={(e) => handleUpdateFieldValue(field.id, isoToDdmmyyyy(e.target.value))}
-                              className={`${overlayInputClass} text-[11px] leading-none`}
+                              onFocus={() => setActiveFieldId(field.id)}
+                              className={`${overlayFieldClass(filled)} text-[11px] leading-none`}
                             />
                           )
                         })()}
 
                         {type === 'full_name' && (
                           <input
+                            ref={(el) => { inputRefs.current[field.id] = el }}
                             type="text"
                             required
                             value={field.value !== null ? (field.value as string) : (requestData?.signerName || '')}
                             onChange={(e) => handleUpdateFieldValue(field.id, e.target.value)}
+                            onFocus={() => setActiveFieldId(field.id)}
                             placeholder="Full Name"
-                            className={overlayInputClass}
+                            className={overlayFieldClass(filled)}
                           />
                         )}
 
@@ -1132,27 +1339,48 @@ export default function SignPage() {
 
                           return (
                             <input
+                              ref={(el) => { inputRefs.current[field.id] = el }}
                               type="text"
                               required
                               value={field.value !== null ? (field.value as string) : defaultValue}
                               onChange={(e) => handleUpdateFieldValue(field.id, e.target.value)}
+                              onFocus={() => setActiveFieldId(field.id)}
                               placeholder={type === 'first_name' ? 'First Name' : 'Last Name'}
-                              className={overlayInputClass}
+                              className={overlayFieldClass(filled)}
                             />
                           )
                         })()}
 
                         {type === 'email' && (
                           <input
+                            ref={(el) => { inputRefs.current[field.id] = el }}
                             type="email"
                             required
                             value={field.value !== null ? (field.value as string) : (requestData?.signerEmail || '')}
                             onChange={(e) => handleUpdateFieldValue(field.id, e.target.value)}
+                            onFocus={() => setActiveFieldId(field.id)}
                             placeholder="Email"
-                            className={overlayInputClass}
+                            className={overlayFieldClass(filled)}
                           />
                         )}
 
+                        {/* Guided-fill callout — points at the field the signer is currently on */}
+                        {isActive && REQUIRED_FIELD_TYPES.includes(field.type) && (
+                          <div className="absolute top-full left-0 mt-1.5 z-40 bg-emerald-50 border border-emerald-300 rounded-lg shadow-lg px-3 py-2 text-[11px] text-emerald-900 whitespace-nowrap flex items-center gap-3">
+                            <span className="font-semibold">{fieldPromptText(field.type)}</span>
+                            <div className="flex items-center gap-2 text-emerald-700 font-bold">
+                              <button type="button" onClick={goToPrevField} className="hover:underline">Previous</button>
+                              <button type="button" onClick={goToNextField} className="hover:underline">Next</button>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setActiveFieldId(null)}
+                              className="text-emerald-500 hover:text-emerald-700"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        )}
                       </div>
                     )
                   })}
@@ -1226,23 +1454,18 @@ export default function SignPage() {
             </div>
           </div>
 
-          {/* Legal and Terms Approval */}
+          {/* Legal and Terms Approval — already confirmed via the disclosure gate at the top */}
           <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm space-y-4">
             <h3 className="text-xs font-extrabold text-[#012269] uppercase tracking-widest border-b border-gray-100 pb-2 flex items-center gap-1.5">
               <ShieldCheck className="w-3.5 h-3.5 text-[#e40229]" /> Dynamic Consent
             </h3>
 
-            <label className="flex items-start gap-2.5 cursor-pointer group">
-              <input
-                type="checkbox"
-                checked={agreedToTerms}
-                onChange={e => setAgreedToTerms(e.target.checked)}
-                className="mt-0.5 w-4.5 h-4.5 rounded border-gray-300 bg-white text-[#e40229] accent-[#e40229] cursor-pointer"
-              />
-              <span className="text-[10px] text-gray-600 leading-relaxed group-hover:text-gray-800 transition-colors">
-                I, <strong className="text-gray-900">{requestData?.signerName}</strong>, confirm that I have reviewed the document and agree that my placed coordinates signatures constitute a legally binding electronic execution.
+            <div className="flex items-start gap-2.5">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+              <span className="text-[10px] text-gray-600 leading-relaxed">
+                I, <strong className="text-gray-900">{requestData?.signerName}</strong>, confirmed that I have reviewed the document and agree that my placed coordinates signatures constitute a legally binding electronic execution.
               </span>
-            </label>
+            </div>
 
             <button
               onClick={handleSubmitSignature}

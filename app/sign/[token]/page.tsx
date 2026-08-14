@@ -328,8 +328,10 @@ function SignatureModal({ isOpen, onClose, onConfirm, defaultSignerName = 'Signe
       canvas.height = 150
       const ctx = canvas.getContext('2d')
       if (ctx) {
-        ctx.fillStyle = '#ffffff'
-        ctx.fillRect(0, 0, canvas.width, canvas.height)
+        // Leave the canvas transparent (its default state) instead of painting
+        // a white backing rectangle — a solid fill here bakes an opaque box
+        // into the exported PNG, which then shows up as a visible white/grey
+        // block behind the signature once it's stamped onto the PDF page.
         ctx.fillStyle = strokeColor
         ctx.textAlign = 'center'
         ctx.textBaseline = 'middle'
@@ -345,8 +347,8 @@ function SignatureModal({ isOpen, onClose, onConfirm, defaultSignerName = 'Signe
       finalCanvas.height = sigCanvasRef.current.height
       const finalCtx = finalCanvas.getContext('2d')
       if (finalCtx) {
-        finalCtx.fillStyle = '#ffffff'
-        finalCtx.fillRect(0, 0, finalCanvas.width, finalCanvas.height)
+        // Same as above — copy the drawn strokes onto a transparent canvas,
+        // no white fill, so the exported PNG blends into the PDF page.
         finalCtx.drawImage(sigCanvasRef.current, 0, 0)
       }
       onConfirm(finalCanvas.toDataURL('image/png'))
@@ -588,8 +590,8 @@ export default function SignPage() {
   const [signatureDataUrl, setSignatureDataUrl] = useState<string>('')
   const [isSigModalOpen, setIsSigModalOpen] = useState(false)
 
-  // Consent gate — signer must accept the disclosure before any field becomes interactive
-  const [disclosureChecked, setDisclosureChecked] = useState(false)
+  // Electronic Record and Signature Disclosure — confirmed at the end, next to the
+  // final submit button, rather than gating access to the document up front.
   const [disclosureAccepted, setDisclosureAccepted] = useState(false)
 
   // PDFJS rendering states
@@ -828,19 +830,26 @@ export default function SignPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeFieldId, signFields, goToField])
 
-  // Jump to the first unfilled required field right after the signer accepts the
-  // disclosure. Triggered from the button's click handler (see below) rather than
-  // an effect, since the field overlays only mount once disclosureAccepted flips
-  // true — a plain click handler can wait a tick for that without a setState-in-effect.
+  // Jump to the first unfilled required field once the document's fields have
+  // actually mounted. The real work happens in a setTimeout (not synchronously),
+  // so calling this from an effect below doesn't trip the setState-in-effect rule.
   const jumpToFirstUnfilledField = useCallback(() => {
-    // Wait for the field overlays to actually mount (they only render once
-    // disclosureAccepted flips true) before trying to scroll to one.
     setTimeout(() => {
       const firstUnfilled = orderedRequiredFields.find(f => !isFieldFilled(f))
       if (firstUnfilled) goToField(firstUnfilled.id)
     }, 80)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [signFields, goToField])
+
+  // Auto-jump once, the first time the document's first page has rendered.
+  const hasAutoJumpedRef = useRef(false)
+  useEffect(() => {
+    if (!hasAutoJumpedRef.current && renderedPages[1] && orderedRequiredFields.length > 0) {
+      hasAutoJumpedRef.current = true
+      jumpToFirstUnfilledField()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [renderedPages])
 
   // Apply signature to elements
   const handleConfirmSignature = (dataUrl: string) => {
@@ -1088,101 +1097,74 @@ export default function SignPage() {
   return (
     <div className="min-h-screen bg-[#f8fafc] flex flex-col font-sans text-gray-800">
 
-      {disclosureAccepted ? (
-        /* Signing toolbar — fields remaining, zoom, download/print, decline/submit */
-        <div className="shrink-0 bg-[#012269] border-b-2 border-[#e40229] sticky top-0 z-30 px-3 sm:px-6">
-          <div className="max-w-6xl mx-auto flex items-center justify-between gap-2 py-1.5 flex-wrap">
-            {brandHeaderDark}
+      {/* Signing toolbar — fields remaining, zoom, download/print, decline/submit.
+          The document and fields are interactive right away; the disclosure is
+          just a checkbox confirmed later, next to the final submit button. */}
+      <div className="shrink-0 bg-[#012269] border-b-2 border-[#e40229] sticky top-0 z-30 px-3 sm:px-6">
+        <div className="max-w-6xl mx-auto flex items-center justify-between gap-2 py-1.5 flex-wrap">
+          {brandHeaderDark}
 
-            <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap justify-end">
-              {/* Fields remaining badge */}
-              <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/10 text-white text-[11px] font-bold">
-                <ListChecks className="w-3.5 h-3.5 text-emerald-300" />
-                Fields remaining: <span className="text-emerald-300">{remainingFieldsCount}</span>
-              </span>
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap justify-end">
+            {/* Fields remaining badge */}
+            <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/10 text-white text-[11px] font-bold">
+              <ListChecks className="w-3.5 h-3.5 text-emerald-300" />
+              Fields remaining: <span className="text-emerald-300">{remainingFieldsCount}</span>
+            </span>
 
-              {/* Zoom controls */}
-              <div className="hidden sm:flex items-center gap-1 bg-white/10 rounded-lg px-1">
-                <button
-                  type="button"
-                  onClick={() => setZoomScale(z => Math.max(0.6, parseFloat((z - 0.1).toFixed(2))))}
-                  className="p-1.5 text-white/70 hover:text-white transition-colors"
-                  title="Zoom out"
-                >
-                  <ZoomOut className="w-3.5 h-3.5" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setZoomScale(z => Math.min(2.2, parseFloat((z + 0.1).toFixed(2))))}
-                  className="p-1.5 text-white/70 hover:text-white transition-colors"
-                  title="Zoom in"
-                >
-                  <ZoomIn className="w-3.5 h-3.5" />
-                </button>
-              </div>
-
-              {/* Download / Print */}
-              <a
-                href={pdfUrl || undefined}
-                download
-                className="hidden sm:flex p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white/80 hover:text-white transition-colors"
-                title="Download original document"
-              >
-                <Download className="w-3.5 h-3.5" />
-              </a>
+            {/* Zoom controls */}
+            <div className="hidden sm:flex items-center gap-1 bg-white/10 rounded-lg px-1">
               <button
                 type="button"
-                onClick={() => window.print()}
-                className="hidden sm:flex p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white/80 hover:text-white transition-colors"
-                title="Print"
+                onClick={() => setZoomScale(z => Math.max(0.6, parseFloat((z - 0.1).toFixed(2))))}
+                className="p-1.5 text-white/70 hover:text-white transition-colors"
+                title="Zoom out"
               >
-                <Printer className="w-3.5 h-3.5" />
-              </button>
-
-              <button
-                onClick={handleDecline}
-                className="px-2.5 sm:px-4 py-1.5 sm:py-2 border border-white/20 text-white/80 hover:text-white hover:bg-white/10 rounded-xl text-[10px] sm:text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap"
-              >
-                <span className="sm:hidden">Decline</span>
-                <span className="hidden sm:inline">Decline Sign</span>
+                <ZoomOut className="w-3.5 h-3.5" />
               </button>
               <button
-                onClick={handleSubmitSignature}
-                className="px-3 sm:px-5 py-1.5 sm:py-2 bg-[#e40229] hover:bg-[#e40229]/90 text-white text-[10px] sm:text-xs font-black rounded-xl uppercase tracking-wider shadow-lg shadow-[#e40229]/15 transition-all whitespace-nowrap"
+                type="button"
+                onClick={() => setZoomScale(z => Math.min(2.2, parseFloat((z + 0.1).toFixed(2))))}
+                className="p-1.5 text-white/70 hover:text-white transition-colors"
+                title="Zoom in"
               >
-                Finish
+                <ZoomIn className="w-3.5 h-3.5" />
               </button>
             </div>
-          </div>
-        </div>
-      ) : (
-        /* Consent gate — must accept the disclosure before any field becomes interactive */
-        <div className="shrink-0 bg-white border-b border-gray-200 sticky top-0 z-30 px-3 sm:px-6 py-3">
-          <div className="max-w-6xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <label className="flex items-start gap-2.5 cursor-pointer text-xs sm:text-sm text-gray-700 group">
-              <input
-                type="checkbox"
-                checked={disclosureChecked}
-                onChange={e => setDisclosureChecked(e.target.checked)}
-                className="mt-0.5 w-4 h-4 rounded border-gray-300 accent-[#012269] cursor-pointer shrink-0"
-              />
-              <span className="group-hover:text-gray-900 transition-colors">
-                I confirm that I have read and understood the{' '}
-                <strong className="text-[#012269] underline decoration-dotted">Electronic Record and Signature Disclosure</strong>
-                {' '}and consent to use electronic records and signatures.
-              </span>
-            </label>
+
+            {/* Download / Print */}
+            <a
+              href={pdfUrl || undefined}
+              download
+              className="hidden sm:flex p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white/80 hover:text-white transition-colors"
+              title="Download original document"
+            >
+              <Download className="w-3.5 h-3.5" />
+            </a>
             <button
               type="button"
-              disabled={!disclosureChecked}
-              onClick={() => { setDisclosureAccepted(true); jumpToFirstUnfilledField() }}
-              className="px-5 py-2.5 bg-[#012269] hover:bg-[#012269]/90 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-black rounded-xl uppercase tracking-wider transition-all shrink-0 w-full sm:w-auto"
+              onClick={() => window.print()}
+              className="hidden sm:flex p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white/80 hover:text-white transition-colors"
+              title="Print"
             >
-              Agree &amp; Continue
+              <Printer className="w-3.5 h-3.5" />
+            </button>
+
+            <button
+              onClick={handleDecline}
+              className="px-2.5 sm:px-4 py-1.5 sm:py-2 border border-white/20 text-white/80 hover:text-white hover:bg-white/10 rounded-xl text-[10px] sm:text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap"
+            >
+              <span className="sm:hidden">Decline</span>
+              <span className="hidden sm:inline">Decline Sign</span>
+            </button>
+            <button
+              onClick={handleSubmitSignature}
+              className="px-3 sm:px-5 py-1.5 sm:py-2 bg-[#e40229] hover:bg-[#e40229]/90 text-white text-[10px] sm:text-xs font-black rounded-xl uppercase tracking-wider shadow-lg shadow-[#e40229]/15 transition-all whitespace-nowrap"
+            >
+              Finish
             </button>
           </div>
         </div>
-      )}
+      </div>
 
       {/* Main portal grid split */}
       <div className="flex-grow max-w-6xl w-full mx-auto p-3 sm:p-4 md:p-6 grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6 lg:overflow-hidden">
@@ -1214,9 +1196,8 @@ export default function SignPage() {
                     className="block max-w-full h-auto bg-white"
                   />
 
-                  {/* Field overlays only appear once the disclosure has been accepted —
-                      before that the signer is just reviewing the plain document. */}
-                  {renderedPages[pNum] && disclosureAccepted && pageFields.map(field => {
+                  {/* Render overlays for this page */}
+                  {renderedPages[pNum] && pageFields.map(field => {
                     const hasValue = !!field.value
                     const type = field.type.toLowerCase()
                     const filled = isFieldFilled(field)
@@ -1454,18 +1435,24 @@ export default function SignPage() {
             </div>
           </div>
 
-          {/* Legal and Terms Approval — already confirmed via the disclosure gate at the top */}
+          {/* Legal and Terms Approval — checked here at the end, right before submitting */}
           <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm space-y-4">
             <h3 className="text-xs font-extrabold text-[#012269] uppercase tracking-widest border-b border-gray-100 pb-2 flex items-center gap-1.5">
               <ShieldCheck className="w-3.5 h-3.5 text-[#e40229]" /> Dynamic Consent
             </h3>
 
-            <div className="flex items-start gap-2.5">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-              <span className="text-[10px] text-gray-600 leading-relaxed">
-                I, <strong className="text-gray-900">{requestData?.signerName}</strong>, confirmed that I have reviewed the document and agree that my placed coordinates signatures constitute a legally binding electronic execution.
+            <label className="flex items-start gap-2.5 cursor-pointer group">
+              <input
+                type="checkbox"
+                checked={disclosureAccepted}
+                onChange={e => setDisclosureAccepted(e.target.checked)}
+                className="mt-0.5 w-4.5 h-4.5 rounded border-gray-300 bg-white text-[#e40229] accent-[#e40229] cursor-pointer"
+              />
+              <span className="text-[10px] text-gray-600 leading-relaxed group-hover:text-gray-800 transition-colors">
+                I, <strong className="text-gray-900">{requestData?.signerName}</strong>, confirm that I have read and understood the{' '}
+                <strong className="text-[#012269]">Electronic Record and Signature Disclosure</strong>, have reviewed the document, and agree that my placed signatures constitute a legally binding electronic execution.
               </span>
-            </div>
+            </label>
 
             <button
               onClick={handleSubmitSignature}

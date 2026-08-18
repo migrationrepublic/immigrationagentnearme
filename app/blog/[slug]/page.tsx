@@ -65,7 +65,7 @@ export default async function BlogPostPage({ params }: PostPageProps) {
       name: "Migration Republic",
       logo: {
         "@type": "ImageObject",
-        url: "https://immigrationagentnearme.com/images/logo.jpg",
+        url: "https://immigrationagentnearme.com/images/logobgre.png",
       },
     },
     description: post.excerpt.rendered.replace(/<[^>]*>/g, "").substring(0, 160),

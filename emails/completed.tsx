@@ -35,16 +35,16 @@ export default function CompletedEmail({
           borderBottom: "2px solid #D4AF37",
         }}>
           <img
-            src="https://immigrationagentnearme.com/images/logobgwhite.jpg"
+            src="https://immigrationagentnearme.com/images/logobgre.png"
             alt="Migration Republic"
             style={{
-              width: "100px",
-              height: "100px",
-              borderRadius: "50%",
-              border: "2px solid #FFFFFF",
+              width: "80px",
+              height: "auto",
               display: "block",
               margin: "0 auto 12px auto",
-              objectFit: "cover",
+              background: "transparent",
+              border: "none",
+              boxShadow: "none",
             }}
           />
           <div style={{

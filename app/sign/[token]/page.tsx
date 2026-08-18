@@ -939,12 +939,12 @@ export default function SignPage() {
 
   const brandHeader = (
     <header className="flex items-center justify-center gap-3 py-4 px-4 text-center sm:text-left">
-      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden border border-gray-200 bg-white flex items-center justify-center shadow-sm shrink-0">
+      <div className="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center shrink-0">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/images/logobgwhite.jpg"
+          src="/images/logobgre.png"
           alt="Migration Republic Logo"
-          className="w-full h-full object-cover"
+          className="w-full h-full object-contain"
         />
       </div>
       <div>
@@ -960,12 +960,12 @@ export default function SignPage() {
 
   const brandHeaderDark = (
     <header className="flex items-center gap-2.5 py-1.5">
-      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full overflow-hidden border border-white/20 bg-white flex items-center justify-center shadow-sm shrink-0">
+      <div className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center shrink-0">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/images/logobgwhite.jpg"
+          src="/images/logobgre.png"
           alt="Migration Republic Logo"
-          className="w-full h-full object-cover"
+          className="w-full h-full object-contain"
         />
       </div>
       <div className="min-w-0">

@@ -55,12 +55,12 @@ function SidebarContent({ pathname, setSidebarOpen, isCollapsed = false, setIsCo
       {/* Brand Header — Logo */}
       <div className={`pt-5 pb-4 border-b border-white/10 flex items-center ${isCollapsed && !isMobile ? 'justify-center px-2' : 'justify-between px-5'}`}>
         <div className={`flex items-center gap-3 ${isCollapsed && !isMobile ? 'justify-center' : 'min-w-0'}`}>
-          <div className="relative w-10 h-10 flex-shrink-0 rounded-xl overflow-hidden border border-white/20 shadow-lg bg-white">
+          <div className="relative w-10 h-10 flex-shrink-0">
             <Image
-              src="/images/logobgwhite.jpg"
+              src="/images/logobgre.png"
               alt="Migration Republic"
               fill
-              className="object-contain p-0.5"
+              className="object-contain"
               sizes="40px"
             />
           </div>
@@ -213,12 +213,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="max-w-md w-full bg-white rounded-3xl p-8 border shadow-2xl text-center" style={{ borderColor: 'var(--color-admin-card-border)' }}>
           {/* Logo on login screen */}
           <div className="flex justify-center mb-6">
-            <div className="relative w-24 h-24 rounded-2xl overflow-hidden border-2 shadow-lg" style={{ borderColor: 'var(--color-admin-card-border)' }}>
+            <div className="relative w-24 h-24">
               <Image
-                src="/images/logobgwhite.jpg"
+                src="/images/logobgre.png"
                 alt="Migration Republic"
                 fill
-                className="object-contain p-1"
+                className="object-contain"
                 sizes="96px"
               />
             </div>
@@ -340,8 +340,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {/* Mobile Header */}
         <header className="md:hidden flex justify-between items-center border-b p-4 sticky top-0 z-10" style={{ background: 'var(--color-admin-sidebar)', borderColor: 'rgba(255,255,255,0.1)' }}>
           <div className="flex items-center gap-2.5">
-            <div className="relative w-8 h-8 rounded-lg overflow-hidden border border-white/20 bg-white shrink-0">
-              <Image src="/images/logobgwhite.jpg" alt="Migration Republic" fill className="object-contain" sizes="32px" />
+            <div className="relative w-8 h-8 shrink-0">
+              <Image src="/images/logobgre.png" alt="Migration Republic" fill className="object-contain" sizes="32px" />
             </div>
             <span className="font-extrabold text-sm tracking-wide text-white">Migration Republic</span>
           </div>

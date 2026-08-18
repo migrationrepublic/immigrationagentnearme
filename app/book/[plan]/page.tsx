@@ -121,13 +121,14 @@ export default function BookPlanPage({
       {/* Header Info Section */}
       <div className="bg-[#012269] text-white pt-12 pb-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto text-center">
-          <div className="flex justify-center mb-8">
+          <div className="flex justify-center mb-6">
             <Image
-              src="/images/logo.jpg"
+              src="/images/logobgre.png"
               alt="Migration Republic"
-              width={160}
-              height={160}
-              className="rounded-full shadow-2xl shadow-black/20"
+              width={140}
+              height={140}
+              className="object-contain w-auto h-24 sm:h-28"
+              priority
             />
           </div>
           <Link

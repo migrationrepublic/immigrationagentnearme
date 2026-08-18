@@ -13,7 +13,7 @@ export function wrapEmailTemplate(contentHtml: string): string {
       <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); overflow: hidden;">
         <!-- Header -->
         <div style="background-color: #030E1E; padding: 24px; text-align: center; border-bottom: 2px solid #D4AF37;">
-          <img src="https://immigrationagentnearme.com/images/logo.jpg" alt="Migration Republic" style="width: 70px; height: 70px; border-radius: 50%; border: 2px solid #D4AF37; display: block; margin: 0 auto 12px auto; object-fit: cover;" />
+          <img src="https://immigrationagentnearme.com/images/logobgre.png" alt="Migration Republic" style="width: 80px; height: auto; display: block; margin: 0 auto 12px auto; background: transparent; border: none; outline: none; box-shadow: none;" />
           <div style="color: #ffffff; margin: 0; font-size: 22px; font-weight: 800; letter-spacing: 0.5px; line-height: 1.2;">Migration Republic</div>
           <div style="color: #D4AF37; margin: 4px 0 0 0; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px;">Registered Migration Agents</div>
         </div>

@@ -57,23 +57,14 @@ function SidebarContent({ pathname, setSidebarOpen, isCollapsed = false, setIsCo
         <div className={`flex items-center gap-3 ${isCollapsed && !isMobile ? 'justify-center' : 'min-w-0'}`}>
           <div className="relative w-10 h-10 flex-shrink-0">
             <Image
-              src="/images/logobgre.png"
+              src="/images/logo.jpg"
               alt="Migration Republic"
               fill
               className="object-contain"
               sizes="40px"
             />
           </div>
-          {(!isCollapsed || isMobile) && (
-            <div className="min-w-0 transition-opacity duration-200">
-              <p className="text-[11px] font-black uppercase tracking-widest leading-none truncate" style={{ color: 'var(--color-admin-gold)' }}>
-                Migration Republic
-              </p>
-              <p className="text-[9px] text-white/50 font-semibold uppercase tracking-wider mt-0.5">
-                Admin Portal
-              </p>
-            </div>
-          )}
+
         </div>
         {isMobile && (
           <button

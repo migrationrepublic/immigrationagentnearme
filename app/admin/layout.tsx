@@ -55,13 +55,13 @@ function SidebarContent({ pathname, setSidebarOpen, isCollapsed = false, setIsCo
       {/* Brand Header — Logo */}
       <div className={`pt-5 pb-4 border-b border-white/10 flex items-center ${isCollapsed && !isMobile ? 'justify-center px-2' : 'justify-between px-5'}`}>
         <div className={`flex items-center gap-3 ${isCollapsed && !isMobile ? 'justify-center' : 'min-w-0'}`}>
-          <div className="relative w-10 h-10 flex-shrink-0">
+          <div className="relative w-16 h-16 flex-shrink-0">
             <Image
               src="/images/logo.jpg"
               alt="Migration Republic"
               fill
               className="object-contain"
-              sizes="40px"
+              sizes="60px"
             />
           </div>
 

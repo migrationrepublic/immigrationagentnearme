@@ -40,14 +40,14 @@ export function ToolHeader({ title, description, badge, hideNav = false }: ToolH
     <>
       {!hideNav && <ToolNavbar />}
 
-      <div className="pt-6 pb-6 text-center max-w-3xl mx-auto px-4">
+      <div className="pt-4 pb-4 sm:pt-6 sm:pb-6 text-center max-w-3xl mx-auto px-4">
         {badge && (
-          <span className="inline-block text-[11px] uppercase tracking-wider font-extrabold bg-brand-soft text-brand-primary px-3 py-1 rounded-full mb-2.5 border border-brand-primary/10">
+          <span className="inline-block text-[10px] sm:text-[11px] uppercase tracking-wider font-extrabold bg-brand-soft text-brand-primary px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full mb-2 border border-brand-primary/10">
             {badge}
           </span>
         )}
 
-        <h1 className="text-2xl sm:text-3xl md:text-3xl font-extrabold text-brand-primary tracking-tight mb-2 leading-tight">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-brand-primary tracking-tight mb-1.5 sm:mb-2 leading-tight">
           {formatTitle(title)}
         </h1>
 

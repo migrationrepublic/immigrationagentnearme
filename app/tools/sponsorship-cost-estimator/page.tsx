@@ -20,8 +20,7 @@ import {
   ChevronLeft,
   Check,
   Plus,
-  Minus,
-  FileSpreadsheet
+  Minus
 } from 'lucide-react';
 
 function fmt(n: number) {
@@ -152,10 +151,10 @@ export default function SponsorshipCostEstimatorPage() {
         description="Government charges only — our professional fee is quoted separately."
       />
 
-      <div className="max-w-3xl mx-auto px-4 sm:px-6">
+      <div className="max-w-3xl mx-auto px-3 sm:px-6">
         {/* Progress Bar (For question steps 1 to 5) */}
         {step <= 5 && (
-          <div className="mb-6">
+          <div className="mb-5 sm:mb-6">
             <div className="flex justify-between items-end mb-2">
               <span className="text-xs font-semibold uppercase tracking-wider text-brand-primary">
                 Question {is482 ? step : (step === 5 ? 4 : step)} of {totalQuestions}
@@ -174,8 +173,8 @@ export default function SponsorshipCostEstimatorPage() {
         )}
 
         {/* Card Container */}
-        <div className="bg-white rounded-2xl shadow-xs border border-gray-200 overflow-hidden min-h-[380px] flex flex-col">
-          <div className="p-5 sm:p-8 flex-1">
+        <div className="bg-white rounded-2xl shadow-xs border border-gray-200 overflow-hidden min-h-[360px] flex flex-col">
+          <div className="p-4 sm:p-8 flex-1">
 
             {/* STEP 1: Visa Subclass */}
             {step === 1 && (
@@ -424,7 +423,7 @@ export default function SponsorshipCostEstimatorPage() {
                         name="business_name"
                         placeholder="e.g. Miller Logistics Pty Ltd"
                         required
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-brand-primary outline-none text-sm bg-white"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-brand-primary outline-none text-base sm:text-sm bg-white"
                       />
                     </div>
                     <div className="space-y-1">
@@ -433,7 +432,7 @@ export default function SponsorshipCostEstimatorPage() {
                         name="name"
                         placeholder="e.g. David Miller"
                         required
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-brand-primary outline-none text-sm bg-white"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-brand-primary outline-none text-base sm:text-sm bg-white"
                       />
                     </div>
                   </div>
@@ -446,7 +445,7 @@ export default function SponsorshipCostEstimatorPage() {
                         type="email"
                         placeholder="david@millerlogistics.com.au"
                         required
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-brand-primary outline-none text-sm bg-white"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-brand-primary outline-none text-base sm:text-sm bg-white"
                       />
                     </div>
                     <div className="space-y-1">
@@ -456,7 +455,7 @@ export default function SponsorshipCostEstimatorPage() {
                         type="tel"
                         placeholder="0400 000 000"
                         required
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-brand-primary outline-none text-sm bg-white"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-brand-primary outline-none text-base sm:text-sm bg-white"
                       />
                     </div>
                   </div>
@@ -488,50 +487,50 @@ export default function SponsorshipCostEstimatorPage() {
                 </div>
 
                 {/* Table Breakdown */}
-                <div className="border border-gray-200 rounded-2xl overflow-hidden shadow-xs">
+                <div className="border border-gray-200 rounded-2xl overflow-hidden shadow-xs overflow-x-auto">
                   <table className="w-full text-xs sm:text-sm text-left">
-                    <thead className="bg-slate-50 border-b border-gray-200 text-gray-500 font-bold uppercase text-[11px] tracking-wider">
+                    <thead className="bg-slate-50 border-b border-gray-200 text-gray-500 font-bold uppercase text-[10px] sm:text-[11px] tracking-wider">
                       <tr>
-                        <th className="px-4 sm:px-6 py-3.5">Item</th>
-                        <th className="px-4 sm:px-6 py-3.5 text-right">Subtotal</th>
+                        <th className="px-3.5 sm:px-6 py-3 sm:py-3.5">Item</th>
+                        <th className="px-3.5 sm:px-6 py-3 sm:py-3.5 text-right whitespace-nowrap">Subtotal</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
                       <tr>
-                        <td className="px-4 sm:px-6 py-3.5 text-gray-800">
+                        <td className="px-3.5 sm:px-6 py-3 sm:py-3.5 text-gray-800">
                           Nomination fee{calculation.nominationFeeRate === 0 ? ' (none for this subclass)' : ''}
                         </td>
-                        <td className="px-4 sm:px-6 py-3.5 text-right font-semibold text-gray-900">
+                        <td className="px-3.5 sm:px-6 py-3 sm:py-3.5 text-right font-semibold text-gray-900 whitespace-nowrap">
                           {fmt(calculation.nominationTotal)}
                         </td>
                       </tr>
                       <tr>
-                        <td className="px-4 sm:px-6 py-3.5 text-gray-800">
+                        <td className="px-3.5 sm:px-6 py-3 sm:py-3.5 text-gray-800">
                           Skilling Australians Fund (SAF) levy
                         </td>
-                        <td className="px-4 sm:px-6 py-3.5 text-right font-semibold text-gray-900">
+                        <td className="px-3.5 sm:px-6 py-3 sm:py-3.5 text-right font-semibold text-gray-900 whitespace-nowrap">
                           {fmt(calculation.safTotal)}
                         </td>
                       </tr>
                       <tr>
-                        <td className="px-4 sm:px-6 py-3.5 text-gray-800">
+                        <td className="px-3.5 sm:px-6 py-3 sm:py-3.5 text-gray-800">
                           Visa application charge — sponsored worker(s)
                         </td>
-                        <td className="px-4 sm:px-6 py-3.5 text-right font-semibold text-gray-900">
+                        <td className="px-3.5 sm:px-6 py-3 sm:py-3.5 text-right font-semibold text-gray-900 whitespace-nowrap">
                           {fmt(calculation.vacPrimaryTotal)}
                         </td>
                       </tr>
                       <tr>
-                        <td className="px-4 sm:px-6 py-3.5 text-gray-800">
+                        <td className="px-3.5 sm:px-6 py-3 sm:py-3.5 text-gray-800">
                           Visa application charge — accompanying family
                         </td>
-                        <td className="px-4 sm:px-6 py-3.5 text-right font-semibold text-gray-900">
+                        <td className="px-3.5 sm:px-6 py-3 sm:py-3.5 text-right font-semibold text-gray-900 whitespace-nowrap">
                           {fmt(calculation.vacFamilyTotal)}
                         </td>
                       </tr>
-                      <tr className="bg-slate-50/80 font-bold text-sm sm:text-base border-t-2 border-brand-primary">
-                        <td className="px-4 sm:px-6 py-4 text-brand-primary">Total government charges</td>
-                        <td className="px-4 sm:px-6 py-4 text-right text-brand-primary font-black">
+                      <tr className="bg-slate-50/80 font-bold text-xs sm:text-base border-t-2 border-brand-primary">
+                        <td className="px-3.5 sm:px-6 py-3.5 sm:py-4 text-brand-primary">Total government charges</td>
+                        <td className="px-3.5 sm:px-6 py-3.5 sm:py-4 text-right text-brand-primary font-black whitespace-nowrap">
                           {fmt(calculation.grandTotal)}
                         </td>
                       </tr>

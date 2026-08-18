@@ -118,7 +118,7 @@ export default function EligibilityCheckerPage() {
         description="Check if you meet the fundamental requirements to apply for an Australian visa."
       />
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6">
+      <div className="w-full">
         <MultiStepTool 
           tool={eligibilityData} 
           onComplete={calculateResults} 

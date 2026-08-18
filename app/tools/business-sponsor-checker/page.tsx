@@ -178,10 +178,10 @@ export default function BusinessSponsorCheckerPage() {
         description="A few questions, indicative result in under a minute. Not a formal assessment."
       />
 
-      <div className="max-w-3xl mx-auto px-4 sm:px-6">
+      <div className="max-w-3xl mx-auto px-3 sm:px-6">
         {/* Progress Bar (For question steps 1 to 8) */}
         {step <= totalQuestions && (
-          <div className="mb-6">
+          <div className="mb-5 sm:mb-6">
             <div className="flex justify-between items-end mb-2">
               <span className="text-xs font-semibold uppercase tracking-wider text-brand-primary">
                 Question {step} of {totalQuestions}
@@ -200,8 +200,8 @@ export default function BusinessSponsorCheckerPage() {
         )}
 
         {/* Card Container */}
-        <div className="bg-white rounded-2xl shadow-xs border border-gray-200 overflow-hidden min-h-[380px] flex flex-col">
-          <div className="p-5 sm:p-8 flex-1">
+        <div className="bg-white rounded-2xl shadow-xs border border-gray-200 overflow-hidden min-h-[360px] flex flex-col">
+          <div className="p-4 sm:p-8 flex-1">
 
             {/* STEP 1: Sponsor Status */}
             {step === 1 && (
@@ -548,7 +548,7 @@ export default function BusinessSponsorCheckerPage() {
                         name="business_name"
                         placeholder="e.g. Apex Construction Pty Ltd"
                         required
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-brand-primary outline-none text-sm bg-white"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-brand-primary outline-none text-base sm:text-sm bg-white"
                       />
                     </div>
                     <div className="space-y-1">
@@ -557,7 +557,7 @@ export default function BusinessSponsorCheckerPage() {
                         name="name"
                         placeholder="e.g. Sarah Jenkins"
                         required
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-brand-primary outline-none text-sm bg-white"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-brand-primary outline-none text-base sm:text-sm bg-white"
                       />
                     </div>
                   </div>
@@ -570,7 +570,7 @@ export default function BusinessSponsorCheckerPage() {
                         type="email"
                         placeholder="sarah@apexconstruction.com.au"
                         required
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-brand-primary outline-none text-sm bg-white"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-brand-primary outline-none text-base sm:text-sm bg-white"
                       />
                     </div>
                     <div className="space-y-1">
@@ -580,7 +580,7 @@ export default function BusinessSponsorCheckerPage() {
                         type="tel"
                         placeholder="0400 000 000"
                         required
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-brand-primary outline-none text-sm bg-white"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-brand-primary outline-none text-base sm:text-sm bg-white"
                       />
                     </div>
                   </div>

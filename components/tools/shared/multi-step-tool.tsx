@@ -92,7 +92,7 @@ export function MultiStepTool({ tool, onComplete }: MultiStepToolProps) {
   const step = steps[currentStep];
 
   return (
-    <div className="max-w-3xl mx-auto" suppressHydrationWarning>
+    <div className="max-w-3xl mx-auto px-3 sm:px-6" suppressHydrationWarning>
       {/* Progress Bar */}
       <div className="mb-5">
         <div className="flex justify-between items-end mb-2">
@@ -112,31 +112,31 @@ export function MultiStepTool({ tool, onComplete }: MultiStepToolProps) {
       </div>
 
       {/* Tool Card */}
-      <div className="bg-white rounded-2xl shadow-xs border border-gray-200 overflow-hidden min-h-[380px] flex flex-col">
-        <div className="p-5 sm:p-8 flex-1">
+      <div className="bg-white rounded-2xl shadow-xs border border-gray-200 overflow-hidden min-h-[360px] flex flex-col">
+        <div className="p-4 sm:p-8 flex-1">
           <h2 className="text-lg sm:text-2xl font-bold text-brand-primary mb-2">
             {step.question}
           </h2>
           {step.description && (
-            <p className="text-xs sm:text-sm text-gray-500 mb-6 leading-relaxed">
+            <p className="text-xs sm:text-sm text-gray-500 mb-5 leading-relaxed">
               {step.description}
             </p>
           )}
 
-          <div className="grid gap-3 mt-4">
+          <div className="grid gap-2.5 sm:gap-3 mt-4">
             {step.options?.map((option) => (
               <button
                 key={option.value}
                 onClick={() => handleOptionSelect(step.id, option.value)}
                 className={`flex items-center justify-between p-3.5 sm:p-4 rounded-xl border-2 text-left transition-all group ${
                   responses[step.id] === String(option.value)
-                    ? "border-brand-primary bg-brand-soft/80 text-brand-primary shadow-xs"
-                    : "border-gray-100 hover:border-brand-primary/20 hover:bg-gray-50 text-gray-700"
+                    ? "border-brand-primary bg-brand-soft/80 text-brand-primary shadow-xs font-bold"
+                    : "border-gray-100 hover:border-brand-primary/20 hover:bg-gray-50 text-gray-700 font-medium"
                 }`}
               >
-                <span className="font-semibold text-sm sm:text-base">{option.label}</span>
+                <span className="text-sm sm:text-base">{option.label}</span>
                 <ChevronRight
-                  className={`w-4 h-4 transition-transform ${
+                  className={`w-4 h-4 transition-transform shrink-0 ml-2 ${
                     responses[step.id] === String(option.value)
                       ? "translate-x-1 text-brand-accent"
                       : "text-gray-300 group-hover:text-gray-400"

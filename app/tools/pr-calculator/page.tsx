@@ -137,7 +137,7 @@ export default function PRCalculatorPage() {
         description="Check your eligibility for Australian Permanent Residency (General Skilled Migration) in minutes."
       />
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6">
+      <div className="w-full">
         <MultiStepTool 
           tool={prCalculatorData} 
           onComplete={calculateResults} 

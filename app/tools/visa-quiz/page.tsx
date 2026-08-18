@@ -119,7 +119,7 @@ export default function VisaQuizPage() {
         description="Find the right visa subclass based on your personal circumstances and migration goals."
       />
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6">
+      <div className="w-full">
         <MultiStepTool
           tool={visaQuizData}
           onComplete={calculateResults}

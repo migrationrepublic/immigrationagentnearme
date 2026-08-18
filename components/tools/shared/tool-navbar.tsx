@@ -38,51 +38,49 @@ export function ToolNavbar() {
   const pathname = usePathname();
 
   return (
-    <header className="sticky top-0 z-40 ">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-24 sm:h-28 gap-4">
+    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-xs">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between py-2 sm:py-0 sm:h-20 gap-2 sm:gap-4">
 
-          {/* Logo (Transparent, Exact 108px size, Perfectly aligned) */}
-          <div className="flex items-center shrink-0">
+          {/* Logo & Home Link */}
+          <div className="flex items-center justify-between shrink-0">
             <Link
               href="https://migrationrepublic.com.au"
-              className="flex items-center group transition-transform duration-300 group-hover:scale-105"
+              className="flex items-center group transition-transform duration-300"
             >
               <Image
                 src="/images/logobgre.png"
                 alt="Migration Republic"
                 width={108}
                 height={108}
-                className="object-contain h-20 sm:h-24 w-auto transition-transform duration-300 group-hover:scale-105"
+                className="object-contain h-12 sm:h-16 w-auto"
                 priority
               />
             </Link>
+
+            <Link
+              href="/tools"
+              className="sm:hidden text-[11px] font-bold text-brand-primary hover:underline px-2.5 py-1 rounded-lg bg-gray-100"
+            >
+              All Tools
+            </Link>
           </div>
 
-          {/* Tools Switcher Nav Links */}
-          <nav className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar py-2 text-xs sm:text-sm">
+          {/* Tools Switcher Nav Links (Smooth edge-to-edge touch horizontal scroll on mobile) */}
+          <nav className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1 text-xs sm:text-sm -mx-3 px-3 sm:mx-0 sm:px-0 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
             {TOOLS_NAV_ITEMS.map((item) => {
               const isActive = pathname === item.href;
               return (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`px-3 sm:px-3.5 py-2 rounded-xl font-semibold whitespace-nowrap transition-all duration-200 flex items-center gap-1.5 ${isActive
-                    ? 'bg-brand-primary text-white shadow-xs'
-                    : 'text-gray-600 hover:text-brand-primary hover:bg-gray-100/90'
-                    }`}
+                  className={`px-3 py-1.5 sm:py-2 rounded-xl font-semibold whitespace-nowrap transition-all duration-200 shrink-0 ${
+                    isActive
+                      ? 'bg-brand-primary text-white shadow-xs'
+                      : 'text-gray-600 hover:text-brand-primary hover:bg-gray-100/90'
+                  }`}
                 >
                   <span>{item.name}</span>
-                  {/* {item.badge && (
-                    <span
-                      className={`text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full uppercase font-bold tracking-wider ${isActive
-                        ? 'bg-brand-accent text-white'
-                        : 'bg-gray-200 text-gray-700'
-                        }`}
-                    >
-                      {item.badge}
-                    </span>
-                  )} */}
                 </Link>
               );
             })}

@@ -259,9 +259,9 @@ export default function Subclass482CheckerPage() {
         description="Assess your preliminary eligibility criteria for the Subclass 482 Skills in Demand Visa."
       />
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6">
+      <div className="max-w-4xl mx-auto px-3 sm:px-6">
         {step <= totalSteps && (
-          <div className="mb-6">
+          <div className="mb-5 sm:mb-6">
             <div className="flex justify-between items-end mb-2">
               <span className="text-xs font-semibold uppercase tracking-wider text-brand-primary">
                 Step {step} of {totalSteps}
@@ -279,16 +279,16 @@ export default function Subclass482CheckerPage() {
           </div>
         )}
 
-        <div className="bg-white rounded-2xl shadow-xs border border-gray-200 overflow-hidden min-h-[420px] flex flex-col">
-          <div className="p-5 sm:p-8 flex-1">
+        <div className="bg-white rounded-2xl shadow-xs border border-gray-200 overflow-hidden min-h-[380px] flex flex-col">
+          <div className="p-4 sm:p-8 flex-1">
 
             {/* STEP 1: Employer Sponsorship */}
             {step === 1 && (
               <div>
-                <h2 className="text-2xl md:text-3xl font-bold text-brand-primary mb-6">
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-brand-primary mb-4 sm:mb-6">
                   Do you have an Australian employer willing to sponsor you?
                 </h2>
-                <div className="grid gap-4">
+                <div className="grid gap-3">
                   {[
                     { label: 'Yes', value: 'yes' },
                     { label: 'My employer may sponsor me', value: 'maybe' },
@@ -298,12 +298,12 @@ export default function Subclass482CheckerPage() {
                       key={opt.value}
                       type="button"
                       onClick={() => handleSelectOption('sponsorship', opt.value)}
-                      className={`flex items-center justify-between p-5 rounded-xl border-2 text-left transition-all ${responses.sponsorship === opt.value
-                        ? "border-brand-primary bg-brand-soft text-brand-primary shadow-sm"
-                        : "border-gray-100 hover:border-brand-primary/20 text-gray-700"
+                      className={`flex items-center justify-between p-4 sm:p-5 rounded-xl border-2 text-left transition-all ${responses.sponsorship === opt.value
+                        ? "border-brand-primary bg-brand-soft text-brand-primary font-bold shadow-xs"
+                        : "border-gray-100 hover:border-brand-primary/20 text-gray-700 font-medium"
                         }`}
                     >
-                      <span className="font-medium text-base">{opt.label}</span>
+                      <span className="text-sm sm:text-base">{opt.label}</span>
                     </button>
                   ))}
                 </div>
@@ -725,25 +725,25 @@ export default function Subclass482CheckerPage() {
                 <h3 className="text-xl font-bold text-brand-primary mb-2">Get Your Detailed 482 Visa Report</h3>
                 <p className="text-gray-600 mb-6 text-sm">Enter your details to save your results and get a free migration roadmap.</p>
 
-                <form onSubmit={handleLeadFormSubmit} className="space-y-4">
-                  <div className="grid md:grid-cols-2 gap-4">
+                <form onSubmit={handleLeadFormSubmit} className="space-y-3.5">
+                  <div className="grid sm:grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <label className="text-xs font-bold text-gray-600">Full Name</label>
+                      <label className="text-xs font-bold text-gray-600">Full Name *</label>
                       <input
                         name="name"
-                        placeholder="Full Name"
+                        placeholder="Full Name *"
                         required
-                        className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-brand-primary outline-none text-base sm:text-sm bg-white"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-xs font-bold text-gray-600">Email Address</label>
+                      <label className="text-xs font-bold text-gray-600">Email Address *</label>
                       <input
                         name="email"
                         type="email"
-                        placeholder="Email Address"
+                        placeholder="Email Address *"
                         required
-                        className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-brand-primary outline-none text-base sm:text-sm bg-white"
                       />
                     </div>
                   </div>
@@ -755,18 +755,18 @@ export default function Subclass482CheckerPage() {
                       type="tel"
                       placeholder="Contact / Mobile Number *"
                       required
-                      className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-brand-primary outline-none text-base sm:text-sm bg-white"
                     />
                   </div>
 
-                  <div className="grid md:grid-cols-2 gap-4">
+                  <div className="grid sm:grid-cols-2 gap-3">
                     <div className="space-y-1">
                       <label className="text-xs font-bold text-gray-600">Passport Country</label>
                       <input
                         name="passport_country"
                         placeholder="Passport Country"
                         required
-                        className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-brand-primary outline-none text-base sm:text-sm bg-white"
                       />
                     </div>
                     <div className="space-y-1">
@@ -775,7 +775,7 @@ export default function Subclass482CheckerPage() {
                         name="current_country"
                         placeholder="Current Country"
                         required
-                        className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-brand-primary outline-none text-base sm:text-sm bg-white"
                       />
                     </div>
                   </div>
@@ -784,31 +784,32 @@ export default function Subclass482CheckerPage() {
                     <label className="text-xs font-bold text-gray-600">Employer Name</label>
                     <input
                       name="employer"
-                      placeholder="Employer Name"
-                      className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none"
+                      placeholder="Employer Name (if any)"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-brand-primary outline-none text-base sm:text-sm bg-white"
                     />
                   </div>
 
-                  <label className="flex items-start gap-2.5 cursor-pointer pt-2">
+                  <label className="flex items-start gap-2.5 cursor-pointer pt-1">
                     <input
                       type="checkbox"
                       name="consent"
                       required
-                      className="mt-0.5 w-4.5 h-4.5 rounded border-gray-300 text-brand-accent focus:ring-brand-accent cursor-pointer"
+                      defaultChecked
+                      className="mt-0.5 w-4 h-4 rounded border-gray-300 text-brand-accent focus:ring-brand-accent cursor-pointer"
                     />
                     <span className="text-xs text-gray-500 leading-relaxed">
                       I consent to Migration Republic contacting me regarding my enquiry.
                     </span>
                   </label>
 
-                  {errorMsg && <p className="text-red-500 text-sm">{errorMsg}</p>}
+                  {errorMsg && <p className="text-red-500 text-xs">{errorMsg}</p>}
 
                   <Button
                     type="submit"
                     disabled={loading}
-                    className="w-full bg-[#e40229] hover:bg-[#e40229]/95 text-white py-6 text-lg font-semibold shadow-lg shadow-[#e40229]/20"
+                    className="w-full bg-[#e40229] hover:bg-[#e40229]/95 text-white py-4 text-sm sm:text-base font-bold shadow-md rounded-xl active:scale-[0.99] transition-all"
                   >
-                    {loading ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : "Save Details & View Results"}
+                    {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : "Save Details & View Results"}
                   </Button>
                 </form>
               </div>

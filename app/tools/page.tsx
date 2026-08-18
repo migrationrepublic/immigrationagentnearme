@@ -69,24 +69,24 @@ export default function ToolsDirectoryPage() {
       <ToolNavbar />
 
       {/* Header Section with Compact Spacing & Transparent Logo */}
-      <div className="pt-8 pb-6 px-4">
+      <div className="pt-4 pb-4 sm:pt-8 sm:pb-6 px-3 sm:px-4">
         <div className="max-w-4xl mx-auto flex flex-col items-center text-center">
-          <Link href="/" className="mb-3 group inline-block">
+          <Link href="/" className="mb-2.5 group inline-block">
             <Image
               src="/images/logobgre.png"
               alt="Migration Republic Logo"
               width={70}
               height={70}
-              className="object-contain transition-transform duration-300 group-hover:scale-105"
+              className="object-contain h-14 sm:h-20 w-auto transition-transform duration-300 group-hover:scale-105"
               priority
             />
           </Link>
 
-          <span className="text-[11px] font-extrabold uppercase tracking-widest text-brand-accent bg-brand-soft px-3 py-1 rounded-full mb-2 border border-brand-primary/10">
+          <span className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-widest text-brand-accent bg-brand-soft px-3 py-0.5 sm:py-1 rounded-full mb-2 border border-brand-primary/10">
             Self-Serve Migration Portals
           </span>
 
-          <h1 className="text-2xl sm:text-4xl font-extrabold text-brand-primary tracking-tight mb-2 leading-tight">
+          <h1 className="text-xl sm:text-3xl md:text-4xl font-extrabold text-brand-primary tracking-tight mb-1.5 sm:mb-2 leading-tight">
             Migration Tools <span className="text-brand-accent">&amp;</span> Calculators
           </h1>
           <p className="text-gray-600 text-xs sm:text-sm md:text-base max-w-xl mx-auto leading-relaxed">
@@ -96,17 +96,17 @@ export default function ToolsDirectoryPage() {
       </div>
 
       {/* Tools Cards Grid */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pb-12 sm:pb-16">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-6">
           {tools.map((tool) => (
             <Link
               key={tool.id}
               href={tool.href}
-              className="group bg-white p-6 sm:p-7 rounded-2xl border border-gray-200 shadow-xs hover:shadow-md hover:border-brand-primary/30 transition-all duration-300 flex flex-col justify-between relative"
+              className="group bg-white p-4 sm:p-7 rounded-2xl border border-gray-200 shadow-xs hover:shadow-md hover:border-brand-primary/30 transition-all duration-300 flex flex-col justify-between relative"
             >
               <div>
-                <div className="flex items-center justify-between gap-2 mb-4">
-                  <div className={`${tool.color} w-14 h-14 rounded-2xl flex items-center justify-center group-hover:scale-105 transition-transform duration-300`}>
+                <div className="flex items-center justify-between gap-2 mb-3 sm:mb-4">
+                  <div className={`${tool.color} w-11 h-11 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center group-hover:scale-105 transition-transform duration-300`}>
                     {tool.icon}
                   </div>
                   {tool.badge && (
@@ -116,15 +116,15 @@ export default function ToolsDirectoryPage() {
                   )}
                 </div>
 
-                <h3 className="text-lg sm:text-xl font-bold text-brand-primary mb-2 group-hover:text-brand-accent transition-colors">
+                <h3 className="text-base sm:text-xl font-bold text-brand-primary mb-1.5 sm:mb-2 group-hover:text-brand-accent transition-colors">
                   {tool.title}
                 </h3>
-                <p className="text-gray-500 text-xs sm:text-sm leading-relaxed mb-6">
+                <p className="text-gray-500 text-xs sm:text-sm leading-relaxed mb-4 sm:mb-6">
                   {tool.description}
                 </p>
               </div>
 
-              <div className="pt-4 border-t border-gray-100 flex items-center justify-between text-xs font-bold text-brand-primary group-hover:text-brand-accent transition-colors">
+              <div className="pt-3 sm:pt-4 border-t border-gray-100 flex items-center justify-between text-xs font-bold text-brand-primary group-hover:text-brand-accent transition-colors">
                 <span>Launch Tool</span>
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </div>
@@ -133,16 +133,16 @@ export default function ToolsDirectoryPage() {
         </div>
 
         {/* Bottom Consultation Banner */}
-        <div className="mt-12 bg-white rounded-3xl p-6 sm:p-10 border border-gray-200 shadow-xs flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="space-y-1.5 text-center md:text-left">
-            <h2 className="text-xl sm:text-2xl font-bold text-brand-primary">Need a formal case assessment?</h2>
+        <div className="mt-8 sm:mt-12 bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-10 border border-gray-200 shadow-xs flex flex-col md:flex-row items-center justify-between gap-4 sm:gap-6 text-center md:text-left">
+          <div className="space-y-1 sm:space-y-1.5">
+            <h2 className="text-lg sm:text-2xl font-bold text-brand-primary">Need a formal case assessment?</h2>
             <p className="text-gray-600 text-xs sm:text-sm max-w-xl">
               While our tools provide accurate initial guidance, immigration law involves nuanced legal criteria. Book a session with our MARA Registered Migration Agents.
             </p>
           </div>
           <Link
             href="/pricing"
-            className="btn-primary inline-flex items-center justify-center px-6 py-3.5 text-sm font-bold bg-[#e40229] hover:bg-[#e40229]/95 text-white rounded-xl shadow-md whitespace-nowrap shrink-0"
+            className="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 text-xs sm:text-sm font-bold bg-[#e40229] hover:bg-[#e40229]/95 text-white rounded-xl shadow-md whitespace-nowrap shrink-0"
           >
             Book a Consultation
           </Link>

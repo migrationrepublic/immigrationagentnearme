@@ -1,22 +1,24 @@
 "use client";
 
 import React from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
-import { ArrowLeft } from 'lucide-react';
+import { ToolNavbar } from './tool-navbar';
 
 interface ToolHeaderProps {
   title: string;
   description: string;
+  badge?: string;
+  hideNav?: boolean;
 }
 
-export function ToolHeader({ title, description }: ToolHeaderProps) {
-  // Helper to keep key phrases together on one line
+export function ToolHeader({ title, description, badge, hideNav = false }: ToolHeaderProps) {
+  // Helper to keep key phrases clean and formatted
   const formatTitle = (rawTitle: string) => {
     const phrases = [
       "Eligibility Checker",
       "Points Calculator",
-      "Selection Quiz"
+      "Selection Quiz",
+      "Cost Estimator",
+      "Quick-Check"
     ];
 
     for (const phrase of phrases) {
@@ -25,7 +27,7 @@ export function ToolHeader({ title, description }: ToolHeaderProps) {
         return (
           <>
             {parts[0]}
-            <span className="inline-block whitespace-nowrap">{phrase}</span>
+            <span className="inline-block">{phrase}</span>
             {parts[1]}
           </>
         );
@@ -35,38 +37,24 @@ export function ToolHeader({ title, description }: ToolHeaderProps) {
   };
 
   return (
-    <div className="mb-12">
-      <div className="flex flex-col items-center text-center">
-        <Link href="/" className="mb-8 group">
-          <div className="relative">
-            <div className="absolute -inset-4 bg-brand-primary/5 rounded-full blur-xl group-hover:bg-brand-primary/10 transition-all"></div>
-            <div className="w-32 h-32 rounded-full border-4 border-white shadow-xl overflow-hidden relative flex items-center justify-center bg-white p-2">
-              <Image
-                src="/images/logobgre.png"
-                alt="Migration Republic Logo"
-                width={160}
-                height={160}
-                className="object-contain scale-110 transition-transform duration-500 group-hover:scale-125"
-                priority
-              />
-            </div>
-          </div>
-        </Link>
+    <>
+      {!hideNav && <ToolNavbar />}
 
-        <Link
-          href="/tools"
-          className="inline-flex items-center gap-2 text-brand-primary/60 hover:text-brand-primary font-bold text-sm uppercase tracking-widest mb-6 transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" /> Back to Tools
-        </Link>
+      <div className="pt-6 pb-6 text-center max-w-3xl mx-auto px-4">
+        {badge && (
+          <span className="inline-block text-[11px] uppercase tracking-wider font-extrabold bg-brand-soft text-brand-primary px-3 py-1 rounded-full mb-2.5 border border-brand-primary/10">
+            {badge}
+          </span>
+        )}
 
-        <h1 className="text-2xl xs:text-3xl md:text-5xl lg:text-6xl font-extrabold text-brand-primary tracking-tight mb-4 max-w-4xl px-2">
+        <h1 className="text-2xl sm:text-3xl md:text-3xl font-extrabold text-brand-primary tracking-tight mb-2 leading-tight">
           {formatTitle(title)}
         </h1>
-        <p className="max-w-2xl mx-auto text-base md:text-lg text-gray-600 font-medium leading-relaxed">
+
+        <p className="text-xs sm:text-sm md:text-base text-gray-600 font-medium leading-relaxed max-w-2xl mx-auto">
           {description}
         </p>
       </div>
-    </div>
+    </>
   );
 }

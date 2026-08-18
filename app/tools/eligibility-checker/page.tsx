@@ -111,13 +111,14 @@ export default function EligibilityCheckerPage() {
   };
 
   return (
-    <div className="min-h-screen bg-brand-soft/30 py-12 px-4 sm:px-6 lg:px-8" suppressHydrationWarning>
-      <div className="max-w-7xl mx-auto">
-        <ToolHeader 
-          title="Eligibility Checker" 
-          description="Check if you meet the fundamental requirements to apply for an Australian visa."
-        />
+    <div className="min-h-screen bg-slate-50/50 pb-20" suppressHydrationWarning>
+      <ToolHeader 
+        badge="General Assessment"
+        title="Eligibility Checker" 
+        description="Check if you meet the fundamental requirements to apply for an Australian visa."
+      />
 
+      <div className="max-w-4xl mx-auto px-4 sm:px-6">
         <MultiStepTool 
           tool={eligibilityData} 
           onComplete={calculateResults} 

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react"
 import { format } from "date-fns"
-import { Loader2, Search, Users, ExternalLink, Wrench, X, Info, AlertTriangle, CheckCircle2, List } from "lucide-react"
+import { Loader2, Search, Users, ExternalLink, Wrench, X, Info, AlertTriangle, CheckCircle2, List, Building2, Receipt, Sparkles } from "lucide-react"
 import { getToolLeadsAction } from "@/app/actions/admin"
 
 interface ToolLead {
@@ -29,6 +29,35 @@ interface ToolLeadResults {
   consent_given?: string
   identified_flags?: string[]
   quiz_responses?: Record<string, unknown>
+
+  // Employer Tools Fields
+  business_name?: string
+  sponsor_status?: string
+  lawfully_trading?: string
+  financial_capacity?: string
+  industry?: string
+  offered_salary?: string
+  salary_meets_csit?: string
+  labour_market_testing?: string
+  location?: string
+  compliance_issues?: string
+  calculated_tier?: string
+  headline?: string
+  summary?: string
+  identified_action_items?: Array<{ type: string; title: string; detail: string; action: string }>
+
+  // Sponsorship Cost Estimator Fields
+  visa_subclass?: string
+  business_turnover?: string
+  number_of_workers?: number
+  years_of_stay?: string
+  accompanying_family?: string
+  nomination_fees_total?: string
+  saf_levy_total?: string
+  primary_vac_total?: string
+  family_vac_total?: string
+  grand_total_government_charges?: string
+  itemised_breakdown?: Record<string, string>
 }
 
 export default function ToolLeadsPage() {
@@ -60,17 +89,22 @@ export default function ToolLeadsPage() {
     const matchesSearch =
       l.user_name?.toLowerCase().includes(search.toLowerCase()) ||
       l.user_email?.toLowerCase().includes(search.toLowerCase()) ||
-      l.tool_name?.toLowerCase().includes(search.toLowerCase())
+      l.tool_name?.toLowerCase().includes(search.toLowerCase()) ||
+      (l.results && JSON.stringify(l.results).toLowerCase().includes(search.toLowerCase()))
 
     let matchesTool = true
-    if (toolFilter === "pr") {
-      matchesTool = l.tool_name === "PR Calculator" || l.tool_name === "PR Points Calculator"
+    if (toolFilter === "sponsor") {
+      matchesTool = l.tool_name?.includes("Business Sponsor")
+    } else if (toolFilter === "cost") {
+      matchesTool = l.tool_name?.includes("Cost Estimator") || l.tool_name?.includes("Sponsorship Cost")
     } else if (toolFilter === "482") {
-      matchesTool = l.tool_name?.includes("482")
+      matchesTool = l.tool_name?.includes("482") && !l.tool_name?.includes("Business Sponsor")
+    } else if (toolFilter === "pr") {
+      matchesTool = l.tool_name === "PR Calculator" || l.tool_name === "PR Points Calculator"
     } else if (toolFilter === "eligibility") {
       matchesTool = l.tool_name === "Eligibility Checker"
     } else if (toolFilter === "quiz") {
-      matchesTool = l.tool_name === "Visa Suggestion Quiz" || (!l.tool_name?.includes("482") && l.tool_name !== "PR Calculator" && l.tool_name !== "PR Points Calculator" && l.tool_name !== "Eligibility Checker")
+      matchesTool = l.tool_name === "Visa Suggestion Quiz" || (!l.tool_name?.includes("482") && l.tool_name !== "PR Calculator" && l.tool_name !== "PR Points Calculator" && l.tool_name !== "Eligibility Checker" && !l.tool_name?.includes("Business Sponsor") && !l.tool_name?.includes("Cost"))
     }
 
     return matchesSearch && matchesTool
@@ -78,16 +112,18 @@ export default function ToolLeadsPage() {
 
   if (loading) {
     return (
-      <div className="admin-loader h-[60vh]">
-        <Loader2 className="admin-loader-icon animate-spin" />
+      <div className="admin-loader h-[60vh] flex items-center justify-center">
+        <Loader2 className="admin-loader-icon animate-spin w-8 h-8 text-purple-700" />
       </div>
     )
   }
 
+  const sponsorCount     = leads.filter(l => l.tool_name?.includes("Business Sponsor")).length
+  const costCount        = leads.filter(l => l.tool_name?.includes("Cost Estimator") || l.tool_name?.includes("Sponsorship Cost")).length
+  const count482         = leads.filter(l => l.tool_name?.includes("482") && !l.tool_name?.includes("Business Sponsor")).length
   const prCount          = leads.filter(l => l.tool_name === "PR Calculator" || l.tool_name === "PR Points Calculator").length
-  const count482         = leads.filter(l => l.tool_name?.includes("482")).length
   const eligibilityCount = leads.filter(l => l.tool_name === "Eligibility Checker").length
-  const quizCount        = leads.filter(l => l.tool_name === "Visa Suggestion Quiz" || (!l.tool_name?.includes("482") && l.tool_name !== "PR Calculator" && l.tool_name !== "PR Points Calculator" && l.tool_name !== "Eligibility Checker")).length
+  const quizCount        = leads.filter(l => l.tool_name === "Visa Suggestion Quiz" || (!l.tool_name?.includes("482") && l.tool_name !== "PR Calculator" && l.tool_name !== "PR Points Calculator" && l.tool_name !== "Eligibility Checker" && !l.tool_name?.includes("Business Sponsor") && !l.tool_name?.includes("Cost"))).length
   const totalCount       = leads.length
 
   return (
@@ -95,22 +131,22 @@ export default function ToolLeadsPage() {
       {/* Title + search & tool filter */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="admin-heading flex items-center gap-2">
+          <h1 className="admin-heading flex items-center gap-2 text-2xl font-bold text-gray-900">
             <Wrench className="w-7 h-7 text-purple-700" />
             Tool Submissions &amp; Lead KPIs
           </h1>
-          <p className="admin-subheading">Users who completed PR calculations, 482 visa checkers, and eligibility quizzes</p>
+          <p className="admin-subheading text-gray-500 text-sm">Corporate sponsorship diagnostics, cost estimates, PR points, and visa quizzes</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
           {/* Search Input */}
           <div className="relative flex-1 sm:w-60">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--color-admin-muted)' }} />
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               type="text"
-              placeholder="Search user or email..."
+              placeholder="Search user, email, business..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="admin-input pl-9 w-full"
+              className="admin-input pl-9 w-full py-2 px-3 border border-gray-200 rounded-xl text-sm"
             />
           </div>
 
@@ -118,150 +154,247 @@ export default function ToolLeadsPage() {
           <select
             value={toolFilter}
             onChange={e => setToolFilter(e.target.value)}
-            className="admin-select w-full sm:w-52"
+            className="admin-select w-full sm:w-60 py-2 px-3 border border-gray-200 rounded-xl text-sm font-medium"
           >
             <option value="all">All Tools ({totalCount})</option>
-            <option value="pr">PR Calculator ({prCount})</option>
+            <option value="sponsor">Business Sponsor Quick ({sponsorCount})</option>
+            <option value="cost">Sponsorship Cost Estimator ({costCount})</option>
             <option value="482">Subclass 482 Checker ({count482})</option>
+            <option value="pr">PR Calculator ({prCount})</option>
             <option value="eligibility">Eligibility Checker ({eligibilityCount})</option>
             <option value="quiz">Visa Quiz ({quizCount})</option>
           </select>
         </div>
       </div>
 
-      {/* Clean Corporate Tool KPI Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+      {/* Corporate Tool KPI Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
         {/* All Tools */}
         <div
           onClick={() => setToolFilter("all")}
-          className={`p-4 rounded-xl border bg-white shadow-xs cursor-pointer transition-all ${
-            toolFilter === "all" ? "border-slate-900 ring-1 ring-slate-900" : "border-slate-200 hover:border-slate-300"
+          className={`p-3.5 rounded-xl border bg-white shadow-xs cursor-pointer transition-all ${
+            toolFilter === "all" ? "border-slate-900 ring-1 ring-slate-900 bg-slate-50" : "border-slate-200 hover:border-slate-300"
           }`}
         >
-          <p className="text-xs font-medium text-slate-500">Total Tool Leads</p>
-          <p className="text-2xl font-bold text-slate-900 mt-1">{totalCount}</p>
+          <div className="flex justify-between items-center text-slate-500 mb-1">
+            <span className="text-xs font-semibold">All Leads</span>
+            <Users className="w-4 h-4 text-slate-600" />
+          </div>
+          <div className="text-2xl font-bold text-slate-900">{totalCount}</div>
         </div>
 
-        {/* PR Calculator */}
+        {/* Business Sponsor Quick */}
         <div
-          onClick={() => setToolFilter("pr")}
-          className={`p-4 rounded-xl border bg-white shadow-xs cursor-pointer transition-all ${
-            toolFilter === "pr" ? "border-slate-900 ring-1 ring-slate-900" : "border-slate-200 hover:border-slate-300"
+          onClick={() => setToolFilter("sponsor")}
+          className={`p-3.5 rounded-xl border bg-white shadow-xs cursor-pointer transition-all ${
+            toolFilter === "sponsor" ? "border-blue-700 ring-1 ring-blue-700 bg-blue-50/50" : "border-slate-200 hover:border-slate-300"
           }`}
         >
-          <p className="text-xs font-medium text-slate-500">PR Calc</p>
-          <p className="text-2xl font-bold text-slate-900 mt-1">{prCount}</p>
+          <div className="flex justify-between items-center text-blue-700 mb-1">
+            <span className="text-xs font-semibold">Sponsor Quick</span>
+            <Building2 className="w-4 h-4" />
+          </div>
+          <div className="text-2xl font-bold text-slate-900">{sponsorCount}</div>
         </div>
 
-        {/* Subclass 482 */}
+        {/* Cost Estimator */}
+        <div
+          onClick={() => setToolFilter("cost")}
+          className={`p-3.5 rounded-xl border bg-white shadow-xs cursor-pointer transition-all ${
+            toolFilter === "cost" ? "border-emerald-700 ring-1 ring-emerald-700 bg-emerald-50/50" : "border-slate-200 hover:border-slate-300"
+          }`}
+        >
+          <div className="flex justify-between items-center text-emerald-700 mb-1">
+            <span className="text-xs font-semibold">Cost Estimator</span>
+            <Receipt className="w-4 h-4" />
+          </div>
+          <div className="text-2xl font-bold text-slate-900">{costCount}</div>
+        </div>
+
+        {/* 482 Checker */}
         <div
           onClick={() => setToolFilter("482")}
-          className={`p-4 rounded-xl border bg-white shadow-xs cursor-pointer transition-all ${
-            toolFilter === "482" ? "border-slate-900 ring-1 ring-slate-900" : "border-slate-200 hover:border-slate-300"
+          className={`p-3.5 rounded-xl border bg-white shadow-xs cursor-pointer transition-all ${
+            toolFilter === "482" ? "border-amber-700 ring-1 ring-amber-700 bg-amber-50/50" : "border-slate-200 hover:border-slate-300"
           }`}
         >
-          <p className="text-xs font-medium text-slate-500">Subclass 482</p>
-          <p className="text-2xl font-bold text-slate-900 mt-1">{count482}</p>
+          <div className="flex justify-between items-center text-amber-700 mb-1">
+            <span className="text-xs font-semibold">482 Visa</span>
+            <Wrench className="w-4 h-4" />
+          </div>
+          <div className="text-2xl font-bold text-slate-900">{count482}</div>
         </div>
 
-        {/* Eligibility Checker */}
+        {/* PR Calc */}
         <div
-          onClick={() => setToolFilter("eligibility")}
-          className={`p-4 rounded-xl border bg-white shadow-xs cursor-pointer transition-all ${
-            toolFilter === "eligibility" ? "border-slate-900 ring-1 ring-slate-900" : "border-slate-200 hover:border-slate-300"
+          onClick={() => setToolFilter("pr")}
+          className={`p-3.5 rounded-xl border bg-white shadow-xs cursor-pointer transition-all ${
+            toolFilter === "pr" ? "border-indigo-700 ring-1 ring-indigo-700 bg-indigo-50/50" : "border-slate-200 hover:border-slate-300"
           }`}
         >
-          <p className="text-xs font-medium text-slate-500">Eligibility Check</p>
-          <p className="text-2xl font-bold text-slate-900 mt-1">{eligibilityCount}</p>
+          <div className="flex justify-between items-center text-indigo-700 mb-1">
+            <span className="text-xs font-semibold">PR Calc</span>
+            <Users className="w-4 h-4" />
+          </div>
+          <div className="text-2xl font-bold text-slate-900">{prCount}</div>
+        </div>
+
+        {/* Eligibility */}
+        <div
+          onClick={() => setToolFilter("eligibility")}
+          className={`p-3.5 rounded-xl border bg-white shadow-xs cursor-pointer transition-all ${
+            toolFilter === "eligibility" ? "border-green-700 ring-1 ring-green-700 bg-green-50/50" : "border-slate-200 hover:border-slate-300"
+          }`}
+        >
+          <div className="flex justify-between items-center text-green-700 mb-1">
+            <span className="text-xs font-semibold">Eligibility</span>
+            <CheckCircle2 className="w-4 h-4" />
+          </div>
+          <div className="text-2xl font-bold text-slate-900">{eligibilityCount}</div>
         </div>
 
         {/* Visa Quiz */}
         <div
           onClick={() => setToolFilter("quiz")}
-          className={`p-4 rounded-xl border bg-white shadow-xs cursor-pointer transition-all ${
-            toolFilter === "quiz" ? "border-slate-900 ring-1 ring-slate-900" : "border-slate-200 hover:border-slate-300"
+          className={`p-3.5 rounded-xl border bg-white shadow-xs cursor-pointer transition-all ${
+            toolFilter === "quiz" ? "border-purple-700 ring-1 ring-purple-700 bg-purple-50/50" : "border-slate-200 hover:border-slate-300"
           }`}
         >
-          <p className="text-xs font-medium text-slate-500">Visa Quiz</p>
-          <p className="text-2xl font-bold text-slate-900 mt-1">{quizCount}</p>
+          <div className="flex justify-between items-center text-purple-700 mb-1">
+            <span className="text-xs font-semibold">Visa Quiz</span>
+            <List className="w-4 h-4" />
+          </div>
+          <div className="text-2xl font-bold text-slate-900">{quizCount}</div>
         </div>
       </div>
 
       {/* Table */}
-      <div className="admin-table-card">
+      <div className="admin-table-container bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-xs">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm whitespace-nowrap">
-            <thead className="admin-thead">
+          <table className="admin-table w-full text-left text-sm">
+            <thead className="bg-gray-50 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase tracking-wider">
               <tr>
-                <th>User</th>
-                <th>Tool Used</th>
-                <th>Result Overview</th>
-                <th>Submitted At</th>
-                <th className="text-right">Actions</th>
+                <th className="py-3.5 px-4">User / Employer</th>
+                <th className="py-3.5 px-4">Tool Used</th>
+                <th className="py-3.5 px-4">Outcome / Highlights</th>
+                <th className="py-3.5 px-4">Date</th>
+                <th className="py-3.5 px-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="admin-tbody">
-              {error ? (
-                <tr><td colSpan={5} className="admin-td text-center" style={{ color: 'var(--color-badge-error-text)' }}>Error loading leads: {error}</td></tr>
-              ) : filtered.length === 0 ? (
-                <tr><td colSpan={5} className="admin-td text-center" style={{ color: 'var(--color-admin-muted)' }}>No submissions yet.</td></tr>
+            <tbody className="divide-y divide-gray-100">
+              {filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="text-center py-12 text-gray-500 text-sm">
+                    No submissions found matching criteria.
+                  </td>
+                </tr>
               ) : (
-                filtered.map(lead => (
-                  <tr key={lead.id} className="admin-tr">
-                    <td className="admin-td">
-                      <span className="admin-cell-primary block">{lead.user_name}</span>
-                      <span className="admin-cell-muted block">{lead.user_email}</span>
-                      {lead.user_phone && <span className="admin-cell-muted block">{lead.user_phone}</span>}
-                    </td>
-                    <td className="admin-td">
-                      <span className={`admin-badge ${lead.tool_name === "PR Calculator" ? "admin-badge-info" : "admin-badge-warn"}`}>
-                        {lead.tool_name}
-                      </span>
-                    </td>
-                    <td className="admin-td">
-                      {lead.tool_name === "PR Calculator" ? (
-                        <span className="admin-cell-primary">{(lead.results?.totalPoints as number | undefined) ?? '—'} Points</span>
-                      ) : lead.tool_name === "Eligibility Checker" ? (
-                        <span className={`font-bold text-sm ${
-                          lead.results?.status === "eligible" ? "text-green-700"
-                          : lead.results?.status === "warning" ? "text-amber-700"
-                          : "text-red-700"
-                        }`}>
-                          {lead.results?.status === "eligible" ? "Eligible"
-                           : lead.results?.status === "warning" ? "Potential Issues"
-                           : "Not Eligible"}
+                filtered.map(lead => {
+                  const r = (lead.results as unknown as ToolLeadResults) || {}
+                  return (
+                    <tr key={lead.id} className="hover:bg-gray-50/60 transition-colors">
+                      <td className="py-3.5 px-4">
+                        <div className="font-bold text-gray-900">{lead.user_name}</div>
+                        {r.business_name && (
+                          <div className="text-xs font-semibold text-blue-700 flex items-center gap-1 mt-0.5">
+                            <Building2 className="w-3 h-3" /> {r.business_name}
+                          </div>
+                        )}
+                        <div className="text-xs text-gray-500">{lead.user_email}</div>
+                        {lead.user_phone && (
+                          <div className="text-xs text-gray-400">{lead.user_phone}</div>
+                        )}
+                      </td>
+                      <td className="py-3.5 px-4">
+                        <span className="inline-block px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-800">
+                          {lead.tool_name}
                         </span>
-                      ) : lead.tool_name === "Visa Suggestion Quiz" ? (
-                        <span className="admin-cell-muted">{(lead.results?.suggestions as unknown[])?.length ?? 0} Suggestions</span>
-                      ) : (
-                        <span className="admin-cell-muted">View details</span>
-                      )}
-                    </td>
-                    <td className="admin-td admin-cell-muted">
-                      {format(new Date(lead.created_at), "MMM d, yyyy h:mm a")}
-                    </td>
-                    <td className="admin-td text-right">
-                      <button 
-                        onClick={() => setSelectedLead(lead)}
-                        className="admin-cell-primary flex items-center gap-1 text-xs ml-auto hover:underline font-bold" 
-                        style={{ color: 'var(--color-admin-navy)' }}
-                      >
-                        Details <ExternalLink className="w-3 h-3" />
-                      </button>
-                    </td>
-                  </tr>
-                ))
+                      </td>
+                      <td className="py-3.5 px-4">
+                        {/* Highlights based on tool */}
+                        {lead.tool_name?.includes("Business Sponsor") && (
+                          <div className="space-y-0.5">
+                            <span className={`inline-block px-2 py-0.5 rounded text-[11px] font-bold ${
+                              r.calculated_tier?.includes('Strong') ? 'bg-green-100 text-green-800' :
+                              r.calculated_tier?.includes('Possible') ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-800'
+                            }`}>
+                              {r.calculated_tier || 'Assessment Completed'}
+                            </span>
+                            <div className="text-xs text-gray-500">
+                              Salary: {r.offered_salary || 'N/A'} • {r.sponsor_status || 'SBS'}
+                            </div>
+                          </div>
+                        )}
+
+                        {(lead.tool_name?.includes("Cost Estimator") || lead.tool_name?.includes("Sponsorship Cost")) && (
+                          <div className="space-y-0.5">
+                            <div className="text-xs font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded inline-block">
+                              {r.grand_total_government_charges || 'Total Calculated'}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {r.visa_subclass} • {r.number_of_workers} worker(s)
+                            </div>
+                          </div>
+                        )}
+
+                        {lead.tool_name?.includes("482") && !lead.tool_name?.includes("Business Sponsor") && (
+                          <div className="space-y-0.5">
+                            <span className="text-xs font-semibold text-blue-900 bg-blue-50 px-2 py-0.5 rounded">
+                              {r.calculated_category || 'Assessed'}
+                            </span>
+                            <div className="text-xs text-gray-500">
+                              {r.occupation || 'CSOL Check'}
+                            </div>
+                          </div>
+                        )}
+
+                        {(lead.tool_name === "PR Calculator" || lead.tool_name === "PR Points Calculator") && (
+                          <div className="text-xs font-bold text-indigo-700">
+                            {r.totalPoints} Estimated Points
+                          </div>
+                        )}
+
+                        {lead.tool_name === "Eligibility Checker" && (
+                          <span className={`text-xs font-semibold px-2 py-0.5 rounded ${
+                            r.status === 'eligible' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'
+                          }`}>
+                            {r.status === 'eligible' ? 'Likely Eligible' : 'Issues Identified'}
+                          </span>
+                        )}
+
+                        {lead.tool_name === "Visa Suggestion Quiz" && (
+                          <div className="text-xs text-purple-700 font-medium">
+                            {r.suggestions?.length || 0} Visas Recommended
+                          </div>
+                        )}
+                      </td>
+                      <td className="py-3.5 px-4 text-xs text-gray-500 whitespace-nowrap">
+                        {format(new Date(lead.created_at), "MMM d, yyyy")}
+                      </td>
+                      <td className="py-3.5 px-4 text-right">
+                        <button
+                          onClick={() => setSelectedLead(lead)}
+                          className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-bold transition-colors"
+                        >
+                          View Details
+                        </button>
+                      </td>
+                    </tr>
+                  )
+                })
               )}
             </tbody>
           </table>
         </div>
       </div>
+
+      {/* DETAIL SLIDE-OUT / MODAL DRAWER */}
       {selectedLead && (() => {
-        const lead = selectedLead;
-        const results = (lead.results as unknown as ToolLeadResults) || {};
+        const lead = selectedLead
+        const results = (lead.results as unknown as ToolLeadResults) || {}
         return (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fadeIn">
-            <div className="relative w-full max-w-2xl bg-white border rounded-3xl p-6 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="relative w-full max-w-2xl bg-white border rounded-3xl p-6 sm:p-8 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
               
               {/* Header */}
               <div className="flex justify-between items-start border-b pb-4 mb-4">
@@ -269,9 +402,14 @@ export default function ToolLeadsPage() {
                   <span className="text-[10px] font-black uppercase tracking-widest text-[#E40229]">
                     Interactive Tool Submission Details
                   </span>
-                  <h3 className="text-xl font-extrabold text-gray-800 mt-1">
+                  <h3 className="text-xl font-extrabold text-gray-900 mt-1">
                     {lead.user_name}
                   </h3>
+                  {results.business_name && (
+                    <div className="text-xs font-bold text-blue-700 flex items-center gap-1.5 mt-0.5">
+                      <Building2 className="w-3.5 h-3.5" /> {results.business_name}
+                    </div>
+                  )}
                 </div>
                 <button
                   onClick={() => setSelectedLead(null)}
@@ -286,15 +424,18 @@ export default function ToolLeadsPage() {
                 
                 {/* Contact Card */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="p-4 rounded-2xl bg-gray-50 border border-gray-100 space-y-2.5">
+                  <div className="p-4 rounded-2xl bg-gray-50 border border-gray-100 space-y-2">
                     <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wide">Contact Information</h4>
                     <div className="text-xs space-y-1">
                       <p><span className="font-semibold text-gray-500">Email: </span><a href={`mailto:${lead.user_email}`} className="text-blue-600 hover:underline">{lead.user_email}</a></p>
                       <p><span className="font-semibold text-gray-500">Phone: </span>{lead.user_phone || "—"}</p>
+                      {results.business_name && (
+                        <p><span className="font-semibold text-gray-500">Business: </span>{results.business_name}</p>
+                      )}
                     </div>
                   </div>
 
-                  <div className="p-4 rounded-2xl bg-gray-50 border border-gray-100 space-y-2.5">
+                  <div className="p-4 rounded-2xl bg-gray-50 border border-gray-100 space-y-2">
                     <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wide">Submission Meta</h4>
                     <div className="text-xs space-y-1">
                       <p><span className="font-semibold text-gray-500">Tool Used: </span><span className="font-bold text-brand-primary">{lead.tool_name}</span></p>
@@ -306,10 +447,77 @@ export default function ToolLeadsPage() {
                 {/* Assessment details */}
                 <div className="p-5 rounded-2xl border border-gray-100 bg-gray-50 space-y-4">
                   <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wide flex items-center gap-1.5 border-b pb-2">
-                    <Info className="w-4 h-4 text-brand-primary" /> Assessment & Calculation Results
+                    <Info className="w-4 h-4 text-brand-primary" /> Assessment &amp; Calculation Results
                   </h4>
 
-                  {/* PR Points Calculator Results */}
+                  {/* 1. CAN MY BUSINESS SPONSOR? RESULTS */}
+                  {lead.tool_name?.includes("Business Sponsor") && (
+                    <div className="space-y-4">
+                      <div className="p-4 rounded-xl text-center bg-blue-50 border border-blue-100">
+                        <p className="text-xs font-bold text-gray-500 uppercase">Assessment Verdict Tier</p>
+                        <h3 className="text-lg font-black text-brand-primary mt-1">
+                          {results.calculated_tier || results.headline}
+                        </h3>
+                        <p className="text-xs text-gray-600 mt-1">{results.summary}</p>
+                      </div>
+
+                      {/* Diagnostic Inputs Grid */}
+                      <div className="grid grid-cols-2 gap-3 bg-white border border-gray-100 rounded-xl p-3.5 text-xs text-gray-700">
+                        <p><span className="font-bold text-gray-400">Sponsor Status:</span> {results.sponsor_status}</p>
+                        <p><span className="font-bold text-gray-400">Trading Status:</span> {results.lawfully_trading}</p>
+                        <p><span className="font-bold text-gray-400">Offered Salary:</span> {results.offered_salary}</p>
+                        <p><span className="font-bold text-gray-400">Meets CSIT:</span> {results.salary_meets_csit}</p>
+                        <p><span className="font-bold text-gray-400">Industry:</span> {results.industry}</p>
+                        <p><span className="font-bold text-gray-400">Location:</span> {results.location}</p>
+                        <p><span className="font-bold text-gray-400">LMT (Ads):</span> {results.labour_market_testing}</p>
+                        <p><span className="font-bold text-gray-400">Compliance History:</span> {results.compliance_issues}</p>
+                      </div>
+
+                      {/* Action Items List */}
+                      {results.identified_action_items && results.identified_action_items.length > 0 && (
+                        <div className="space-y-2">
+                          <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">Identified Flags &amp; Action Items:</p>
+                          <div className="space-y-2">
+                            {results.identified_action_items.map((item, idx) => (
+                              <div key={idx} className="p-3 bg-white border border-gray-100 rounded-xl text-xs space-y-1">
+                                <div className="font-bold text-gray-900 flex items-center gap-1.5">
+                                  <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
+                                  {item.title}
+                                </div>
+                                <p className="text-gray-600">{item.detail}</p>
+                                <p className="text-brand-accent font-semibold pt-1">Fix: {item.action}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* 2. SPONSORSHIP COST ESTIMATOR RESULTS */}
+                  {(lead.tool_name?.includes("Cost Estimator") || lead.tool_name?.includes("Sponsorship Cost")) && (
+                    <div className="space-y-4">
+                      <div className="p-4 rounded-xl text-center bg-emerald-50 border border-emerald-100">
+                        <p className="text-xs font-bold text-gray-500 uppercase">Estimated Government Statutory Charges</p>
+                        <h3 className="text-3xl font-black text-emerald-800 mt-1">
+                          {results.grand_total_government_charges}
+                        </h3>
+                        <p className="text-xs text-gray-600 mt-1">{results.visa_subclass} • {results.number_of_workers} Worker(s)</p>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3 bg-white border border-gray-100 rounded-xl p-3.5 text-xs text-gray-700">
+                        <p><span className="font-bold text-gray-400">Business Turnover:</span> {results.business_turnover}</p>
+                        <p><span className="font-bold text-gray-400">Years of Stay:</span> {results.years_of_stay}</p>
+                        <p><span className="font-bold text-gray-400">Nomination Total:</span> {results.nomination_fees_total}</p>
+                        <p><span className="font-bold text-gray-400">SAF Levy Total:</span> {results.saf_levy_total}</p>
+                        <p><span className="font-bold text-gray-400">Primary VAC Total:</span> {results.primary_vac_total}</p>
+                        <p><span className="font-bold text-gray-400">Family VAC Total:</span> {results.family_vac_total}</p>
+                        <p className="col-span-2"><span className="font-bold text-gray-400">Family Dependants:</span> {results.accompanying_family}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 3. PR Points Calculator Results */}
                   {(lead.tool_name === "PR Calculator" || lead.tool_name === "PR Points Calculator") && (
                     <div className="space-y-4">
                       <div className="bg-brand-soft border border-brand-primary/10 p-4 rounded-xl text-center">
@@ -342,7 +550,7 @@ export default function ToolLeadsPage() {
                     </div>
                   )}
 
-                  {/* Eligibility Checker Results */}
+                  {/* 4. Eligibility Checker Results */}
                   {lead.tool_name === "Eligibility Checker" && (
                     <div className="space-y-4">
                       <div className={`p-4 rounded-xl text-center border font-bold text-sm ${
@@ -375,7 +583,7 @@ export default function ToolLeadsPage() {
                     </div>
                   )}
 
-                  {/* Visa Suggestion Quiz Results */}
+                  {/* 5. Visa Suggestion Quiz Results */}
                   {lead.tool_name === "Visa Suggestion Quiz" && (
                     <div className="space-y-3">
                       <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">Matching Visas Suggestions:</p>
@@ -395,8 +603,8 @@ export default function ToolLeadsPage() {
                     </div>
                   )}
 
-                  {/* Subclass 482 checker results */}
-                  {(lead.tool_name === "Subclass 482 Eligibility Checker" || lead.tool_name === "Subclass 482 Skills in Demand Visa Eligibility Checker" || results.quiz_responses) && (
+                  {/* 6. Subclass 482 checker results */}
+                  {(lead.tool_name === "Subclass 482 Eligibility Checker" || lead.tool_name === "Subclass 482 Skills in Demand Visa Eligibility Checker" || (results.quiz_responses && !lead.tool_name?.includes("Business Sponsor"))) && (
                     <div className="space-y-4">
                       <div className="bg-brand-soft border border-brand-primary/10 p-4 rounded-xl text-center bg-blue-50/50">
                         <p className="text-xs font-bold text-gray-500 uppercase">Calculated Assessment Category</p>
@@ -405,7 +613,6 @@ export default function ToolLeadsPage() {
                         </h3>
                       </div>
 
-                      {/* Metadata attributes */}
                       <div className="grid grid-cols-2 gap-3 bg-white border border-gray-100 rounded-xl p-3.5 text-xs text-gray-700">
                         <p><span className="font-bold text-gray-400">Occupation:</span> {String(results.occupation || 'N/A')}</p>
                         <p><span className="font-bold text-gray-400">Employer Sponsor:</span> {String(results.employer_name || 'N/A')}</p>
@@ -413,34 +620,14 @@ export default function ToolLeadsPage() {
                         <p><span className="font-bold text-gray-400">Current Location:</span> {String(results.current_country || 'N/A')}</p>
                       </div>
 
-                      {/* Flags */}
-                      <div className="space-y-2">
-                        <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">Identified Assessment Flags:</p>
-                        <div className="space-y-1.5">
-                          {(results.identified_flags as string[])?.length > 0 ? (
-                            (results.identified_flags as string[]).map((flag, idx) => (
+                      {results.identified_flags && results.identified_flags.length > 0 && (
+                        <div className="space-y-2">
+                          <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">Identified Assessment Flags:</p>
+                          <div className="space-y-1.5">
+                            {results.identified_flags.map((flag, idx) => (
                               <div key={idx} className="flex gap-2 text-xs bg-white border border-gray-100 rounded-lg p-2.5 text-gray-700">
                                 <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
                                 <span>{flag}</span>
-                              </div>
-                            ))
-                          ) : (
-                            <div className="text-xs text-green-700 font-semibold bg-green-50/50 p-2.5 rounded-lg border border-green-100">
-                              No compliance, visa refusal, or sponsorship flags identified.
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Raw responses summary */}
-                      {results.quiz_responses && (
-                        <div className="space-y-2">
-                          <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">Detailed Quiz Inputs:</p>
-                          <div className="bg-white border border-gray-100 rounded-xl p-3 text-xs space-y-1.5 text-gray-600 font-mono">
-                            {Object.entries(results.quiz_responses as Record<string, unknown>).map(([key, val]) => (
-                              <div key={key} className="flex justify-between border-b border-gray-50 pb-1 last:border-0 last:pb-0">
-                                <span className="capitalize">{key.replace(/_/g, ' ')}:</span>
-                                <span className="font-bold text-brand-primary">{String(val)}</span>
                               </div>
                             ))}
                           </div>
@@ -448,6 +635,7 @@ export default function ToolLeadsPage() {
                       )}
                     </div>
                   )}
+
                 </div>
               </div>
 
@@ -463,7 +651,7 @@ export default function ToolLeadsPage() {
               </div>
             </div>
           </div>
-        );
+        )
       })()}
     </div>
   )

@@ -112,13 +112,14 @@ export default function VisaQuizPage() {
   };
 
   return (
-    <div className="min-h-screen bg-brand-soft/30 py-12 px-4 sm:px-6 lg:px-8" suppressHydrationWarning>
-      <div className="max-w-7xl mx-auto">
-        <ToolHeader
-          title="Visa Suggestion Quiz"
-          description="Find the right visa subclass based on your personal circumstances and migration goals."
-        />
+    <div className="min-h-screen bg-slate-50/50 pb-20" suppressHydrationWarning>
+      <ToolHeader
+        badge="Interactive Quiz"
+        title="Visa Suggestion Quiz"
+        description="Find the right visa subclass based on your personal circumstances and migration goals."
+      />
 
+      <div className="max-w-4xl mx-auto px-4 sm:px-6">
         <MultiStepTool
           tool={visaQuizData}
           onComplete={calculateResults}

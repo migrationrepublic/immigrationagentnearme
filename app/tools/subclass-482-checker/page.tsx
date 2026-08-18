@@ -252,15 +252,16 @@ export default function Subclass482CheckerPage() {
   const { resultType, flags } = processAssessment();
 
   return (
-    <div className="min-h-screen bg-brand-soft/30 pt-12 pb-32 px-4 sm:px-6 lg:px-8" suppressHydrationWarning>
-      <div className="max-w-4xl mx-auto">
-        <ToolHeader
-          title="Subclass 482 Visa Eligibility Checker"
-          description="Assess your preliminary eligibility criteria for the Subclass 482 Skills in Demand Visa."
-        />
+    <div className="min-h-screen bg-slate-50/50 pb-20" suppressHydrationWarning>
+      <ToolHeader
+        badge="Work Visa"
+        title="Subclass 482 Visa Eligibility Checker"
+        description="Assess your preliminary eligibility criteria for the Subclass 482 Skills in Demand Visa."
+      />
 
+      <div className="max-w-4xl mx-auto px-4 sm:px-6">
         {step <= totalSteps && (
-          <div className="mb-8">
+          <div className="mb-6">
             <div className="flex justify-between items-end mb-2">
               <span className="text-xs font-semibold uppercase tracking-wider text-brand-primary">
                 Step {step} of {totalSteps}
@@ -269,7 +270,7 @@ export default function Subclass482CheckerPage() {
                 {Math.round(progress)}% Complete
               </span>
             </div>
-            <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+            <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
               <div
                 className="h-full bg-brand-accent transition-all duration-500 ease-out"
                 style={{ width: `${progress}%` }}
@@ -278,8 +279,8 @@ export default function Subclass482CheckerPage() {
           </div>
         )}
 
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden min-h-[450px] flex flex-col">
-          <div className="p-5 sm:p-8 md:p-12 flex-1">
+        <div className="bg-white rounded-2xl shadow-xs border border-gray-200 overflow-hidden min-h-[420px] flex flex-col">
+          <div className="p-5 sm:p-8 flex-1">
 
             {/* STEP 1: Employer Sponsorship */}
             {step === 1 && (

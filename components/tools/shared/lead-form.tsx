@@ -40,19 +40,19 @@ export function LeadForm({ toolName, results, onSuccess }: LeadFormProps) {
   };
 
   return (
-    <div className="bg-brand-soft border border-gray-100 rounded-xl p-6 md:p-8 mt-6">
-      <h3 className="text-xl font-bold text-brand-primary mb-2">Get Your Detailed Report</h3>
-      <p className="text-gray-600 mb-6">Enter your details to save your results and get a free migration roadmap.</p>
+    <div className="bg-slate-50 border border-gray-200 rounded-2xl p-5 sm:p-6 mt-6">
+      <h3 className="text-lg font-bold text-brand-primary mb-1">Get Your Detailed Report</h3>
+      <p className="text-gray-500 text-xs sm:text-sm mb-4">Enter your details to save your results and get a free migration roadmap.</p>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid md:grid-cols-2 gap-4">
+      <form onSubmit={handleSubmit} className="space-y-3.5">
+        <div className="grid md:grid-cols-2 gap-3">
           <div className="space-y-1">
             <label className="text-xs font-bold text-gray-600">Full Name *</label>
             <input
               name="name"
               placeholder="Full Name *"
               required
-              className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-brand-primary outline-none text-sm bg-white"
             />
           </div>
           <div className="space-y-1">
@@ -62,7 +62,7 @@ export function LeadForm({ toolName, results, onSuccess }: LeadFormProps) {
               type="email"
               placeholder="Email Address *"
               required
-              className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-brand-primary outline-none text-sm bg-white"
             />
           </div>
         </div>
@@ -73,18 +73,18 @@ export function LeadForm({ toolName, results, onSuccess }: LeadFormProps) {
             type="tel"
             placeholder="Contact Number *"
             required
-            className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none"
+            className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-brand-primary outline-none text-sm bg-white"
           />
         </div>
         
-        {error && <p className="text-red-500 text-sm">{error}</p>}
+        {error && <p className="text-red-500 text-xs">{error}</p>}
 
         <Button 
           type="submit" 
           disabled={loading}
-          className="w-full bg-brand-accent hover:bg-brand-accent/90 text-white py-6 text-lg font-semibold shadow-lg shadow-brand-accent/20"
+          className="w-full bg-[#e40229] hover:bg-[#e40229]/95 text-white py-4 text-sm sm:text-base font-bold shadow-md rounded-xl active:scale-[0.99] transition-all"
         >
-          {loading ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : "Save My Results"}
+          {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : "Save My Results & Unlock Analysis"}
         </Button>
       </form>
     </div>

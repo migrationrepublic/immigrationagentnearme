@@ -61,31 +61,51 @@ export default function Navbar() {
               Tools <ChevronDown className="w-4 h-4" />
             </button>
             <div className="absolute top-full left-1/2 -translate-x-1/2 pt-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-              <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-4 w-64 grid gap-1">
+              <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-4 w-72 grid gap-1">
+                <Link
+                  href="/tools/business-sponsor-checker"
+                  className="flex items-center gap-3 px-4 py-2.5 hover:bg-brand-primary/5 rounded-xl text-brand-heading font-medium transition-colors text-sm"
+                >
+                  Can My Business Sponsor?
+                </Link>
+                <Link
+                  href="/tools/sponsorship-cost-estimator"
+                  className="flex items-center gap-3 px-4 py-2.5 hover:bg-brand-primary/5 rounded-xl text-brand-heading font-medium transition-colors text-sm"
+                >
+                  Sponsorship Cost Estimator
+                </Link>
+                <Link
+                  href="/tools/subclass-482-checker"
+                  className="flex items-center gap-3 px-4 py-2.5 hover:bg-brand-primary/5 rounded-xl text-brand-heading font-medium transition-colors text-sm"
+                >
+                  Subclass 482 Checker
+                </Link>
                 <Link
                   href="/tools/pr-calculator"
-                  className="flex items-center gap-3 px-4 py-3 hover:bg-brand-primary/5 rounded-xl text-brand-heading font-medium transition-colors"
+                  className="flex items-center gap-3 px-4 py-2.5 hover:bg-brand-primary/5 rounded-xl text-brand-heading font-medium transition-colors text-sm"
                 >
                   PR Points Calculator
                 </Link>
                 <Link
                   href="/tools/eligibility-checker"
-                  className="flex items-center gap-3 px-4 py-3 hover:bg-brand-primary/5 rounded-xl text-brand-heading font-medium transition-colors"
+                  className="flex items-center gap-3 px-4 py-2.5 hover:bg-brand-primary/5 rounded-xl text-brand-heading font-medium transition-colors text-sm"
                 >
                   Eligibility Checker
                 </Link>
                 <Link
                   href="/tools/visa-quiz"
-                  className="flex items-center gap-3 px-4 py-3 hover:bg-brand-primary/5 rounded-xl text-brand-heading font-medium transition-colors"
+                  className="flex items-center gap-3 px-4 py-2.5 hover:bg-brand-primary/5 rounded-xl text-brand-heading font-medium transition-colors text-sm"
                 >
-                  Visa Selection Quiz
+                  Visa Suggestion Quiz
                 </Link>
-                <Link
-                  href="/tools/subclass-482-checker"
-                  className="flex items-center gap-3 px-4 py-3 hover:bg-brand-primary/5 rounded-xl text-brand-heading font-medium transition-colors"
-                >
-                  Subclass 482 Checker
-                </Link>
+                <div className="pt-2 border-t border-gray-100 mt-1">
+                  <Link
+                    href="/tools"
+                    className="flex items-center justify-between px-4 py-2 text-brand-accent font-bold hover:underline text-xs"
+                  >
+                    View All Calculators →
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
@@ -184,6 +204,27 @@ export default function Navbar() {
               {isToolsOpen && (
                 <div className="pl-4 flex flex-col gap-2 pt-1 pb-2">
                   <Link
+                    href="/tools/business-sponsor-checker"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="text-sm font-semibold text-gray-600 hover:text-brand-accent py-1.5"
+                  >
+                    Can My Business Sponsor?
+                  </Link>
+                  <Link
+                    href="/tools/sponsorship-cost-estimator"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="text-sm font-semibold text-gray-600 hover:text-brand-accent py-1.5"
+                  >
+                    Sponsorship Cost Estimator
+                  </Link>
+                  <Link
+                    href="/tools/subclass-482-checker"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="text-sm font-semibold text-gray-600 hover:text-brand-accent py-1.5"
+                  >
+                    Subclass 482 Checker
+                  </Link>
+                  <Link
                     href="/tools/pr-calculator"
                     onClick={() => setIsMobileMenuOpen(false)}
                     className="text-sm font-semibold text-gray-600 hover:text-brand-accent py-1.5"
@@ -202,14 +243,7 @@ export default function Navbar() {
                     onClick={() => setIsMobileMenuOpen(false)}
                     className="text-sm font-semibold text-gray-600 hover:text-brand-accent py-1.5"
                   >
-                    Visa Selection Quiz
-                  </Link>
-                  <Link
-                    href="/tools/subclass-482-checker"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="text-sm font-semibold text-gray-600 hover:text-brand-accent py-1.5"
-                  >
-                    Subclass 482 Checker
+                    Visa Suggestion Quiz
                   </Link>
                 </div>
               )}

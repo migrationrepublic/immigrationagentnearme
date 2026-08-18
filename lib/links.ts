@@ -46,6 +46,9 @@ export const TOOLS_LINKS = {
   prCalculator: "/tools/pr-calculator",
   eligibilityChecker: "/tools/eligibility-checker",
   visaQuiz: "/tools/visa-quiz",
+  subclass482Checker: "/tools/subclass-482-checker",
+  businessSponsorChecker: "/tools/business-sponsor-checker",
+  sponsorshipCostEstimator: "/tools/sponsorship-cost-estimator",
 };
 
 export const VISA_SUBCLASSES = [

@@ -1,15 +1,10 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import {
-  Calendar,
-  FileText,
-  Signature,
   Wrench,
   Globe,
-  DollarSign,
-  Activity,
   Loader2,
   ArrowRight,
   RefreshCw,
@@ -53,6 +48,8 @@ interface DashboardStats {
   toolLeads482Count: number
   toolLeadsEligibilityCount: number
   toolLeadsQuizCount: number
+  toolLeadsSponsorCount: number
+  toolLeadsCostCount: number
   revenue: number
 }
 
@@ -79,6 +76,8 @@ export default function AdminDashboardPage() {
     toolLeads482Count: 0,
     toolLeadsEligibilityCount: 0,
     toolLeadsQuizCount: 0,
+    toolLeadsSponsorCount: 0,
+    toolLeadsCostCount: 0,
     revenue: 0,
   })
   const [recentWebsiteLeads, setRecentWebsiteLeads] = useState<DetailedWebsiteLead[]>([])
@@ -88,7 +87,7 @@ export default function AdminDashboardPage() {
   const [activeTab, setActiveTab] = useState<'website' | 'tool' | 'audit'>('website')
   const [refreshing, setRefreshing] = useState(false)
 
-  async function loadStats() {
+  const loadStats = useCallback(async () => {
     try {
       const todayStr = format(new Date(), 'yyyy-MM-dd')
 
@@ -124,9 +123,11 @@ export default function AdminDashboardPage() {
       const tLeads = (toolLeadsData as DetailedToolLead[]) || []
       const tTotal = tLeads.length
       const tPR = tLeads.filter(l => l.tool_name === 'PR Calculator' || l.tool_name === 'PR Points Calculator').length
-      const t482 = tLeads.filter(l => l.tool_name?.includes('482')).length
+      const t482 = tLeads.filter(l => l.tool_name?.includes('482') && !l.tool_name?.includes('Business Sponsor')).length
       const tEligibility = tLeads.filter(l => l.tool_name === 'Eligibility Checker').length
-      const tQuiz = tLeads.filter(l => l.tool_name === 'Visa Suggestion Quiz' || (!l.tool_name?.includes('482') && l.tool_name !== 'PR Calculator' && l.tool_name !== 'PR Points Calculator' && l.tool_name !== 'Eligibility Checker')).length
+      const tSponsor = tLeads.filter(l => l.tool_name?.includes('Business Sponsor')).length
+      const tCost = tLeads.filter(l => l.tool_name?.includes('Cost Estimator') || l.tool_name?.includes('Sponsorship Cost')).length
+      const tQuiz = tLeads.filter(l => l.tool_name === 'Visa Suggestion Quiz' || (!l.tool_name?.includes('482') && l.tool_name !== 'PR Calculator' && l.tool_name !== 'PR Points Calculator' && l.tool_name !== 'Eligibility Checker' && !l.tool_name?.includes('Business Sponsor') && !l.tool_name?.includes('Cost'))).length
 
       setStats({
         todayBookings: todayBookings || 0,
@@ -142,6 +143,8 @@ export default function AdminDashboardPage() {
         toolLeads482Count: t482,
         toolLeadsEligibilityCount: tEligibility,
         toolLeadsQuizCount: tQuiz,
+        toolLeadsSponsorCount: tSponsor,
+        toolLeadsCostCount: tCost,
         revenue: totalRev / 100,
       })
 
@@ -154,11 +157,11 @@ export default function AdminDashboardPage() {
       setLoading(false)
       setRefreshing(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
     loadStats()
-  }, [])
+  }, [loadStats])
 
   const handleRefresh = () => {
     setRefreshing(true)
@@ -195,7 +198,7 @@ export default function AdminDashboardPage() {
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
         {/* Bookings */}
         <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
-          <p className="text-xs font-medium text-slate-500">Today's Bookings</p>
+          <p className="text-xs font-medium text-slate-500">Today&apos;s Bookings</p>
           <p className="text-2xl font-bold text-slate-900 mt-2">{stats.todayBookings}</p>
         </div>
 
@@ -303,15 +306,25 @@ export default function AdminDashboardPage() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
             <div className="p-3 bg-slate-50 border border-slate-100 rounded-lg">
-              <span className="text-xs text-slate-500 font-medium block">PR Calc</span>
-              <span className="text-xl font-bold text-slate-900 mt-1 block">{stats.toolLeadsPRCount}</span>
+              <span className="text-xs text-slate-500 font-medium block">Sponsor Quick</span>
+              <span className="text-xl font-bold text-slate-900 mt-1 block">{stats.toolLeadsSponsorCount}</span>
+            </div>
+
+            <div className="p-3 bg-slate-50 border border-slate-100 rounded-lg">
+              <span className="text-xs text-slate-500 font-medium block">Cost Estimator</span>
+              <span className="text-xl font-bold text-slate-900 mt-1 block">{stats.toolLeadsCostCount}</span>
             </div>
 
             <div className="p-3 bg-slate-50 border border-slate-100 rounded-lg">
               <span className="text-xs text-slate-500 font-medium block">482 Checker</span>
               <span className="text-xl font-bold text-slate-900 mt-1 block">{stats.toolLeads482Count}</span>
+            </div>
+
+            <div className="p-3 bg-slate-50 border border-slate-100 rounded-lg">
+              <span className="text-xs text-slate-500 font-medium block">PR Calc</span>
+              <span className="text-xl font-bold text-slate-900 mt-1 block">{stats.toolLeadsPRCount}</span>
             </div>
 
             <div className="p-3 bg-slate-50 border border-slate-100 rounded-lg">
@@ -334,25 +347,22 @@ export default function AdminDashboardPage() {
           <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg">
             <button
               onClick={() => setActiveTab('website')}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${
-                activeTab === 'website' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
-              }`}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${activeTab === 'website' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                }`}
             >
               Website Leads ({recentWebsiteLeads.length})
             </button>
             <button
               onClick={() => setActiveTab('tool')}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${
-                activeTab === 'tool' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
-              }`}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${activeTab === 'tool' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                }`}
             >
               Tool Submissions ({recentToolLeads.length})
             </button>
             <button
               onClick={() => setActiveTab('audit')}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${
-                activeTab === 'audit' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
-              }`}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${activeTab === 'audit' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                }`}
             >
               Audit Logs ({activity.length})
             </button>

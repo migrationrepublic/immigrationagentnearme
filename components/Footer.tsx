@@ -131,10 +131,12 @@ export default function Footer() {
               <h4>Migration Tools</h4>
               <ul className="space-y-2 mt-4">
                 {[
+                  { name: "Can My Business Sponsor?", href: "/tools/business-sponsor-checker" },
+                  { name: "Sponsorship Cost Estimator", href: "/tools/sponsorship-cost-estimator" },
+                  { name: "Subclass 482 Checker", href: "/tools/subclass-482-checker" },
                   { name: "PR Points Calculator", href: "/tools/pr-calculator" },
                   { name: "Eligibility Checker", href: "/tools/eligibility-checker" },
                   { name: "Visa Selection Quiz", href: "/tools/visa-quiz" },
-                  { name: "Subclass 482 Checker", href: "/tools/subclass-482-checker" },
                 ].map((tool) => (
                   <li key={tool.name} className="group/link overflow-hidden">
                     <Link

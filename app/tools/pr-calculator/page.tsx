@@ -130,13 +130,14 @@ export default function PRCalculatorPage() {
   };
 
   return (
-    <div className="min-h-screen bg-brand-soft/30 py-12 px-4 sm:px-6 lg:px-8" suppressHydrationWarning>
-      <div className="max-w-7xl mx-auto">
-        <ToolHeader 
-          title="PR Points Calculator" 
-          description="Check your eligibility for Australian Permanent Residency (General Skilled Migration) in minutes."
-        />
+    <div className="min-h-screen bg-slate-50/50 pb-20" suppressHydrationWarning>
+      <ToolHeader 
+        badge="Skilled Migration"
+        title="PR Points Calculator" 
+        description="Check your eligibility for Australian Permanent Residency (General Skilled Migration) in minutes."
+      />
 
+      <div className="max-w-4xl mx-auto px-4 sm:px-6">
         <MultiStepTool 
           tool={prCalculatorData} 
           onComplete={calculateResults} 

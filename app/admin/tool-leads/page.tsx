@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react"
 import { format } from "date-fns"
-import { Loader2, Search, Users, ExternalLink, Wrench, X, Info, AlertTriangle, CheckCircle2, List, Building2, Receipt, Sparkles } from "lucide-react"
+import { Loader2, Search, X, Info, AlertTriangle, Building2 } from "lucide-react"
 import { getToolLeadsAction } from "@/app/actions/admin"
 
 interface ToolLead {
@@ -68,19 +68,26 @@ export default function ToolLeadsPage() {
   const [selectedLead, setSelectedLead] = useState<ToolLead | null>(null)
 
   useEffect(() => {
+    let isMounted = true
     async function fetchLeads() {
       try {
-        setError(null)
         const data = await getToolLeadsAction()
-        setLeads((data as ToolLead[]) || [])
+        if (isMounted) {
+          setLeads((data as ToolLead[]) || [])
+        }
       } catch (err) {
         console.error("Error fetching tool leads:", err)
-        setError(err instanceof Error ? err.message : String(err))
+        if (isMounted) {
+          setError(err instanceof Error ? err.message : String(err))
+        }
       } finally {
-        setLoading(false)
+        if (isMounted) {
+          setLoading(false)
+        }
       }
     }
     fetchLeads()
+    return () => { isMounted = false }
   }, [])
 
   const [toolFilter, setToolFilter] = useState("all")
@@ -131,8 +138,7 @@ export default function ToolLeadsPage() {
       {/* Title + search & tool filter */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="admin-heading flex items-center gap-2 text-2xl font-bold text-gray-900">
-            <Wrench className="w-7 h-7 text-purple-700" />
+          <h1 className="admin-heading text-2xl font-bold text-gray-900">
             Tool Submissions &amp; Lead KPIs
           </h1>
           <p className="admin-subheading text-gray-500 text-sm">Corporate sponsorship diagnostics, cost estimates, PR points, and visa quizzes</p>
@@ -176,9 +182,8 @@ export default function ToolLeadsPage() {
             toolFilter === "all" ? "border-slate-900 ring-1 ring-slate-900 bg-slate-50" : "border-slate-200 hover:border-slate-300"
           }`}
         >
-          <div className="flex justify-between items-center text-slate-500 mb-1">
+          <div className="text-slate-500 mb-1">
             <span className="text-xs font-semibold">All Leads</span>
-            <Users className="w-4 h-4 text-slate-600" />
           </div>
           <div className="text-2xl font-bold text-slate-900">{totalCount}</div>
         </div>
@@ -190,9 +195,8 @@ export default function ToolLeadsPage() {
             toolFilter === "sponsor" ? "border-blue-700 ring-1 ring-blue-700 bg-blue-50/50" : "border-slate-200 hover:border-slate-300"
           }`}
         >
-          <div className="flex justify-between items-center text-blue-700 mb-1">
+          <div className="text-blue-700 mb-1">
             <span className="text-xs font-semibold">Sponsor Quick</span>
-            <Building2 className="w-4 h-4" />
           </div>
           <div className="text-2xl font-bold text-slate-900">{sponsorCount}</div>
         </div>
@@ -204,9 +208,8 @@ export default function ToolLeadsPage() {
             toolFilter === "cost" ? "border-emerald-700 ring-1 ring-emerald-700 bg-emerald-50/50" : "border-slate-200 hover:border-slate-300"
           }`}
         >
-          <div className="flex justify-between items-center text-emerald-700 mb-1">
+          <div className="text-emerald-700 mb-1">
             <span className="text-xs font-semibold">Cost Estimator</span>
-            <Receipt className="w-4 h-4" />
           </div>
           <div className="text-2xl font-bold text-slate-900">{costCount}</div>
         </div>
@@ -218,9 +221,8 @@ export default function ToolLeadsPage() {
             toolFilter === "482" ? "border-amber-700 ring-1 ring-amber-700 bg-amber-50/50" : "border-slate-200 hover:border-slate-300"
           }`}
         >
-          <div className="flex justify-between items-center text-amber-700 mb-1">
+          <div className="text-amber-700 mb-1">
             <span className="text-xs font-semibold">482 Visa</span>
-            <Wrench className="w-4 h-4" />
           </div>
           <div className="text-2xl font-bold text-slate-900">{count482}</div>
         </div>
@@ -232,9 +234,8 @@ export default function ToolLeadsPage() {
             toolFilter === "pr" ? "border-indigo-700 ring-1 ring-indigo-700 bg-indigo-50/50" : "border-slate-200 hover:border-slate-300"
           }`}
         >
-          <div className="flex justify-between items-center text-indigo-700 mb-1">
+          <div className="text-indigo-700 mb-1">
             <span className="text-xs font-semibold">PR Calc</span>
-            <Users className="w-4 h-4" />
           </div>
           <div className="text-2xl font-bold text-slate-900">{prCount}</div>
         </div>
@@ -246,9 +247,8 @@ export default function ToolLeadsPage() {
             toolFilter === "eligibility" ? "border-green-700 ring-1 ring-green-700 bg-green-50/50" : "border-slate-200 hover:border-slate-300"
           }`}
         >
-          <div className="flex justify-between items-center text-green-700 mb-1">
+          <div className="text-green-700 mb-1">
             <span className="text-xs font-semibold">Eligibility</span>
-            <CheckCircle2 className="w-4 h-4" />
           </div>
           <div className="text-2xl font-bold text-slate-900">{eligibilityCount}</div>
         </div>
@@ -260,9 +260,8 @@ export default function ToolLeadsPage() {
             toolFilter === "quiz" ? "border-purple-700 ring-1 ring-purple-700 bg-purple-50/50" : "border-slate-200 hover:border-slate-300"
           }`}
         >
-          <div className="flex justify-between items-center text-purple-700 mb-1">
+          <div className="text-purple-700 mb-1">
             <span className="text-xs font-semibold">Visa Quiz</span>
-            <List className="w-4 h-4" />
           </div>
           <div className="text-2xl font-bold text-slate-900">{quizCount}</div>
         </div>
@@ -282,7 +281,13 @@ export default function ToolLeadsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {filtered.length === 0 ? (
+              {error ? (
+                <tr>
+                  <td colSpan={5} className="text-center py-8 text-red-600 text-sm">
+                    Error loading submissions: {error}
+                  </td>
+                </tr>
+              ) : filtered.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="text-center py-12 text-gray-500 text-sm">
                     No submissions found matching criteria.
@@ -296,8 +301,8 @@ export default function ToolLeadsPage() {
                       <td className="py-3.5 px-4">
                         <div className="font-bold text-gray-900">{lead.user_name}</div>
                         {r.business_name && (
-                          <div className="text-xs font-semibold text-blue-700 flex items-center gap-1 mt-0.5">
-                            <Building2 className="w-3 h-3" /> {r.business_name}
+                          <div className="text-xs font-semibold text-blue-700 mt-0.5">
+                            {r.business_name}
                           </div>
                         )}
                         <div className="text-xs text-gray-500">{lead.user_email}</div>
@@ -315,10 +320,10 @@ export default function ToolLeadsPage() {
                         {lead.tool_name?.includes("Business Sponsor") && (
                           <div className="space-y-0.5">
                             <span className={`inline-block px-2 py-0.5 rounded text-[11px] font-bold ${
-                              r.calculated_tier?.includes('Strong') ? 'bg-green-100 text-green-800' :
-                              r.calculated_tier?.includes('Possible') ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-800'
+                              (r.calculated_tier || r.headline || '').toLowerCase().includes('strong') ? 'bg-green-100 text-green-800' :
+                              (r.calculated_tier || r.headline || '').toLowerCase().includes('possible') ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-800'
                             }`}>
-                              {r.calculated_tier || 'Assessment Completed'}
+                              {r.calculated_tier || r.headline || 'Assessment Completed'}
                             </span>
                             <div className="text-xs text-gray-500">
                               Salary: {r.offered_salary || 'N/A'} • {r.sponsor_status || 'SBS'}
@@ -468,7 +473,7 @@ export default function ToolLeadsPage() {
                         <p><span className="font-bold text-gray-400">Offered Salary:</span> {results.offered_salary}</p>
                         <p><span className="font-bold text-gray-400">Meets CSIT:</span> {results.salary_meets_csit}</p>
                         <p><span className="font-bold text-gray-400">Industry:</span> {results.industry}</p>
-                        <p><span className="font-bold text-gray-400">Location:</span> {results.location}</p>
+                        <p><span className="font-bold text-gray-400">Region / Location:</span> {results.region || results.location}</p>
                         <p><span className="font-bold text-gray-400">LMT (Ads):</span> {results.labour_market_testing}</p>
                         <p><span className="font-bold text-gray-400">Compliance History:</span> {results.compliance_issues}</p>
                       </div>

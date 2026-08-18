@@ -9,8 +9,8 @@ import { submitToolLead } from '@/app/actions/tools';
 import {
   evaluateBusinessSponsorEligibility,
   INDUSTRIES,
-  LOCATIONS,
-  CORE_SKILLS_INCOME_THRESHOLD,
+  REGIONS,
+  CSIT,
   EligibilityEvaluationInput,
   EligibilityResult
 } from '@/lib/tools/sponsorship-calculator-data';
@@ -28,38 +28,37 @@ import {
   RotateCcw,
   ChevronRight,
   ChevronLeft,
-  Info,
   Check
 } from 'lucide-react';
 
 export default function BusinessSponsorCheckerPage() {
   const [step, setStep] = useState(1);
   const [responses, setResponses] = useState<{
-    sponsorStatus: 'first_time' | 'approved';
-    lawfullyTrading: 'yes' | 'no' | 'setting_up';
-    financialCapacity: 'yes' | 'not_sure' | 'no';
+    sponsorStatus: 'first' | 'existing';
+    trading: 'yes' | 'establishing' | 'no';
+    financial: 'yes' | 'notsure' | 'no';
     industry: string;
     salary: number | string;
-    lmtStatus: 'already_done' | 'not_yet_willing' | 'not_sure';
-    location: string;
-    complianceIssues: 'no' | 'not_sure' | 'yes';
+    lmt: 'done' | 'willing' | 'unsure';
+    region: string;
+    compliance: 'no' | 'notsure' | 'yes';
   }>({
-    sponsorStatus: 'first_time',
-    lawfullyTrading: 'yes',
-    financialCapacity: 'yes',
-    industry: 'trades_construction',
+    sponsorStatus: 'first',
+    trading: 'yes',
+    financial: 'yes',
+    industry: 'Trades & Construction',
     salary: 85000,
-    lmtStatus: 'already_done',
-    location: 'NSW_METRO',
-    complianceIssues: 'no',
+    lmt: 'done',
+    region: 'metro',
+    compliance: 'no',
   });
 
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // If first-time sponsor: 8 question steps. If approved sponsor: 7 question steps.
-  const isFirstTime = responses.sponsorStatus === 'first_time';
+  // If first-time sponsor: 8 question steps. If already approved sponsor: 7 question steps (compliance skipped).
+  const isFirstTime = responses.sponsorStatus === 'first';
   const totalQuestions = isFirstTime ? 8 : 7;
   const progress = Math.min(100, (step / totalQuestions) * 100);
 
@@ -70,12 +69,12 @@ export default function BusinessSponsorCheckerPage() {
   const handleNext = () => {
     // Validation per step
     if (step === 1 && !responses.sponsorStatus) return;
-    if (step === 2 && !responses.lawfullyTrading) return;
-    if (step === 3 && !responses.financialCapacity) return;
+    if (step === 2 && !responses.trading) return;
+    if (step === 3 && !responses.financial) return;
     if (step === 4 && !responses.industry) return;
     if (step === 5 && (!responses.salary || Number(responses.salary) <= 0)) return;
-    if (step === 6 && !responses.lmtStatus) return;
-    if (step === 7 && !responses.location) return;
+    if (step === 6 && !responses.lmt) return;
+    if (step === 7 && !responses.region) return;
 
     if (step < totalQuestions) {
       setStep(step + 1);
@@ -93,14 +92,14 @@ export default function BusinessSponsorCheckerPage() {
   const resetTool = () => {
     setStep(1);
     setResponses({
-      sponsorStatus: 'first_time',
-      lawfullyTrading: 'yes',
-      financialCapacity: 'yes',
-      industry: 'trades_construction',
+      sponsorStatus: 'first',
+      trading: 'yes',
+      financial: 'yes',
+      industry: 'Trades & Construction',
       salary: 85000,
-      lmtStatus: 'already_done',
-      location: 'NSW_METRO',
-      complianceIssues: 'no',
+      lmt: 'done',
+      region: 'metro',
+      compliance: 'no',
     });
     setSubmitted(false);
     setErrorMsg(null);
@@ -110,13 +109,13 @@ export default function BusinessSponsorCheckerPage() {
   const processAssessment = (): EligibilityResult => {
     const input: EligibilityEvaluationInput = {
       sponsorStatus: responses.sponsorStatus,
-      lawfullyTrading: responses.lawfullyTrading,
-      financialCapacity: responses.financialCapacity,
+      trading: responses.trading,
+      financial: responses.financial,
       industry: responses.industry,
       salary: Number(responses.salary) || 0,
-      lmtStatus: responses.lmtStatus,
-      location: responses.location,
-      complianceIssues: responses.sponsorStatus === 'first_time' ? responses.complianceIssues : 'no',
+      lmt: responses.lmt,
+      region: responses.region,
+      compliance: responses.sponsorStatus === 'first' ? responses.compliance : 'no',
     };
     return evaluateBusinessSponsorEligibility(input);
   };
@@ -136,24 +135,24 @@ export default function BusinessSponsorCheckerPage() {
       user_phone: formData.get('phone') as string,
       results: {
         business_name: (formData.get('business_name') as string) || 'N/A',
-        sponsor_status: responses.sponsorStatus === 'first_time' ? 'First-Time Sponsor' : 'Approved Sponsor',
-        lawfully_trading: responses.lawfullyTrading === 'yes' ? 'Yes, Actively Trading' : responses.lawfullyTrading === 'setting_up' ? 'Setting Up AU Operation' : 'No',
-        financial_capacity: responses.financialCapacity === 'yes' ? 'Yes' : responses.financialCapacity === 'not_sure' ? 'Not Sure' : 'No',
-        industry: INDUSTRIES.find(i => i.value === responses.industry)?.label || responses.industry,
+        sponsor_status: responses.sponsorStatus === 'first' ? 'First-time sponsor' : 'Already an approved sponsor',
+        lawfully_trading: responses.trading === 'yes' ? 'Yes' : responses.trading === 'establishing' ? "We're setting up an Australian operation" : 'No',
+        financial_capacity: responses.financial === 'yes' ? 'Yes' : responses.financial === 'notsure' ? 'Not sure' : 'No',
+        industry: responses.industry,
         offered_salary: `$${Number(responses.salary).toLocaleString()} AUD`,
-        salary_meets_csit: Number(responses.salary) >= CORE_SKILLS_INCOME_THRESHOLD ? 'Yes' : 'No (Below $79,499)',
-        labour_market_testing: responses.lmtStatus === 'already_done' ? 'Yes, Already Done' : responses.lmtStatus === 'not_yet_willing' ? 'Not Yet, Willing' : 'Not Sure',
-        location: LOCATIONS.find(l => l.value === responses.location)?.label || responses.location,
-        compliance_issues: responses.sponsorStatus === 'first_time' ? (responses.complianceIssues === 'no' ? 'None' : responses.complianceIssues === 'yes' ? 'Yes, Past Issues Reported' : 'Not Sure') : 'N/A (Approved Sponsor)',
-        calculated_tier: result.badgeTitle,
-        headline: result.headline,
-        summary: result.summary,
-        flags_count: result.flags.length,
-        identified_action_items: result.flags.map(f => ({
-          type: f.type,
-          title: f.title,
-          detail: f.detail,
-          action: f.actionItem || 'Review with migration agent'
+        salary_meets_csit: Number(responses.salary) >= CSIT ? 'Yes' : 'No (Below $79,499)',
+        labour_market_testing: responses.lmt === 'done' ? 'Yes, already done' : responses.lmt === 'willing' ? 'Not yet, but willing' : 'Not sure what this means',
+        region: REGIONS.find(r => r.value === responses.region)?.label || responses.region,
+        compliance_issues: responses.sponsorStatus === 'first' ? (responses.compliance === 'no' ? 'No' : responses.compliance === 'yes' ? 'Yes' : 'Not sure') : 'N/A (Approved Sponsor)',
+        calculated_tier: result.title,
+        headline: result.title,
+        summary: result.sub,
+        flags_count: result.items.length,
+        identified_action_items: result.items.map(item => ({
+          type: item.type,
+          title: item.title,
+          detail: item.body,
+          action: item.title
         }))
       }
     };
@@ -174,18 +173,18 @@ export default function BusinessSponsorCheckerPage() {
   return (
     <div className="min-h-screen bg-slate-50/50 pb-20" suppressHydrationWarning>
       <ToolHeader
-        badge="Employer Sponsoring"
+        badge="Employer Sponsorship"
         title="Can My Business Sponsor? Eligibility Quick-Check"
-        description="A fast, self-serve diagnostic for Australian employers looking to sponsor overseas skilled workers under Subclass 482, 186, or 494 visas."
+        description="A few questions, indicative result in under a minute. Not a formal assessment."
       />
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6">
         {/* Progress Bar (For question steps 1 to 8) */}
         {step <= totalQuestions && (
           <div className="mb-6">
             <div className="flex justify-between items-end mb-2">
               <span className="text-xs font-semibold uppercase tracking-wider text-brand-primary">
-                Step {step} of {totalQuestions}
+                Question {step} of {totalQuestions}
               </span>
               <span className="text-xs font-medium text-gray-500">
                 {Math.round(progress)}% Complete
@@ -201,41 +200,38 @@ export default function BusinessSponsorCheckerPage() {
         )}
 
         {/* Card Container */}
-        <div className="bg-white rounded-2xl shadow-xs border border-gray-200 overflow-hidden min-h-[420px] flex flex-col">
+        <div className="bg-white rounded-2xl shadow-xs border border-gray-200 overflow-hidden min-h-[380px] flex flex-col">
           <div className="p-5 sm:p-8 flex-1">
 
-            {/* STEP 1: Sponsorship Status */}
+            {/* STEP 1: Sponsor Status */}
             {step === 1 && (
               <div className="animate-fadeIn">
                 <div className="flex items-center gap-2 mb-2 text-brand-accent font-bold text-xs uppercase tracking-wider">
-                  <Building2 className="w-4 h-4" /> Sponsorship Profile
+                  <Building2 className="w-4 h-4" /> Sponsor Status
                 </div>
                 <h2 className="text-xl sm:text-2xl font-bold text-brand-primary mb-2">
                   What is your business sponsorship status?
                 </h2>
                 <p className="text-xs sm:text-sm text-gray-500 mb-6">
-                  Select whether your business is applying for Standard Business Sponsorship (SBS) for the first time or is already an approved sponsor.
+                  Select whether you are applying for the first time or already hold approved sponsor status.
                 </p>
 
                 <div className="grid gap-3">
                   {[
-                    { value: 'first_time', label: 'First-time sponsor', desc: 'Applying for Standard Business Sponsorship (SBS) accreditation for the first time' },
-                    { value: 'approved', label: 'Already an approved sponsor', desc: 'Currently holds active Standard Business Sponsorship accreditation' }
+                    { value: 'first', label: 'First-time sponsor' },
+                    { value: 'existing', label: 'Already an approved sponsor' }
                   ].map((opt) => (
                     <button
                       key={opt.value}
                       type="button"
                       onClick={() => handleSelectOption('sponsorStatus', opt.value)}
-                      className={`flex items-center justify-between p-4 sm:p-5 rounded-xl border-2 text-left transition-all ${
+                      className={`flex items-center justify-between p-4 rounded-xl border-2 text-left transition-all ${
                         responses.sponsorStatus === opt.value
-                          ? 'border-brand-primary bg-brand-soft/80 text-brand-primary shadow-xs'
-                          : 'border-gray-100 hover:border-brand-primary/20 hover:bg-gray-50 text-gray-700'
+                          ? 'border-brand-primary bg-brand-soft/80 text-brand-primary font-bold shadow-xs'
+                          : 'border-gray-100 hover:border-brand-primary/20 hover:bg-gray-50 text-gray-700 font-medium'
                       }`}
                     >
-                      <div>
-                        <div className="font-bold text-sm sm:text-base">{opt.label}</div>
-                        <div className="text-xs text-gray-500 mt-1">{opt.desc}</div>
-                      </div>
+                      <span className="text-sm sm:text-base">{opt.label}</span>
                       {responses.sponsorStatus === opt.value && (
                         <Check className="w-5 h-5 text-brand-accent shrink-0 ml-3" />
                       )}
@@ -245,40 +241,37 @@ export default function BusinessSponsorCheckerPage() {
               </div>
             )}
 
-            {/* STEP 2: Lawfully Operating & Trading */}
+            {/* STEP 2: Trading Status */}
             {step === 2 && (
               <div className="animate-fadeIn">
                 <div className="flex items-center gap-2 mb-2 text-brand-accent font-bold text-xs uppercase tracking-wider">
-                  <Building2 className="w-4 h-4" /> Australian Trading Status
+                  <Building2 className="w-4 h-4" /> Operating Status
                 </div>
                 <h2 className="text-xl sm:text-2xl font-bold text-brand-primary mb-2">
                   Is the business lawfully operating and actively trading in Australia?
                 </h2>
                 <p className="text-xs sm:text-sm text-gray-500 mb-6">
-                  An active Australian business entity (ABN/ACN) trading lawfully is a statutory prerequisite for Standard Business Sponsorship.
+                  Standard Business Sponsorship generally requires a lawfully operating, actively trading Australian business.
                 </p>
 
                 <div className="grid gap-3">
                   {[
-                    { value: 'yes', label: 'Yes, actively trading in Australia', desc: 'Registered Australian business entity (ABN/ACN) with active commercial operations' },
-                    { value: 'setting_up', label: 'We’re setting up an Australian operation', desc: 'Overseas business establishing an Australian branch, subsidiary, or new entity' },
-                    { value: 'no', label: 'No, not operating in Australia', desc: 'Not currently registered or actively trading in Australia' }
+                    { value: 'yes', label: 'Yes' },
+                    { value: 'establishing', label: "We're setting up an Australian operation" },
+                    { value: 'no', label: 'No' }
                   ].map((opt) => (
                     <button
                       key={opt.value}
                       type="button"
-                      onClick={() => handleSelectOption('lawfullyTrading', opt.value)}
-                      className={`flex items-center justify-between p-4 sm:p-5 rounded-xl border-2 text-left transition-all ${
-                        responses.lawfullyTrading === opt.value
-                          ? 'border-brand-primary bg-brand-soft/80 text-brand-primary shadow-xs'
-                          : 'border-gray-100 hover:border-brand-primary/20 hover:bg-gray-50 text-gray-700'
+                      onClick={() => handleSelectOption('trading', opt.value)}
+                      className={`flex items-center justify-between p-4 rounded-xl border-2 text-left transition-all ${
+                        responses.trading === opt.value
+                          ? 'border-brand-primary bg-brand-soft/80 text-brand-primary font-bold shadow-xs'
+                          : 'border-gray-100 hover:border-brand-primary/20 hover:bg-gray-50 text-gray-700 font-medium'
                       }`}
                     >
-                      <div>
-                        <div className="font-bold text-sm sm:text-base">{opt.label}</div>
-                        <div className="text-xs text-gray-500 mt-1">{opt.desc}</div>
-                      </div>
-                      {responses.lawfullyTrading === opt.value && (
+                      <span className="text-sm sm:text-base">{opt.label}</span>
+                      {responses.trading === opt.value && (
                         <Check className="w-5 h-5 text-brand-accent shrink-0 ml-3" />
                       )}
                     </button>
@@ -291,36 +284,33 @@ export default function BusinessSponsorCheckerPage() {
             {step === 3 && (
               <div className="animate-fadeIn">
                 <div className="flex items-center gap-2 mb-2 text-brand-accent font-bold text-xs uppercase tracking-wider">
-                  <DollarSign className="w-4 h-4" /> Financial Viability
+                  <DollarSign className="w-4 h-4" /> Financial Capacity
                 </div>
                 <h2 className="text-xl sm:text-2xl font-bold text-brand-primary mb-2">
                   Can the business demonstrate financial capacity to meet sponsorship costs?
                 </h2>
                 <p className="text-xs sm:text-sm text-gray-500 mb-6">
-                  Evidence can include recent BAS, balance sheets, profit &amp; loss statements, or accountant declarations.
+                  Evidence can include financial statements, BAS, and payroll records.
                 </p>
 
                 <div className="grid gap-3">
                   {[
-                    { value: 'yes', label: 'Yes, fully solvent & profitable', desc: 'Strong balance sheet, healthy cash flow, or sufficient revenue reserves' },
-                    { value: 'not_sure', label: 'Not sure / Need document review', desc: 'We have financials but need guidance on satisfying Department benchmarks' },
-                    { value: 'no', label: 'No, currently in financial hardship', desc: 'Operating with significant loss or insolvency challenges' }
+                    { value: 'yes', label: 'Yes' },
+                    { value: 'notsure', label: 'Not sure' },
+                    { value: 'no', label: 'No' }
                   ].map((opt) => (
                     <button
                       key={opt.value}
                       type="button"
-                      onClick={() => handleSelectOption('financialCapacity', opt.value)}
-                      className={`flex items-center justify-between p-4 sm:p-5 rounded-xl border-2 text-left transition-all ${
-                        responses.financialCapacity === opt.value
-                          ? 'border-brand-primary bg-brand-soft/80 text-brand-primary shadow-xs'
-                          : 'border-gray-100 hover:border-brand-primary/20 hover:bg-gray-50 text-gray-700'
+                      onClick={() => handleSelectOption('financial', opt.value)}
+                      className={`flex items-center justify-between p-4 rounded-xl border-2 text-left transition-all ${
+                        responses.financial === opt.value
+                          ? 'border-brand-primary bg-brand-soft/80 text-brand-primary font-bold shadow-xs'
+                          : 'border-gray-100 hover:border-brand-primary/20 hover:bg-gray-50 text-gray-700 font-medium'
                       }`}
                     >
-                      <div>
-                        <div className="font-bold text-sm sm:text-base">{opt.label}</div>
-                        <div className="text-xs text-gray-500 mt-1">{opt.desc}</div>
-                      </div>
-                      {responses.financialCapacity === opt.value && (
+                      <span className="text-sm sm:text-base">{opt.label}</span>
+                      {responses.financial === opt.value && (
                         <Check className="w-5 h-5 text-brand-accent shrink-0 ml-3" />
                       )}
                     </button>
@@ -329,33 +319,33 @@ export default function BusinessSponsorCheckerPage() {
               </div>
             )}
 
-            {/* STEP 4: Business Industry */}
+            {/* STEP 4: Industry */}
             {step === 4 && (
               <div className="animate-fadeIn">
                 <div className="flex items-center gap-2 mb-2 text-brand-accent font-bold text-xs uppercase tracking-wider">
-                  <Briefcase className="w-4 h-4" /> Industry Sector
+                  <Briefcase className="w-4 h-4" /> Industry
                 </div>
                 <h2 className="text-xl sm:text-2xl font-bold text-brand-primary mb-2">
                   Which industry does your business operate in?
                 </h2>
                 <p className="text-xs sm:text-sm text-gray-500 mb-6">
-                  Certain sectors (e.g. Health, Aged Care, Construction, Tech) benefit from priority visa processing and labour agreement streams.
+                  Select your primary industry sector.
                 </p>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   {INDUSTRIES.map((ind) => (
                     <button
-                      key={ind.value}
+                      key={ind}
                       type="button"
-                      onClick={() => handleSelectOption('industry', ind.value)}
+                      onClick={() => handleSelectOption('industry', ind)}
                       className={`p-3.5 rounded-xl border-2 text-left transition-all flex items-center justify-between ${
-                        responses.industry === ind.value
+                        responses.industry === ind
                           ? 'border-brand-primary bg-brand-soft/80 text-brand-primary font-bold shadow-xs'
                           : 'border-gray-100 hover:border-brand-primary/20 hover:bg-gray-50 text-gray-700 font-medium'
                       }`}
                     >
-                      <span className="text-sm">{ind.label}</span>
-                      {responses.industry === ind.value && (
+                      <span className="text-sm">{ind}</span>
+                      {responses.industry === ind && (
                         <Check className="w-4 h-4 text-brand-accent shrink-0" />
                       )}
                     </button>
@@ -364,17 +354,17 @@ export default function BusinessSponsorCheckerPage() {
               </div>
             )}
 
-            {/* STEP 5: Annual Salary Offered */}
+            {/* STEP 5: Annual Salary */}
             {step === 5 && (
               <div className="animate-fadeIn">
                 <div className="flex items-center gap-2 mb-2 text-brand-accent font-bold text-xs uppercase tracking-wider">
-                  <DollarSign className="w-4 h-4" /> Salary &amp; TSMIT
+                  <DollarSign className="w-4 h-4" /> Offered Salary
                 </div>
                 <h2 className="text-xl sm:text-2xl font-bold text-brand-primary mb-2">
-                  What annual base salary (AUD) is offered for the nominated role?
+                  Annual salary offered for the role (AUD)
                 </h2>
                 <p className="text-xs sm:text-sm text-gray-500 mb-6">
-                  The Core Skills Income Threshold (CSIT / TSMIT) is currently <strong>${CORE_SKILLS_INCOME_THRESHOLD.toLocaleString()} AUD</strong>.
+                  The Core Skills Income Threshold is <strong>${CSIT.toLocaleString()} AUD</strong>.
                 </p>
 
                 <div className="space-y-4">
@@ -382,19 +372,18 @@ export default function BusinessSponsorCheckerPage() {
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold text-base">$</span>
                     <input
                       type="number"
-                      min="30000"
-                      max="500000"
+                      min="0"
                       step="1000"
                       value={responses.salary}
                       onChange={(e) => handleSelectOption('salary', e.target.value)}
-                      placeholder="79499"
+                      placeholder="e.g. 75000"
                       className="w-full pl-8 pr-4 py-3.5 rounded-xl border-2 border-gray-200 focus:border-brand-primary focus:ring-0 outline-none text-gray-900 font-bold text-lg"
                     />
                   </div>
 
-                  {/* Quick Preset Buttons */}
+                  {/* Preset Shortcuts */}
                   <div className="flex flex-wrap gap-2">
-                    {[79499, 85000, 95000, 110000, 130000].map((sal) => (
+                    {[75000, 79499, 85000, 95000, 120000].map((sal) => (
                       <button
                         key={sal}
                         type="button"
@@ -405,20 +394,20 @@ export default function BusinessSponsorCheckerPage() {
                             : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
                         }`}
                       >
-                        ${sal.toLocaleString()} AUD {sal === 79499 ? '(Min Threshold)' : ''}
+                        ${sal.toLocaleString()} AUD {sal === 79499 ? '(CSIT Threshold)' : ''}
                       </button>
                     ))}
                   </div>
 
-                  {Number(responses.salary) >= CORE_SKILLS_INCOME_THRESHOLD ? (
+                  {Number(responses.salary) >= CSIT ? (
                     <div className="p-3 bg-green-50 rounded-xl border border-green-200 text-green-900 text-xs flex items-center gap-2">
                       <Check className="w-4 h-4 text-green-600 shrink-0" />
-                      <span>Offered salary meets the statutory Core Skills Income Threshold ($79,499+).</span>
+                      <span>Salary meets or exceeds the Core Skills Income Threshold ($79,499+).</span>
                     </div>
                   ) : (
                     <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-amber-900 text-xs flex items-start gap-2">
                       <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                      <span>Offered salary is below $79,499. Role may require salary adjustment or DAMA / labour agreement concessions.</span>
+                      <span>Offered salary is below $79,499. May require adjustment or labour agreement/DAMA concessions.</span>
                     </div>
                   )}
                 </div>
@@ -429,36 +418,33 @@ export default function BusinessSponsorCheckerPage() {
             {step === 6 && (
               <div className="animate-fadeIn">
                 <div className="flex items-center gap-2 mb-2 text-brand-accent font-bold text-xs uppercase tracking-wider">
-                  <Briefcase className="w-4 h-4" /> Labour Market Testing (LMT)
+                  <Briefcase className="w-4 h-4" /> Labour Market Testing
                 </div>
                 <h2 className="text-xl sm:text-2xl font-bold text-brand-primary mb-2">
-                  Has the nominated role been advertised locally in Australia?
+                  Has the role been advertised locally (labour market testing)?
                 </h2>
                 <p className="text-xs sm:text-sm text-gray-500 mb-6">
-                  Most employer nominations require advertising the role locally across 2+ approved platforms (e.g. SEEK, Workforce Australia) for at least 4 weeks.
+                  You’ll generally need to advertise the role locally before nominating.
                 </p>
 
                 <div className="grid gap-3">
                   {[
-                    { value: 'already_done', label: 'Yes, already done', desc: 'Compliant job advertisements run within the past 4 months' },
-                    { value: 'not_yet_willing', label: 'Not yet, but willing to advertise', desc: 'Ready to place compliant job adverts before nominating' },
-                    { value: 'not_sure', label: 'Not sure what this means', desc: 'Need guidance on required platforms, wording, and timing' }
+                    { value: 'done', label: 'Yes, already done' },
+                    { value: 'willing', label: 'Not yet, but willing' },
+                    { value: 'unsure', label: 'Not sure what this means' }
                   ].map((opt) => (
                     <button
                       key={opt.value}
                       type="button"
-                      onClick={() => handleSelectOption('lmtStatus', opt.value)}
-                      className={`flex items-center justify-between p-4 sm:p-5 rounded-xl border-2 text-left transition-all ${
-                        responses.lmtStatus === opt.value
-                          ? 'border-brand-primary bg-brand-soft/80 text-brand-primary shadow-xs'
-                          : 'border-gray-100 hover:border-brand-primary/20 hover:bg-gray-50 text-gray-700'
+                      onClick={() => handleSelectOption('lmt', opt.value)}
+                      className={`flex items-center justify-between p-4 rounded-xl border-2 text-left transition-all ${
+                        responses.lmt === opt.value
+                          ? 'border-brand-primary bg-brand-soft/80 text-brand-primary font-bold shadow-xs'
+                          : 'border-gray-100 hover:border-brand-primary/20 hover:bg-gray-50 text-gray-700 font-medium'
                       }`}
                     >
-                      <div>
-                        <div className="font-bold text-sm sm:text-base">{opt.label}</div>
-                        <div className="text-xs text-gray-500 mt-1">{opt.desc}</div>
-                      </div>
-                      {responses.lmtStatus === opt.value && (
+                      <span className="text-sm sm:text-base">{opt.label}</span>
+                      {responses.lmt === opt.value && (
                         <Check className="w-5 h-5 text-brand-accent shrink-0 ml-3" />
                       )}
                     </button>
@@ -467,38 +453,38 @@ export default function BusinessSponsorCheckerPage() {
               </div>
             )}
 
-            {/* STEP 7: Business Location */}
+            {/* STEP 7: Business Region */}
             {step === 7 && (
               <div className="animate-fadeIn">
                 <div className="flex items-center gap-2 mb-2 text-brand-accent font-bold text-xs uppercase tracking-wider">
-                  <MapPin className="w-4 h-4" /> Operating Region
+                  <MapPin className="w-4 h-4" /> Business Region
                 </div>
                 <h2 className="text-xl sm:text-2xl font-bold text-brand-primary mb-2">
-                  Where is the business or primary work location situated?
+                  Business region
                 </h2>
                 <p className="text-xs sm:text-sm text-gray-500 mb-6">
-                  Identifies regional visa opportunities (Subclass 494) and DAMA (Designated Area Migration Agreement) concessions.
+                  Select your operating location in Australia.
                 </p>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-[300px] overflow-y-auto pr-1">
-                  {LOCATIONS.map((loc) => (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  {REGIONS.map((reg) => (
                     <button
-                      key={loc.value}
+                      key={reg.value}
                       type="button"
-                      onClick={() => handleSelectOption('location', loc.value)}
-                      className={`p-3 rounded-xl border-2 text-left transition-all flex items-center justify-between ${
-                        responses.location === loc.value
+                      onClick={() => handleSelectOption('region', reg.value)}
+                      className={`p-3.5 rounded-xl border-2 text-left transition-all flex items-center justify-between ${
+                        responses.region === reg.value
                           ? 'border-brand-primary bg-brand-soft/80 text-brand-primary font-bold shadow-xs'
                           : 'border-gray-100 hover:border-brand-primary/20 hover:bg-gray-50 text-gray-700 font-medium'
                       }`}
                     >
                       <div>
-                        <div className="text-xs font-semibold">{loc.label}</div>
-                        {loc.isDama && (
-                          <span className="text-[10px] text-blue-700 font-bold uppercase">★ DAMA Eligible</span>
+                        <span className="text-sm">{reg.label}</span>
+                        {reg.isRegional && (
+                          <span className="text-[10px] text-blue-700 font-bold uppercase block mt-0.5">★ Regional Concessions</span>
                         )}
                       </div>
-                      {responses.location === loc.value && (
+                      {responses.region === reg.value && (
                         <Check className="w-4 h-4 text-brand-accent shrink-0" />
                       )}
                     </button>
@@ -511,36 +497,33 @@ export default function BusinessSponsorCheckerPage() {
             {step === 8 && isFirstTime && (
               <div className="animate-fadeIn">
                 <div className="flex items-center gap-2 mb-2 text-amber-600 font-bold text-xs uppercase tracking-wider">
-                  <ShieldAlert className="w-4 h-4" /> Compliance Check
+                  <ShieldAlert className="w-4 h-4" /> Compliance History
                 </div>
                 <h2 className="text-xl sm:text-2xl font-bold text-brand-primary mb-2">
-                  Any prior workplace relations or immigration compliance issues?
+                  Any prior workplace or immigration law compliance issues?
                 </h2>
                 <p className="text-xs sm:text-sm text-gray-500 mb-6">
-                  (Shown for first-time sponsors) Have Fair Work Ombudsman sanctions, visa cancellations, or unresolved employment disputes occurred in the past?
+                  (Shown for first-time sponsors) Prior issues need a proper conversation before application work starts.
                 </p>
 
                 <div className="grid gap-3">
                   {[
-                    { value: 'no', label: 'No issues', desc: 'Clean regulatory record across Fair Work and Immigration' },
-                    { value: 'not_sure', label: 'Not sure / Minor past dispute', desc: 'Need review to confirm adverse information status' },
-                    { value: 'yes', label: 'Yes, past compliance issues', desc: 'Requires proactive strategy and mitigation with an agent' }
+                    { value: 'no', label: 'No' },
+                    { value: 'notsure', label: 'Not sure' },
+                    { value: 'yes', label: 'Yes' }
                   ].map((opt) => (
                     <button
                       key={opt.value}
                       type="button"
-                      onClick={() => handleSelectOption('complianceIssues', opt.value)}
-                      className={`flex items-center justify-between p-4 sm:p-5 rounded-xl border-2 text-left transition-all ${
-                        responses.complianceIssues === opt.value
-                          ? 'border-brand-primary bg-brand-soft/80 text-brand-primary shadow-xs'
-                          : 'border-gray-100 hover:border-brand-primary/20 hover:bg-gray-50 text-gray-700'
+                      onClick={() => handleSelectOption('compliance', opt.value)}
+                      className={`flex items-center justify-between p-4 rounded-xl border-2 text-left transition-all ${
+                        responses.compliance === opt.value
+                          ? 'border-brand-primary bg-brand-soft/80 text-brand-primary font-bold shadow-xs'
+                          : 'border-gray-100 hover:border-brand-primary/20 hover:bg-gray-50 text-gray-700 font-medium'
                       }`}
                     >
-                      <div>
-                        <div className="font-bold text-sm sm:text-base">{opt.label}</div>
-                        <div className="text-xs text-gray-500 mt-1">{opt.desc}</div>
-                      </div>
-                      {responses.complianceIssues === opt.value && (
+                      <span className="text-sm sm:text-base">{opt.label}</span>
+                      {responses.compliance === opt.value && (
                         <Check className="w-5 h-5 text-brand-accent shrink-0 ml-3" />
                       )}
                     </button>
@@ -549,37 +532,30 @@ export default function BusinessSponsorCheckerPage() {
               </div>
             )}
 
-            {/* STEP 9: Contact Details & Lead Capture Gating */}
+            {/* STEP 9: Lead Capture (See the full breakdown and next steps) */}
             {step === 9 && (
               <div className="animate-fadeIn space-y-4">
-                <div className="bg-blue-50 border border-blue-100 rounded-xl p-3.5 flex gap-2.5">
-                  <Info className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
-                  <p className="text-xs text-blue-800 font-semibold leading-relaxed">
-                    Please enter your business contact details below to instantly calculate and view your eligibility diagnostic report.
-                  </p>
+                <div className="border-b pb-3">
+                  <h3 className="text-lg sm:text-xl font-bold text-brand-primary">See the full breakdown and next steps</h3>
+                  <p className="text-gray-500 text-xs sm:text-sm mt-0.5">Enter your details below to reveal your preliminary results and tailored action plan.</p>
                 </div>
 
-                <div>
-                  <h3 className="text-lg sm:text-xl font-bold text-brand-primary">Get Your Detailed Business Sponsorship Report</h3>
-                  <p className="text-gray-500 text-xs sm:text-sm mt-0.5">We will generate your customized action plan and concession recommendations.</p>
-                </div>
-
-                <form onSubmit={handleLeadFormSubmit} className="space-y-3.5 pt-2">
+                <form onSubmit={handleLeadFormSubmit} className="space-y-3.5 pt-1">
                   <div className="grid sm:grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <label className="text-xs font-bold text-gray-600">Your Full Name *</label>
+                      <label className="text-xs font-bold text-gray-600">Business name *</label>
                       <input
-                        name="name"
-                        placeholder="e.g. Sarah Jenkins"
+                        name="business_name"
+                        placeholder="e.g. Apex Construction Pty Ltd"
                         required
                         className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-brand-primary outline-none text-sm bg-white"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-xs font-bold text-gray-600">Business / Company Name *</label>
+                      <label className="text-xs font-bold text-gray-600">Your name *</label>
                       <input
-                        name="business_name"
-                        placeholder="e.g. Apex Construction Pty Ltd"
+                        name="name"
+                        placeholder="e.g. Sarah Jenkins"
                         required
                         className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-brand-primary outline-none text-sm bg-white"
                       />
@@ -588,7 +564,7 @@ export default function BusinessSponsorCheckerPage() {
 
                   <div className="grid sm:grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <label className="text-xs font-bold text-gray-600">Work Email Address *</label>
+                      <label className="text-xs font-bold text-gray-600">Email *</label>
                       <input
                         name="email"
                         type="email"
@@ -598,7 +574,7 @@ export default function BusinessSponsorCheckerPage() {
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-xs font-bold text-gray-600">Contact Number *</label>
+                      <label className="text-xs font-bold text-gray-600">Phone *</label>
                       <input
                         name="phone"
                         type="tel"
@@ -627,9 +603,9 @@ export default function BusinessSponsorCheckerPage() {
                   <Button
                     type="submit"
                     disabled={loading}
-                    className="w-full bg-[#e40229] hover:bg-[#e40229]/95 text-white py-4 text-sm sm:text-base font-bold shadow-md rounded-xl active:scale-[0.99] transition-all"
+                    className="w-full bg-[#012269] hover:bg-[#012269]/90 text-white py-4 text-sm sm:text-base font-bold shadow-md rounded-xl active:scale-[0.99] transition-all"
                   >
-                    {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : "Save Details & View Assessment"}
+                    {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : "Show my full results"}
                   </Button>
                 </form>
               </div>
@@ -638,94 +614,82 @@ export default function BusinessSponsorCheckerPage() {
             {/* STEP 10: Results Screen */}
             {step === 10 && submitted && (
               <div className="space-y-6 animate-fadeIn">
-                <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-center">
-                  <h4 className="font-bold text-green-900 text-sm sm:text-base">Thank you! Your assessment has been saved.</h4>
-                  <p className="text-green-700 text-xs mt-0.5">Below is your customized business sponsorship eligibility diagnostic:</p>
-                </div>
-
-                {/* Verdict Badge Card */}
+                {/* Verdict Card */}
                 <div className={`p-6 rounded-2xl border-2 text-center space-y-2 ${
-                  result.tier === 'strong_candidate'
-                    ? 'bg-green-50 border-green-200 text-green-950'
-                    : result.tier === 'possible'
-                      ? 'bg-amber-50 border-amber-200 text-amber-950'
-                      : 'bg-red-50 border-red-200 text-red-950'
+                  result.cls === 'ok'
+                    ? 'bg-[#EDF6EF] border-[#BFE1C9] text-[#2E7D4F]'
+                    : result.cls === 'warn'
+                      ? 'bg-[#FBF1E5] border-[#EAD1AC] text-[#A9631E]'
+                      : 'bg-[#FBEBE9] border-[#EFC1BC] text-[#B0362C]'
                 }`}>
                   <div className="flex justify-center mb-1">
-                    {result.tier === 'strong_candidate' && <CheckCircle2 className="w-12 h-12 text-green-600" />}
-                    {result.tier === 'possible' && <AlertTriangle className="w-12 h-12 text-amber-600" />}
-                    {result.tier === 'hard_stop' && <XCircle className="w-12 h-12 text-red-600" />}
+                    {result.cls === 'ok' && <CheckCircle2 className="w-12 h-12 text-[#2E7D4F]" />}
+                    {result.cls === 'warn' && <AlertTriangle className="w-12 h-12 text-[#A9631E]" />}
+                    {result.cls === 'stop' && <XCircle className="w-12 h-12 text-[#B0362C]" />}
                   </div>
 
-                  <span className="text-[11px] uppercase font-extrabold tracking-widest opacity-80">Preliminary Verdict</span>
-                  <h3 className="text-xl sm:text-2xl font-black">{result.badgeTitle}</h3>
-                  <p className="text-xs sm:text-sm max-w-xl mx-auto opacity-90 leading-relaxed">{result.headline}</p>
+                  <h3 className="text-xl sm:text-2xl font-black">{result.title}</h3>
+                  <p className="text-xs sm:text-sm max-w-xl mx-auto opacity-90 leading-relaxed text-gray-800">{result.sub}</p>
                 </div>
 
-                {/* Findings & Action Items */}
+                {/* Findings List */}
                 <div className="space-y-3">
-                  <h4 className="font-bold text-brand-primary text-sm border-b pb-2">Diagnostic Findings &amp; Action Plan:</h4>
+                  <h4 className="font-bold text-brand-primary text-sm border-b pb-2">Full Assessment Breakdown:</h4>
 
-                  {result.flags.length === 0 ? (
+                  {result.items.length === 0 ? (
                     <div className="p-4 bg-green-50 rounded-xl border border-green-200 text-green-900 text-xs flex items-center gap-2">
                       <CheckCircle2 className="w-4 h-4 text-green-600 shrink-0" />
-                      <span>No regulatory blockers identified. Your business is ready to proceed with Standard Business Sponsorship.</span>
+                      <span>No specific issues flagged. Your business looks like a strong candidate for sponsorship.</span>
                     </div>
                   ) : (
                     <div className="space-y-2.5">
-                      {result.flags.map((flag, idx) => (
+                      {result.items.map((item, idx) => (
                         <div
                           key={idx}
-                          className={`p-4 rounded-xl border text-xs space-y-1 ${
-                            flag.type === 'hard_stop'
-                              ? 'bg-red-50/70 border-red-200 text-red-950'
-                              : flag.type === 'fixable'
-                                ? 'bg-amber-50/70 border-amber-200 text-amber-950'
-                                : 'bg-blue-50/70 border-blue-200 text-blue-950'
-                          }`}
+                          className="p-4 rounded-xl border border-gray-200 bg-white shadow-xs text-xs space-y-1"
                         >
-                          <div className="font-bold flex items-center gap-1.5">
-                            {flag.type === 'hard_stop' && <XCircle className="w-4 h-4 text-red-600 shrink-0" />}
-                            {flag.type === 'fixable' && <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />}
-                            {flag.type === 'bonus' && <Sparkles className="w-4 h-4 text-blue-600 shrink-0" />}
-                            <span>{flag.title}</span>
+                          <div className="font-bold text-sm text-[#012269] flex items-center gap-1.5">
+                            {item.type === 'hard_stop' && <XCircle className="w-4 h-4 text-red-600 shrink-0" />}
+                            {item.type === 'flag' && <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />}
+                            {item.type === 'bonus' && <Sparkles className="w-4 h-4 text-blue-600 shrink-0" />}
+                            <span>{item.title}</span>
                           </div>
-                          <p className="text-gray-700 leading-relaxed">{flag.detail}</p>
-                          {flag.actionItem && (
-                            <p className="font-bold text-brand-accent pt-1">
-                              Action: {flag.actionItem}
-                            </p>
-                          )}
+                          <p className="text-gray-700 leading-relaxed pt-0.5">{item.body}</p>
                         </div>
                       ))}
                     </div>
                   )}
                 </div>
 
-                {/* Actions & Next Steps */}
-                <div className="pt-4 border-t border-gray-100 flex flex-col sm:flex-row gap-3 justify-between items-center">
-                  <Button
-                    variant="outline"
-                    onClick={resetTool}
-                    className="flex items-center gap-2 w-full sm:w-auto justify-center rounded-xl text-xs font-semibold"
-                  >
-                    <RotateCcw className="w-4 h-4" /> Start Over
-                  </Button>
-                  <Link
-                    href="https://migrationrepublic.com.au/book-a-consultation/"
-                    className="bg-[#e40229] hover:bg-[#e40229]/95 text-white font-bold px-6 py-2.5 rounded-xl text-center text-sm w-full sm:w-auto shadow-md"
-                  >
-                    Book Corporate Consultation
-                  </Link>
+                {/* CTA Row & Consultation */}
+                <div className="p-4 rounded-2xl bg-gray-50 border border-gray-200 flex flex-col sm:flex-row gap-4 justify-between items-center">
+                  <p className="text-xs sm:text-sm text-gray-600 font-medium">Ready to talk it through?</p>
+                  <div className="flex items-center gap-3 w-full sm:w-auto">
+                    <Button
+                      variant="outline"
+                      onClick={resetTool}
+                      className="flex items-center gap-1.5 rounded-xl text-xs font-semibold"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" /> Start Over
+                    </Button>
+                    <Link
+                      href="https://migrationrepublic.com.au/book-a-consultation/"
+                      className="bg-[#012269] hover:bg-[#012269]/90 text-white font-bold px-6 py-2.5 rounded-xl text-center text-xs tracking-wide shadow-md flex-1 sm:flex-initial"
+                    >
+                      Book a consultation
+                    </Link>
+                  </div>
                 </div>
 
-                <ToolDisclaimer />
+                <ToolDisclaimer
+                  customText="This is an indicative guide only, not a formal migration assessment, and it doesn't guarantee any outcome — only the Department of Home Affairs approves a visa application. Book a consultation for a full assessment tailored to your business."
+                />
               </div>
             )}
 
           </div>
 
-          {/* Footer Navigation (For steps 1 to 8) */}
+          {/* Footer Navigation (For question steps 1 to 8) */}
           {step <= totalQuestions && (
             <div className="px-4 sm:px-8 py-3.5 sm:py-4 bg-gray-50 border-t border-gray-100 flex justify-between items-center">
               <Button

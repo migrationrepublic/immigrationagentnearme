@@ -119,6 +119,25 @@ export async function updateWebsiteLeadStatusAction(idInput: string, statusInput
   return { success: true, lead: data };
 }
 
+export async function bulkUpdateWebsiteLeadStatusAction(idsInput: string[], statusInput: string) {
+  const isAdmin = await verifyAdmin();
+  if (!isAdmin) {
+    throw new Error("Unauthorized: You are not an admin.");
+  }
+
+  const ids = z.array(z.string().uuid("Invalid lead ID")).min(1, "No leads selected").parse(idsInput);
+  const status = z.string().min(1).parse(statusInput);
+
+  const { data, error } = await supabaseServer
+    .from("website_leads")
+    .update({ status, updated_at: new Date().toISOString() })
+    .in("id", ids)
+    .select();
+
+  if (error) throw error;
+  return { success: true, count: data?.length || 0, leads: data };
+}
+
 export async function getAvailabilityForDateAction(dateInput: string) {
   // Validate input
   const date = DateSchema.parse(dateInput);

@@ -2,8 +2,8 @@
 
 import React, { useEffect, useState } from "react"
 import { format } from "date-fns"
-import { Loader2, Search, Users, ExternalLink, Globe, Calendar, Info, X } from "lucide-react"
-import { getWebsiteLeadsAction, updateWebsiteLeadStatusAction } from "@/app/actions/admin"
+import { Loader2, Search, ExternalLink, Info, X, CheckSquare, Square, Check, Archive, MailCheck, Clock, AlertCircle } from "lucide-react"
+import { getWebsiteLeadsAction, updateWebsiteLeadStatusAction, bulkUpdateWebsiteLeadStatusAction } from "@/app/actions/admin"
 
 interface WebsiteLead {
   id: string
@@ -29,6 +29,11 @@ export default function WebsiteLeadsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  // Bulk selection state
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [bulkUpdating, setBulkUpdating] = useState(false)
+  const [bulkSuccessMsg, setBulkSuccessMsg] = useState<string | null>(null)
+
   // Modal state
   const [selectedLead, setSelectedLead] = useState<WebsiteLead | null>(null)
   const [notesText, setNotesText] = useState("")
@@ -36,22 +41,29 @@ export default function WebsiteLeadsPage() {
   const [updating, setUpdating] = useState(false)
 
   useEffect(() => {
-    fetchLeads()
-  }, [])
-
-  async function fetchLeads() {
-    try {
-      setLoading(true)
-      setError(null)
-      const data = await getWebsiteLeadsAction()
-      setLeads((data as WebsiteLead[]) || [])
-    } catch (err) {
-      console.error("Error fetching website leads:", err)
-      setError(err instanceof Error ? err.message : String(err))
-    } finally {
-      setLoading(false)
+    let isMounted = true
+    async function loadData() {
+      try {
+        const data = await getWebsiteLeadsAction()
+        if (isMounted) {
+          setLeads((data as WebsiteLead[]) || [])
+        }
+      } catch (err) {
+        console.error("Error fetching website leads:", err)
+        if (isMounted) {
+          setError(err instanceof Error ? err.message : String(err))
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false)
+        }
+      }
     }
-  }
+    loadData()
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   // Open details modal
   const handleOpenDetails = (lead: WebsiteLead) => {
@@ -60,7 +72,7 @@ export default function WebsiteLeadsPage() {
     setLeadStatus(lead.status || "new")
   }
 
-  // Save changes
+  // Save changes for single lead
   const handleSaveChanges = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!selectedLead) return
@@ -69,10 +81,7 @@ export default function WebsiteLeadsPage() {
       setUpdating(true)
       const res = await updateWebsiteLeadStatusAction(selectedLead.id, leadStatus, notesText)
       if (res.success && res.lead) {
-        // Update local list
         setLeads(prev => prev.map(l => l.id === selectedLead.id ? (res.lead as unknown as WebsiteLead) : l))
-        setSelectedLead(res.lead as unknown as WebsiteLead)
-        // Close modal or show success
         setSelectedLead(null)
       }
     } catch (err) {
@@ -83,6 +92,7 @@ export default function WebsiteLeadsPage() {
     }
   }
 
+  // Filtered list
   const filtered = leads.filter(l => {
     const fullName = `${l.first_name || ""} ${l.last_name || ""}`.toLowerCase()
     const matchesSearch =
@@ -96,10 +106,61 @@ export default function WebsiteLeadsPage() {
     return matchesSearch && matchesStatus
   })
 
+  // Bulk Selection Handlers
+  const allFilteredSelected = filtered.length > 0 && filtered.every(l => selectedIds.has(l.id))
+
+  const handleToggleSelectAll = () => {
+    if (allFilteredSelected) {
+      setSelectedIds(new Set())
+    } else {
+      setSelectedIds(new Set(filtered.map(l => l.id)))
+    }
+  }
+
+  const handleSelectFirst20 = () => {
+    const first20 = filtered.slice(0, 20).map(l => l.id)
+    setSelectedIds(new Set(first20))
+  }
+
+  const handleToggleSelectOne = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) {
+        next.delete(id)
+      } else {
+        next.add(id)
+      }
+      return next
+    })
+  }
+
+  const handleBulkUpdateStatus = async (targetStatus: string) => {
+    const idsArray = Array.from(selectedIds)
+    if (idsArray.length === 0) return
+
+    try {
+      setBulkUpdating(true)
+      setBulkSuccessMsg(null)
+      const res = await bulkUpdateWebsiteLeadStatusAction(idsArray, targetStatus)
+      if (res.success && res.leads) {
+        const updatedMap = new Map((res.leads as WebsiteLead[]).map(l => [l.id, l]))
+        setLeads(prev => prev.map(l => updatedMap.get(l.id) || l))
+        setBulkSuccessMsg(`Successfully updated ${res.count} lead(s) to "${targetStatus}"!`)
+        setSelectedIds(new Set())
+        setTimeout(() => setBulkSuccessMsg(null), 4000)
+      }
+    } catch (err) {
+      console.error("Bulk update failed:", err)
+      alert(err instanceof Error ? err.message : "Bulk update failed.")
+    } finally {
+      setBulkUpdating(false)
+    }
+  }
+
   if (loading) {
     return (
-      <div className="admin-loader h-[60vh]">
-        <Loader2 className="admin-loader-icon animate-spin" />
+      <div className="admin-loader h-[60vh] flex items-center justify-center">
+        <Loader2 className="admin-loader-icon animate-spin w-8 h-8 text-slate-400" />
       </div>
     )
   }
@@ -113,15 +174,15 @@ export default function WebsiteLeadsPage() {
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
       case "new":
-        return "admin-badge-warn"
+        return "bg-amber-100 text-amber-800 border-amber-200"
       case "contacted":
-        return "admin-badge-success"
+        return "bg-green-100 text-green-800 border-green-200"
       case "in_progress":
-        return "admin-badge-info"
+        return "bg-blue-100 text-blue-800 border-blue-200"
       case "archived":
-        return "admin-badge-navy"
+        return "bg-slate-100 text-slate-700 border-slate-200"
       default:
-        return "admin-badge-navy"
+        return "bg-slate-100 text-slate-700 border-slate-200"
     }
   }
 
@@ -130,22 +191,21 @@ export default function WebsiteLeadsPage() {
       {/* Title + Filters */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="admin-heading flex items-center gap-2">
-            <Globe className="w-7 h-7" style={{ color: 'var(--color-admin-gold)' }} />
+          <h1 className="admin-heading text-2xl font-bold text-gray-900">
             Website Contact Leads
           </h1>
-          <p className="admin-subheading">Inquiries submitted via contact forms on migrationrepublic.com.au</p>
+          <p className="admin-subheading text-gray-500 text-sm">Inquiries submitted via contact forms on migrationrepublic.com.au</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
           {/* Search Input */}
           <div className="relative flex-1 sm:w-60">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--color-admin-muted)' }} />
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               type="text"
               placeholder="Search website leads..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="admin-input pl-9 w-full"
+              className="admin-input pl-9 w-full py-2 px-3 border border-gray-200 rounded-xl text-sm"
             />
           </div>
 
@@ -153,7 +213,7 @@ export default function WebsiteLeadsPage() {
           <select
             value={statusFilter}
             onChange={e => setStatusFilter(e.target.value)}
-            className="admin-select w-full sm:w-44"
+            className="admin-select w-full sm:w-44 py-2 px-3 border border-gray-200 rounded-xl text-sm font-medium"
           >
             <option value="all">All Statuses ({totalCount})</option>
             <option value="new">New ({newCount})</option>
@@ -164,16 +224,16 @@ export default function WebsiteLeadsPage() {
         </div>
       </div>
 
-      {/* Clean Corporate KPI Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+      {/* Corporate KPI Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         {/* Total Leads */}
         <div
           onClick={() => setStatusFilter("all")}
           className={`p-4 rounded-xl border bg-white shadow-xs cursor-pointer transition-all ${
-            statusFilter === "all" ? "border-slate-900 ring-1 ring-slate-900" : "border-slate-200 hover:border-slate-300"
+            statusFilter === "all" ? "border-slate-900 ring-1 ring-slate-900 bg-slate-50" : "border-slate-200 hover:border-slate-300"
           }`}
         >
-          <p className="text-xs font-medium text-slate-500">Total Leads</p>
+          <p className="text-xs font-semibold text-slate-500">Total Leads</p>
           <p className="text-2xl font-bold text-slate-900 mt-1">{totalCount}</p>
         </div>
 
@@ -181,11 +241,11 @@ export default function WebsiteLeadsPage() {
         <div
           onClick={() => setStatusFilter("new")}
           className={`p-4 rounded-xl border bg-white shadow-xs cursor-pointer transition-all ${
-            statusFilter === "new" ? "border-slate-900 ring-1 ring-slate-900" : "border-slate-200 hover:border-slate-300"
+            statusFilter === "new" ? "border-amber-700 ring-1 ring-amber-700 bg-amber-50/50" : "border-slate-200 hover:border-slate-300"
           }`}
         >
           <div className="flex items-center justify-between">
-            <p className="text-xs font-medium text-slate-500">New Action</p>
+            <p className="text-xs font-semibold text-amber-700">New Action</p>
             {newCount > 0 && (
               <span className="w-2 h-2 rounded-full bg-amber-500" />
             )}
@@ -197,10 +257,10 @@ export default function WebsiteLeadsPage() {
         <div
           onClick={() => setStatusFilter("contacted")}
           className={`p-4 rounded-xl border bg-white shadow-xs cursor-pointer transition-all ${
-            statusFilter === "contacted" ? "border-slate-900 ring-1 ring-slate-900" : "border-slate-200 hover:border-slate-300"
+            statusFilter === "contacted" ? "border-green-700 ring-1 ring-green-700 bg-green-50/50" : "border-slate-200 hover:border-slate-300"
           }`}
         >
-          <p className="text-xs font-medium text-slate-500">Contacted</p>
+          <p className="text-xs font-semibold text-green-700">Contacted</p>
           <p className="text-2xl font-bold text-slate-900 mt-1">{contactedCount}</p>
         </div>
 
@@ -208,10 +268,10 @@ export default function WebsiteLeadsPage() {
         <div
           onClick={() => setStatusFilter("in_progress")}
           className={`p-4 rounded-xl border bg-white shadow-xs cursor-pointer transition-all ${
-            statusFilter === "in_progress" ? "border-slate-900 ring-1 ring-slate-900" : "border-slate-200 hover:border-slate-300"
+            statusFilter === "in_progress" ? "border-blue-700 ring-1 ring-blue-700 bg-blue-50/50" : "border-slate-200 hover:border-slate-300"
           }`}
         >
-          <p className="text-xs font-medium text-slate-500">In Progress</p>
+          <p className="text-xs font-semibold text-blue-700">In Progress</p>
           <p className="text-2xl font-bold text-slate-900 mt-1">{inProgressCount}</p>
         </div>
 
@@ -219,75 +279,178 @@ export default function WebsiteLeadsPage() {
         <div
           onClick={() => setStatusFilter("archived")}
           className={`p-4 rounded-xl border bg-white shadow-xs cursor-pointer transition-all ${
-            statusFilter === "archived" ? "border-slate-900 ring-1 ring-slate-900" : "border-slate-200 hover:border-slate-300"
+            statusFilter === "archived" ? "border-slate-700 ring-1 ring-slate-700 bg-slate-100" : "border-slate-200 hover:border-slate-300"
           }`}
         >
-          <p className="text-xs font-medium text-slate-500">Archived</p>
+          <p className="text-xs font-semibold text-slate-700">Archived</p>
           <p className="text-2xl font-bold text-slate-900 mt-1">{archivedCount}</p>
         </div>
       </div>
 
+      {/* Bulk Success Notification */}
+      {bulkSuccessMsg && (
+        <div className="p-3.5 bg-green-50 border border-green-200 rounded-xl text-green-900 text-xs font-bold flex items-center justify-between animate-fadeIn">
+          <div className="flex items-center gap-2">
+            <Check className="w-4 h-4 text-green-600" />
+            <span>{bulkSuccessMsg}</span>
+          </div>
+          <button onClick={() => setBulkSuccessMsg(null)} className="text-green-700 hover:text-green-900">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
+      {/* Bulk Action Bar (When 1 or more items are selected) */}
+      <div className="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
+          <button
+            onClick={handleToggleSelectAll}
+            className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors"
+          >
+            {allFilteredSelected ? <CheckSquare className="w-4 h-4 text-brand-primary" /> : <Square className="w-4 h-4 text-slate-400" />}
+            <span>{allFilteredSelected ? "Deselect All" : "Select All Visible"}</span>
+          </button>
+
+          <button
+            onClick={handleSelectFirst20}
+            className="text-xs font-bold px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
+          >
+            Select First 20
+          </button>
+
+          {selectedIds.size > 0 && (
+            <span className="text-xs font-bold text-brand-primary bg-brand-soft px-3 py-1.5 rounded-lg border border-brand-primary/10">
+              {selectedIds.size} Lead(s) Selected
+            </span>
+          )}
+        </div>
+
+        {/* 1-Click Status Update Actions */}
+        <div className="flex items-center gap-2 flex-wrap w-full md:w-auto">
+          <span className="text-xs font-semibold text-slate-500 hidden sm:inline">1-Click Update:</span>
+
+          <button
+            disabled={selectedIds.size === 0 || bulkUpdating}
+            onClick={() => handleBulkUpdateStatus("archived")}
+            className="text-xs font-bold px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 disabled:opacity-40 disabled:cursor-not-allowed transition-all inline-flex items-center gap-1"
+          >
+            {bulkUpdating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Archive className="w-3.5 h-3.5" />}
+            Archive {selectedIds.size > 0 ? `(${selectedIds.size})` : ""}
+          </button>
+
+          <button
+            disabled={selectedIds.size === 0 || bulkUpdating}
+            onClick={() => handleBulkUpdateStatus("contacted")}
+            className="text-xs font-bold px-3 py-1.5 rounded-lg bg-green-600 hover:bg-green-700 text-white disabled:opacity-40 disabled:cursor-not-allowed transition-all inline-flex items-center gap-1 shadow-xs"
+          >
+            {bulkUpdating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <MailCheck className="w-3.5 h-3.5" />}
+            Contacted {selectedIds.size > 0 ? `(${selectedIds.size})` : ""}
+          </button>
+
+          <button
+            disabled={selectedIds.size === 0 || bulkUpdating}
+            onClick={() => handleBulkUpdateStatus("in_progress")}
+            className="text-xs font-bold px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-40 disabled:cursor-not-allowed transition-all inline-flex items-center gap-1 shadow-xs"
+          >
+            {bulkUpdating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Clock className="w-3.5 h-3.5" />}
+            In Progress {selectedIds.size > 0 ? `(${selectedIds.size})` : ""}
+          </button>
+
+          <button
+            disabled={selectedIds.size === 0 || bulkUpdating}
+            onClick={() => handleBulkUpdateStatus("new")}
+            className="text-xs font-bold px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white disabled:opacity-40 disabled:cursor-not-allowed transition-all inline-flex items-center gap-1 shadow-xs"
+          >
+            {bulkUpdating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <AlertCircle className="w-3.5 h-3.5" />}
+            New {selectedIds.size > 0 ? `(${selectedIds.size})` : ""}
+          </button>
+        </div>
+      </div>
+
       {/* Table */}
-      <div className="admin-table-card">
+      <div className="admin-table-card bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-xs">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm whitespace-nowrap">
-            <thead className="admin-thead">
+            <thead className="bg-gray-50 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase tracking-wider">
               <tr>
-                <th>Sender</th>
-                <th>Subject &amp; Message</th>
-                <th>Status</th>
-                <th>Submitted</th>
-                <th className="text-right">Actions</th>
+                <th className="py-3.5 px-4 w-10 text-center">
+                  <input
+                    type="checkbox"
+                    checked={allFilteredSelected}
+                    onChange={handleToggleSelectAll}
+                    className="w-4 h-4 rounded border-gray-300 text-brand-primary focus:ring-brand-primary cursor-pointer"
+                  />
+                </th>
+                <th className="py-3.5 px-4">Sender</th>
+                <th className="py-3.5 px-4">Subject &amp; Message</th>
+                <th className="py-3.5 px-4">Status</th>
+                <th className="py-3.5 px-4">Submitted</th>
+                <th className="py-3.5 px-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="admin-tbody">
+            <tbody className="divide-y divide-gray-100">
               {error ? (
                 <tr>
-                  <td colSpan={5} className="admin-td text-center py-6" style={{ color: 'var(--color-badge-error-text)' }}>
+                  <td colSpan={6} className="text-center py-6 text-red-600 text-sm">
                     Error loading leads: {error}
                   </td>
                 </tr>
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="admin-td text-center py-10" style={{ color: 'var(--color-admin-muted)' }}>
+                  <td colSpan={6} className="text-center py-10 text-gray-500 text-sm">
                     No leads found matching your criteria.
                   </td>
                 </tr>
               ) : (
-                filtered.map(lead => (
-                  <tr key={lead.id} className="admin-tr">
-                    <td className="admin-td">
-                      <span className="admin-cell-primary block">
-                        {lead.first_name || lead.last_name ? `${lead.first_name || ""} ${lead.last_name || ""}` : "Anonymous"}
-                      </span>
-                      <span className="admin-cell-muted block">{lead.email}</span>
-                      {lead.phone && <span className="admin-cell-muted block text-xs">{lead.phone}</span>}
-                    </td>
-                    <td className="admin-td max-w-md">
-                      <span className="admin-cell-primary block font-semibold truncate max-w-xs">{lead.subject || "No Subject"}</span>
-                      <span className="admin-cell-muted block truncate max-w-xs" title={lead.message || ""}>
-                        {lead.message || "No message body"}
-                      </span>
-                    </td>
-                    <td className="admin-td">
-                      <span className={`admin-badge capitalize ${getStatusBadgeClass(lead.status || "new")}`}>
-                        {lead.status || "new"}
-                      </span>
-                    </td>
-                    <td className="admin-td admin-cell-muted">
-                      {format(new Date(lead.created_at), "MMM d, yyyy h:mm a")}
-                    </td>
-                    <td className="admin-td text-right">
-                      <button
-                        onClick={() => handleOpenDetails(lead)}
-                        className="admin-cell-primary flex items-center gap-1.5 text-xs ml-auto hover:underline font-bold"
-                        style={{ color: 'var(--color-admin-navy)' }}
-                      >
-                        Details <ExternalLink className="w-3.5 h-3.5" />
-                      </button>
-                    </td>
-                  </tr>
-                ))
+                filtered.map(lead => {
+                  const isChecked = selectedIds.has(lead.id)
+                  return (
+                    <tr
+                      key={lead.id}
+                      className={`transition-colors ${
+                        isChecked ? "bg-blue-50/40" : "hover:bg-gray-50/60"
+                      }`}
+                    >
+                      <td className="py-3.5 px-4 text-center">
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => handleToggleSelectOne(lead.id)}
+                          className="w-4 h-4 rounded border-gray-300 text-brand-primary focus:ring-brand-primary cursor-pointer"
+                        />
+                      </td>
+                      <td className="py-3.5 px-4">
+                        <span className="font-bold text-gray-900 block">
+                          {lead.first_name || lead.last_name ? `${lead.first_name || ""} ${lead.last_name || ""}` : "Anonymous"}
+                        </span>
+                        <span className="text-xs text-gray-500 block">{lead.email}</span>
+                        {lead.phone && <span className="text-xs text-gray-400 block">{lead.phone}</span>}
+                      </td>
+                      <td className="py-3.5 px-4 max-w-md">
+                        <span className="font-semibold text-gray-900 block truncate max-w-xs">{lead.subject || "No Subject"}</span>
+                        <span className="text-xs text-gray-500 block truncate max-w-xs" title={lead.message || ""}>
+                          {lead.message || "No message body"}
+                        </span>
+                      </td>
+                      <td className="py-3.5 px-4">
+                        <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold border capitalize ${getStatusBadgeClass(lead.status || "new")}`}>
+                          {lead.status || "new"}
+                        </span>
+                      </td>
+                      <td className="py-3.5 px-4 text-xs text-gray-500">
+                        {format(new Date(lead.created_at), "MMM d, yyyy h:mm a")}
+                      </td>
+                      <td className="py-3.5 px-4 text-right">
+                        <button
+                          onClick={() => handleOpenDetails(lead)}
+                          className="inline-flex items-center gap-1 text-xs font-bold text-[#012269] hover:underline"
+                        >
+                          Details <ExternalLink className="w-3.5 h-3.5" />
+                        </button>
+                      </td>
+                    </tr>
+                  )
+                })
               )}
             </tbody>
           </table>
@@ -301,7 +464,7 @@ export default function WebsiteLeadsPage() {
             {/* Header */}
             <div className="flex justify-between items-start border-b pb-4 mb-4">
               <div>
-                <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--color-admin-gold)' }}>
+                <span className="text-[10px] font-black uppercase tracking-widest text-[#012269]">
                   Lead Submission Details
                 </span>
                 <h3 className="text-xl font-extrabold text-gray-800 mt-1">

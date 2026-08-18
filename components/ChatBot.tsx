@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { MessageSquare, Send, X, Sparkles, Phone, FileText } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 interface Message {
   role: "user" | "assistant";
@@ -17,6 +18,7 @@ const SUGGESTIONS = [
 ];
 
 export default function ChatBot() {
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -27,6 +29,11 @@ export default function ChatBot() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isLoading]);
+
+  // Hide ChatBot on Tool pages
+  if (pathname?.startsWith("/tools")) {
+    return null;
+  }
 
   const handleSend = async (text: string) => {
     if (!text.trim() || isLoading) return;
@@ -148,7 +155,7 @@ export default function ChatBot() {
 
   return (
     <>
-      {/* Floating Chat Button */}
+      {/* Floating Chat Button (Smaller on mobile, full size on desktop) */}
       <button
         onClick={() => {
           setIsOpen(!isOpen);
@@ -163,15 +170,19 @@ export default function ChatBot() {
             ]);
           }
         }}
-        className="fixed bottom-6 right-6 z-50 flex items-center justify-center w-16 h-16 rounded-full bg-brand-primary text-white shadow-2xl hover:bg-brand-primary/90 transition-transform active:scale-95 hover:scale-110 cursor-pointer"
+        className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-brand-primary text-white shadow-2xl hover:bg-brand-primary/90 transition-transform active:scale-95 hover:scale-105 cursor-pointer"
         aria-label="Toggle Chatbot"
       >
-        {isOpen ? <X className="w-7 h-7" /> : <MessageSquare className="w-7 h-7" />}
+        {isOpen ? (
+          <X className="w-5 h-5 sm:w-7 sm:h-7" />
+        ) : (
+          <MessageSquare className="w-5 h-5 sm:w-7 sm:h-7" />
+        )}
       </button>
 
       {/* Chat Window Panel */}
       {isOpen && (
-        <div className="fixed bottom-24 right-6 z-50 w-[380px] sm:w-[400px] h-[580px] rounded-2xl glass-card flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-300 border border-white/30 shadow-2xl">
+        <div className="fixed bottom-18 sm:bottom-24 right-3 sm:right-6 left-3 sm:left-auto z-50 sm:w-[400px] h-[520px] sm:h-[580px] max-h-[80vh] rounded-2xl glass-card flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-300 border border-white/30 shadow-2xl">
           {/* Header */}
           <div className="bg-brand-primary/95 backdrop-blur-md px-6 py-4 flex items-center justify-between text-white border-b border-white/10">
             <div className="flex items-center gap-2.5">

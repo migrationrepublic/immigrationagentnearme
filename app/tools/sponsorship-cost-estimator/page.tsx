@@ -199,11 +199,10 @@ export default function SponsorshipCostEstimatorPage() {
                       key={item.id}
                       type="button"
                       onClick={() => setVisa(item.id as '482' | '186' | '494')}
-                      className={`flex items-center justify-between p-4 rounded-xl border-2 text-left transition-all ${
-                        visa === item.id
+                      className={`flex items-center justify-between p-4 rounded-xl border-2 text-left transition-all ${visa === item.id
                           ? 'border-brand-primary bg-brand-soft/80 text-brand-primary font-bold shadow-xs'
                           : 'border-gray-100 hover:border-brand-primary/20 hover:bg-gray-50 text-gray-700 font-medium'
-                      }`}
+                        }`}
                     >
                       <div>
                         <div className="text-sm sm:text-base font-bold">{item.label}</div>
@@ -248,11 +247,10 @@ export default function SponsorshipCostEstimatorPage() {
                       key={item.id}
                       type="button"
                       onClick={() => setTurnover(item.id as 'small' | 'large')}
-                      className={`flex items-center justify-between p-4 rounded-xl border-2 text-left transition-all ${
-                        turnover === item.id
+                      className={`flex items-center justify-between p-4 rounded-xl border-2 text-left transition-all ${turnover === item.id
                           ? 'border-brand-primary bg-brand-soft/80 text-brand-primary font-bold shadow-xs'
                           : 'border-gray-100 hover:border-brand-primary/20 hover:bg-gray-50 text-gray-700 font-medium'
-                      }`}
+                        }`}
                     >
                       <div>
                         <div className="text-sm sm:text-base font-bold">{item.label}</div>
@@ -325,11 +323,10 @@ export default function SponsorshipCostEstimatorPage() {
                       key={yr}
                       type="button"
                       onClick={() => setYears(yr)}
-                      className={`p-4 rounded-xl border-2 text-center transition-all ${
-                        years === yr
+                      className={`p-4 rounded-xl border-2 text-center transition-all ${years === yr
                           ? 'border-brand-primary bg-brand-soft/80 text-brand-primary font-bold shadow-xs'
                           : 'border-gray-100 hover:border-brand-primary/20 hover:bg-gray-50 text-gray-700 font-medium'
-                      }`}
+                        }`}
                     >
                       <div className="text-xl font-bold">{yr} Year{yr > 1 ? 's' : ''}</div>
                       <div className="text-xs text-gray-500 mt-1">

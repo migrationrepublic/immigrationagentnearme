@@ -40,6 +40,7 @@ interface ToolLeadResults {
   salary_meets_csit?: string
   labour_market_testing?: string
   location?: string
+  region?: string
   compliance_issues?: string
   calculated_tier?: string
   headline?: string

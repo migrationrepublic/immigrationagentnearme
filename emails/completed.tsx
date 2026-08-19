@@ -29,26 +29,26 @@ export default function CompletedEmail({
       }}>
         {/* Branded Header */}
         <div style={{
-          backgroundColor: "#030E1E",
-          padding: "24px",
+          backgroundColor: "#ffffff",
+          padding: "28px 24px 20px 24px",
           textAlign: "center",
           borderBottom: "2px solid #D4AF37",
         }}>
           <img
-            src="https://immigrationagentnearme.com/images/logobgre.png"
+            src="https://immigrationagentnearme.com/images/logo.jpg"
             alt="Migration Republic"
             style={{
-              width: "80px",
+              width: "85px",
               height: "auto",
               display: "block",
-              margin: "0 auto 12px auto",
-              background: "transparent",
+              margin: "0 auto 10px auto",
+              borderRadius: "50%",
               border: "none",
               boxShadow: "none",
             }}
           />
           <div style={{
-            color: "#ffffff",
+            color: "#06276C",
             margin: "0",
             fontSize: "22px",
             fontWeight: 800,
@@ -61,7 +61,7 @@ export default function CompletedEmail({
             color: "#D4AF37",
             margin: "4px 0 0 0",
             fontSize: "11px",
-            fontWeight: 600,
+            fontWeight: 700,
             textTransform: "uppercase",
             letterSpacing: "1.5px",
           }}>
@@ -77,7 +77,7 @@ export default function CompletedEmail({
           fontSize: "15px",
         }}>
           <h2 style={{
-            color: "#030E1E",
+            color: "#06276C",
             marginTop: "0",
             fontSize: "20px",
             fontWeight: "bold",
@@ -101,7 +101,7 @@ export default function CompletedEmail({
               rel="noopener noreferrer"
               style={{
                 backgroundColor: "#D4AF37",
-                color: "#030E1E",
+                color: "#06276C",
                 padding: "12px 28px",
                 borderRadius: "8px",
                 textDecoration: "none",
@@ -125,20 +125,20 @@ export default function CompletedEmail({
           color: "#64748b",
           fontSize: "13px",
         }}>
-          <div style={{ fontWeight: "bold", color: "#030E1E", marginBottom: "8px", fontSize: "14px" }}>
+          <div style={{ fontWeight: "bold", color: "#06276C", marginBottom: "8px", fontSize: "14px" }}>
             Migration Republic
           </div>
           <div style={{ marginBottom: "16px", lineHeight: "1.5" }}>
             📍 470 St Kilda Road, Melbourne, VIC 3004<br />
-            📞 <a href="tel:+61435321219" style={{ color: "#030E1E", textDecoration: "none", fontWeight: 600 }}>+61 435 321 219</a><br />
-            ✉️ <a href="mailto:info@migrationrepublic.com.au" style={{ color: "#030E1E", textDecoration: "none", fontWeight: 600 }}>info@migrationrepublic.com.au</a><br />
+            📞 <a href="tel:+61435321219" style={{ color: "#06276C", textDecoration: "none", fontWeight: 600 }}>+61 435 321 219</a><br />
+            ✉️ <a href="mailto:info@migrationrepublic.com.au" style={{ color: "#06276C", textDecoration: "none", fontWeight: 600 }}>info@migrationrepublic.com.au</a><br />
             🌐 <a href="https://migrationrepublic.com.au" target="_blank" rel="noopener noreferrer" style={{ color: "#D4AF37", textDecoration: "none", fontWeight: 600 }}>migrationrepublic.com.au</a>
           </div>
 
           <div style={{ margin: "20px 0", borderTop: "1px solid #e2e8f0", paddingTop: "16px" }}>
             <span style={{
               fontWeight: 600,
-              color: "#030E1E",
+              color: "#06276C",
               display: "block",
               marginBottom: "10px",
               fontSize: "12px",

@@ -49,26 +49,26 @@ export default function AdminEmail({
       }}>
         {/* Branded Header */}
         <div style={{
-          backgroundColor: "#030E1E",
-          padding: "24px",
+          backgroundColor: "#ffffff",
+          padding: "28px 24px 20px 24px",
           textAlign: "center",
           borderBottom: "2px solid #D4AF37",
         }}>
           <img
-            src="https://immigrationagentnearme.com/images/logobgre.png"
+            src="https://immigrationagentnearme.com/images/logo.jpg"
             alt="Migration Republic"
             style={{
-              width: "80px",
+              width: "85px",
               height: "auto",
               display: "block",
-              margin: "0 auto 12px auto",
-              background: "transparent",
+              margin: "0 auto 10px auto",
+              borderRadius: "50%",
               border: "none",
               boxShadow: "none",
             }}
           />
           <div style={{
-            color: "#ffffff",
+            color: "#06276C",
             margin: "0",
             fontSize: "22px",
             fontWeight: 800,
@@ -81,7 +81,7 @@ export default function AdminEmail({
             color: "#D4AF37",
             margin: "4px 0 0 0",
             fontSize: "11px",
-            fontWeight: 600,
+            fontWeight: 700,
             textTransform: "uppercase",
             letterSpacing: "1.5px",
           }}>
@@ -99,7 +99,7 @@ export default function AdminEmail({
           {type === "signature" ? (
             <div>
               <h2 style={{
-                color: "#030E1E",
+                color: "#06276C",
                 marginTop: "0",
                 fontSize: "18px",
                 fontWeight: "bold",
@@ -123,15 +123,15 @@ export default function AdminEmail({
                   <tbody>
                     <tr style={{ borderBottom: "1px solid #f1f5f9" }}>
                       <td style={{ padding: "8px 0", color: "#64748b", fontSize: "13px" }}><strong>Signer:</strong></td>
-                      <td style={{ padding: "8px 0", color: "#030E1E", fontSize: "14px", fontWeight: "bold", textAlign: "right" }}>{signerName}</td>
+                      <td style={{ padding: "8px 0", color: "#06276C", fontSize: "14px", fontWeight: "bold", textAlign: "right" }}>{signerName}</td>
                     </tr>
                     <tr style={{ borderBottom: "1px solid #f1f5f9" }}>
                       <td style={{ padding: "8px 0", color: "#64748b", fontSize: "13px" }}><strong>Document Name:</strong></td>
-                      <td style={{ padding: "8px 0", color: "#030E1E", fontSize: "14px", fontWeight: "bold", textAlign: "right" }}>{documentName}</td>
+                      <td style={{ padding: "8px 0", color: "#06276C", fontSize: "14px", fontWeight: "bold", textAlign: "right" }}>{documentName}</td>
                     </tr>
                     <tr>
                       <td style={{ padding: "8px 0", color: "#64748b", fontSize: "13px" }}><strong>Timestamp (UTC):</strong></td>
-                      <td style={{ padding: "8px 0", color: "#030E1E", fontSize: "14px", fontWeight: "bold", textAlign: "right" }}>{new Date().toUTCString()}</td>
+                      <td style={{ padding: "8px 0", color: "#06276C", fontSize: "14px", fontWeight: "bold", textAlign: "right" }}>{new Date().toUTCString()}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -145,7 +145,7 @@ export default function AdminEmail({
                     rel="noopener noreferrer"
                     style={{
                       backgroundColor: "#D4AF37",
-                      color: "#030E1E",
+                      color: "#06276C",
                       padding: "12px 28px",
                       borderRadius: "8px",
                       textDecoration: "none",
@@ -163,7 +163,7 @@ export default function AdminEmail({
           ) : (
             <div>
               <h2 style={{
-                color: "#030E1E",
+                color: "#06276C",
                 marginTop: "0",
                 fontSize: "18px",
                 fontWeight: "bold",
@@ -187,19 +187,19 @@ export default function AdminEmail({
                   <tbody>
                     <tr style={{ borderBottom: "1px solid #f1f5f9" }}>
                       <td style={{ padding: "8px 0", color: "#64748b", fontSize: "13px", width: "120px" }}><strong>Client Name:</strong></td>
-                      <td style={{ padding: "8px 0", color: "#030E1E", fontSize: "14px", fontWeight: "bold", textAlign: "right" }}>{clientName}</td>
+                      <td style={{ padding: "8px 0", color: "#06276C", fontSize: "14px", fontWeight: "bold", textAlign: "right" }}>{clientName}</td>
                     </tr>
                     <tr style={{ borderBottom: "1px solid #f1f5f9" }}>
                       <td style={{ padding: "8px 0", color: "#64748b", fontSize: "13px" }}><strong>Plan Selected:</strong></td>
-                      <td style={{ padding: "8px 0", color: "#030E1E", fontSize: "14px", fontWeight: "bold", textAlign: "right" }}>{planName}</td>
+                      <td style={{ padding: "8px 0", color: "#06276C", fontSize: "14px", fontWeight: "bold", textAlign: "right" }}>{planName}</td>
                     </tr>
                     <tr style={{ borderBottom: "1px solid #f1f5f9" }}>
                       <td style={{ padding: "8px 0", color: "#64748b", fontSize: "13px" }}><strong>Date & Time:</strong></td>
-                      <td style={{ padding: "8px 0", color: "#030E1E", fontSize: "14px", fontWeight: "bold", textAlign: "right" }}>{date} at {time}</td>
+                      <td style={{ padding: "8px 0", color: "#06276C", fontSize: "14px", fontWeight: "bold", textAlign: "right" }}>{date} at {time}</td>
                     </tr>
                     <tr style={{ borderBottom: "1px solid #f1f5f9" }}>
                       <td style={{ padding: "8px 0", color: "#64748b", fontSize: "13px" }}><strong>Phone Number:</strong></td>
-                      <td style={{ padding: "8px 0", color: "#030E1E", fontSize: "14px", fontWeight: "bold", textAlign: "right" }}>{phone || "N/A"}</td>
+                      <td style={{ padding: "8px 0", color: "#06276C", fontSize: "14px", fontWeight: "bold", textAlign: "right" }}>{phone || "N/A"}</td>
                     </tr>
                     {notes && (
                       <tr>
@@ -219,7 +219,7 @@ export default function AdminEmail({
                     rel="noopener noreferrer"
                     style={{
                       backgroundColor: "#D4AF37",
-                      color: "#030E1E",
+                      color: "#06276C",
                       padding: "12px 28px",
                       borderRadius: "8px",
                       textDecoration: "none",
@@ -246,20 +246,20 @@ export default function AdminEmail({
           color: "#64748b",
           fontSize: "13px",
         }}>
-          <div style={{ fontWeight: "bold", color: "#030E1E", marginBottom: "8px", fontSize: "14px" }}>
+          <div style={{ fontWeight: "bold", color: "#06276C", marginBottom: "8px", fontSize: "14px" }}>
             Migration Republic
           </div>
           <div style={{ marginBottom: "16px", lineHeight: "1.5" }}>
             📍 470 St Kilda Road, Melbourne, VIC 3004<br />
-            📞 <a href="tel:+61435321219" style={{ color: "#030E1E", textDecoration: "none", fontWeight: 600 }}>+61 435 321 219</a><br />
-            ✉️ <a href="mailto:info@migrationrepublic.com.au" style={{ color: "#030E1E", textDecoration: "none", fontWeight: 600 }}>info@migrationrepublic.com.au</a><br />
+            📞 <a href="tel:+61435321219" style={{ color: "#06276C", textDecoration: "none", fontWeight: 600 }}>+61 435 321 219</a><br />
+            ✉️ <a href="mailto:info@migrationrepublic.com.au" style={{ color: "#06276C", textDecoration: "none", fontWeight: 600 }}>info@migrationrepublic.com.au</a><br />
             🌐 <a href="https://migrationrepublic.com.au" target="_blank" rel="noopener noreferrer" style={{ color: "#D4AF37", textDecoration: "none", fontWeight: 600 }}>migrationrepublic.com.au</a>
           </div>
 
           <div style={{ margin: "20px 0", borderTop: "1px solid #e2e8f0", paddingTop: "16px" }}>
             <span style={{
               fontWeight: 600,
-              color: "#030E1E",
+              color: "#06276C",
               display: "block",
               marginBottom: "10px",
               fontSize: "12px",

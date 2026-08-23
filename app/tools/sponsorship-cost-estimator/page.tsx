@@ -135,11 +135,9 @@ export default function SponsorshipCostEstimatorPage() {
         },
         applicant_cost: {
           vac_sponsored_workers: fmt(calculation.vacPrimaryTotal),
-          subtotal: fmt(applicantCostTotal),
-        },
-        family_charges: {
-          vac_accompanying_family: fmt(calculation.vacFamilyTotal),
-          subtotal: fmt(familyChargesTotal),
+          vac_accompanying_family_adults: adults > 0 ? fmt(adults * calculation.vacAdultRate) : 'N/A',
+          vac_accompanying_family_children: children > 0 ? fmt(children * calculation.vacChildRate) : 'N/A',
+          subtotal: fmt(applicantCostTotal + familyChargesTotal),
         },
       }
     };
@@ -539,11 +537,11 @@ export default function SponsorshipCostEstimatorPage() {
                     </table>
                   </div>
 
-                  {/* Applicant Cost */}
+                  {/* Applicant Cost (includes accompanying family charges) */}
                   <div className="border border-gray-200 rounded-2xl overflow-hidden shadow-xs overflow-x-auto">
                     <div className="px-3.5 sm:px-6 py-2.5 sm:py-3 bg-brand-soft/60 border-b border-gray-200 flex items-center justify-between">
                       <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-brand-primary">Applicant cost</span>
-                      <span className="text-[10px] sm:text-[11px] text-gray-500 font-medium">Sponsored worker(s) visa application charge</span>
+                      <span className="text-[10px] sm:text-[11px] text-gray-500 font-medium">Visa application charges — worker(s) &amp; family</span>
                     </div>
                     <table className="w-full text-xs sm:text-sm text-left">
                       <tbody className="divide-y divide-gray-100">
@@ -555,39 +553,40 @@ export default function SponsorshipCostEstimatorPage() {
                             {fmt(calculation.vacPrimaryTotal)}
                           </td>
                         </tr>
+                        {adults > 0 && (
+                          <tr>
+                            <td className="px-3.5 sm:px-6 py-3 sm:py-3.5 text-gray-800">
+                              Visa application charge — accompanying family ({adults} adult{adults !== 1 ? 's' : ''})
+                            </td>
+                            <td className="px-3.5 sm:px-6 py-3 sm:py-3.5 text-right font-semibold text-gray-900 whitespace-nowrap">
+                              {fmt(adults * calculation.vacAdultRate)}
+                            </td>
+                          </tr>
+                        )}
+                        {children > 0 && (
+                          <tr>
+                            <td className="px-3.5 sm:px-6 py-3 sm:py-3.5 text-gray-800">
+                              Visa application charge — accompanying family ({children} child{children !== 1 ? 'ren' : ''})
+                            </td>
+                            <td className="px-3.5 sm:px-6 py-3 sm:py-3.5 text-right font-semibold text-gray-900 whitespace-nowrap">
+                              {fmt(children * calculation.vacChildRate)}
+                            </td>
+                          </tr>
+                        )}
+                        {adults === 0 && children === 0 && (
+                          <tr>
+                            <td className="px-3.5 sm:px-6 py-3 sm:py-3.5 text-gray-800">
+                              Visa application charge — accompanying family
+                            </td>
+                            <td className="px-3.5 sm:px-6 py-3 sm:py-3.5 text-right font-semibold text-gray-900 whitespace-nowrap">
+                              {fmt(0)}
+                            </td>
+                          </tr>
+                        )}
                         <tr className="bg-slate-50/80 font-bold">
                           <td className="px-3.5 sm:px-6 py-3 sm:py-3.5 text-brand-primary">Applicant cost subtotal</td>
                           <td className="px-3.5 sm:px-6 py-3 sm:py-3.5 text-right text-brand-primary whitespace-nowrap">
-                            {fmt(applicantCostTotal)}
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-
-                  {/* Family Charges */}
-                  <div className="border border-gray-200 rounded-2xl overflow-hidden shadow-xs overflow-x-auto">
-                    <div className="px-3.5 sm:px-6 py-2.5 sm:py-3 bg-brand-soft/60 border-b border-gray-200 flex items-center justify-between">
-                      <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-brand-primary">Family charges</span>
-                      <span className="text-[10px] sm:text-[11px] text-gray-500 font-medium">Accompanying dependants</span>
-                    </div>
-                    <table className="w-full text-xs sm:text-sm text-left">
-                      <tbody className="divide-y divide-gray-100">
-                        <tr>
-                          <td className="px-3.5 sm:px-6 py-3 sm:py-3.5 text-gray-800">
-                            Visa application charge — accompanying family
-                            {(adults > 0 || children > 0) && (
-                              <span className="text-gray-400"> ({adults} adult{adults !== 1 ? 's' : ''}, {children} child{children !== 1 ? 'ren' : ''})</span>
-                            )}
-                          </td>
-                          <td className="px-3.5 sm:px-6 py-3 sm:py-3.5 text-right font-semibold text-gray-900 whitespace-nowrap">
-                            {fmt(calculation.vacFamilyTotal)}
-                          </td>
-                        </tr>
-                        <tr className="bg-slate-50/80 font-bold">
-                          <td className="px-3.5 sm:px-6 py-3 sm:py-3.5 text-brand-primary">Family charges subtotal</td>
-                          <td className="px-3.5 sm:px-6 py-3 sm:py-3.5 text-right text-brand-primary whitespace-nowrap">
-                            {fmt(familyChargesTotal)}
+                            {fmt(applicantCostTotal + familyChargesTotal)}
                           </td>
                         </tr>
                       </tbody>

@@ -7,6 +7,17 @@ const fromEmail = env.EMAIL_FROM
 const adminEmail = env.ADMIN_EMAIL
 const adminRecipients = adminEmail ? adminEmail.split(',').map(e => e.trim()).filter(Boolean) : []
 
+// Escapes untrusted values (names, emails, results, etc.) before they are
+// interpolated into HTML email templates, preventing markup/script injection.
+export function escapeHtml(value: unknown): string {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
 export function wrapEmailTemplate(contentHtml: string): string {
   return `
     <div style="background-color: #f3f4f6; padding: 30px 15px; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; min-height: 100%;">
@@ -202,19 +213,19 @@ export async function sendToolLeadAdminAlert(
         <table style="width: 100%; border-collapse: collapse;">
           <tr style="border-bottom: 1px solid #f1f5f9;">
             <td style="padding: 10px 0; color: #64748b; font-size: 14px; width: 120px;"><strong>Tool Used:</strong></td>
-            <td style="padding: 10px 0; color: #06276C; font-size: 14px; font-weight: 600;">${toolName}</td>
+            <td style="padding: 10px 0; color: #06276C; font-size: 14px; font-weight: 600;">${escapeHtml(toolName)}</td>
           </tr>
           <tr style="border-bottom: 1px solid #f1f5f9;">
             <td style="padding: 10px 0; color: #64748b; font-size: 14px;"><strong>Client Name:</strong></td>
-            <td style="padding: 10px 0; color: #06276C; font-size: 14px; font-weight: 600;">${name}</td>
+            <td style="padding: 10px 0; color: #06276C; font-size: 14px; font-weight: 600;">${escapeHtml(name)}</td>
           </tr>
           <tr style="border-bottom: 1px solid #f1f5f9;">
             <td style="padding: 10px 0; color: #64748b; font-size: 14px;"><strong>Email:</strong></td>
-            <td style="padding: 10px 0; color: #06276C; font-size: 14px; font-weight: 600;"><a href="mailto:${email}" style="color: #06276C; text-decoration: none;">${email}</a></td>
+            <td style="padding: 10px 0; color: #06276C; font-size: 14px; font-weight: 600;"><a href="mailto:${encodeURIComponent(email)}" style="color: #06276C; text-decoration: none;">${escapeHtml(email)}</a></td>
           </tr>
           <tr style="border-bottom: 1px solid #f1f5f9;">
             <td style="padding: 10px 0; color: #64748b; font-size: 14px;"><strong>Phone:</strong></td>
-            <td style="padding: 10px 0; color: #06276C; font-size: 14px; font-weight: 600;"><a href="tel:${phone}" style="color: #06276C; text-decoration: none;">${phone || 'N/A'}</a></td>
+            <td style="padding: 10px 0; color: #06276C; font-size: 14px; font-weight: 600;"><a href="tel:${encodeURIComponent(phone || '')}" style="color: #06276C; text-decoration: none;">${escapeHtml(phone || 'N/A')}</a></td>
           </tr>
           <tr>
             <td style="padding: 10px 0; color: #64748b; font-size: 14px; vertical-align: top;"><strong>Results Summary:</strong></td>
@@ -244,19 +255,19 @@ export async function sendToolResultClientEmail(
   try {
     const htmlContent = wrapEmailTemplate(`
       <h2 style="color: #06276C; margin-top: 0; font-size: 20px; font-weight: bold; border-bottom: 2px solid #D4AF37; padding-bottom: 8px;">Your Tool Results Are Ready</h2>
-      <p>Hi <strong>${name}</strong>,</p>
-      <p>Thank you for using our <strong>${toolName}</strong> at Migration Republic.</p>
-      
+      <p>Hi <strong>${escapeHtml(name)}</strong>,</p>
+      <p>Thank you for using our <strong>${escapeHtml(toolName)}</strong> at Migration Republic.</p>
+
       <p>We have successfully received your assessment details. Below are the contact details you submitted for confirmation:</p>
       <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 16px; margin: 20px 0;">
         <table style="width: 100%; border-collapse: collapse;">
           <tr>
             <td style="padding: 6px 0; color: #64748b; font-size: 14px; width: 100px;"><strong>Email:</strong></td>
-            <td style="padding: 6px 0; color: #06276C; font-size: 14px; font-weight: 600;">${email}</td>
+            <td style="padding: 6px 0; color: #06276C; font-size: 14px; font-weight: 600;">${escapeHtml(email)}</td>
           </tr>
           <tr>
             <td style="padding: 6px 0; color: #64748b; font-size: 14px;"><strong>Phone:</strong></td>
-            <td style="padding: 6px 0; color: #06276C; font-size: 14px; font-weight: 600;">${phone || 'N/A'}</td>
+            <td style="padding: 6px 0; color: #06276C; font-size: 14px; font-weight: 600;">${escapeHtml(phone || 'N/A')}</td>
           </tr>
         </table>
       </div>

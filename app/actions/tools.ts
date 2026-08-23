@@ -1,7 +1,7 @@
 "use server";
 
 import { supabaseServer } from '@/lib/supabase-server';
-import { sendToolLeadAdminAlert, sendToolResultClientEmail } from '@/lib/email';
+import { sendToolLeadAdminAlert, sendToolResultClientEmail, escapeHtml } from '@/lib/email';
 import { z } from "zod";
 
 const ToolLeadSchema = z.object({
@@ -41,7 +41,7 @@ export async function submitToolLead(formData: ToolLeadInput) {
 
     function formatResultsToHTML(obj: unknown): string {
       if (!obj) return 'N/A';
-      if (typeof obj !== 'object') return String(obj);
+      if (typeof obj !== 'object') return escapeHtml(obj);
       
       if (Array.isArray(obj)) {
         return `<ul style="margin: 0; padding-left: 20px;">` + 
@@ -51,12 +51,12 @@ export async function submitToolLead(formData: ToolLeadInput) {
 
       let html = `<div style="display: flex; flex-direction: column; gap: 4px;">`;
       for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
-        const formattedKey = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
-        
+        const formattedKey = escapeHtml(key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()));
+
         if (typeof value === 'object' && value !== null) {
           html += `<div style="margin-bottom: 8px;"><strong>${formattedKey}:</strong><div style="margin-top: 4px; padding-left: 10px; border-left: 2px solid #ccc;">${formatResultsToHTML(value)}</div></div>`;
         } else {
-          html += `<div><strong>${formattedKey}:</strong> ${value}</div>`;
+          html += `<div><strong>${formattedKey}:</strong> ${escapeHtml(value)}</div>`;
         }
       }
       html += `</div>`;

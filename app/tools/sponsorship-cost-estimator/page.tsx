@@ -27,6 +27,9 @@ function fmt(n: number) {
   return '$' + n.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 }
 
+const MAX_WORKERS = 50;
+const MAX_FAMILY_MEMBERS = 50;
+
 export default function SponsorshipCostEstimatorPage() {
   const [step, setStep] = useState(1);
   const [visa, setVisa] = useState<'482' | '186' | '494'>('482');
@@ -54,6 +57,13 @@ export default function SponsorshipCostEstimatorPage() {
     adults,
     children,
   });
+
+  // Company Cost = charges the sponsoring business pays (nomination + SAF levy).
+  // Applicant Cost = the sponsored worker's own visa application charge.
+  // Family Charges = visa application charges for accompanying dependants, shown separately.
+  const companyCostTotal = calculation.nominationTotal + calculation.safTotal;
+  const applicantCostTotal = calculation.vacPrimaryTotal;
+  const familyChargesTotal = calculation.vacFamilyTotal;
 
   const handleNext = () => {
     // If not 482 and moving from step 3 (Workers), skip step 4 (Years) to step 5 (Family)
@@ -117,18 +127,20 @@ export default function SponsorshipCostEstimatorPage() {
         number_of_workers: workers,
         years_of_stay: is482 ? `${years} years` : 'N/A (One-off)',
         accompanying_family: `${adults} adult(s) (18+), ${children} child(ren) (<18)`,
-        nomination_fees_total: fmt(calculation.nominationTotal),
-        saf_levy_total: fmt(calculation.safTotal),
-        primary_vac_total: fmt(calculation.vacPrimaryTotal),
-        family_vac_total: fmt(calculation.vacFamilyTotal),
         grand_total_government_charges: fmt(calculation.grandTotal),
-        itemised_breakdown: {
+        company_cost: {
           nomination_fee: fmt(calculation.nominationTotal),
           saf_levy: fmt(calculation.safTotal),
+          subtotal: fmt(companyCostTotal),
+        },
+        applicant_cost: {
           vac_sponsored_workers: fmt(calculation.vacPrimaryTotal),
+          subtotal: fmt(applicantCostTotal),
+        },
+        family_charges: {
           vac_accompanying_family: fmt(calculation.vacFamilyTotal),
-          total_government_charges: fmt(calculation.grandTotal),
-        }
+          subtotal: fmt(familyChargesTotal),
+        },
       }
     };
 
@@ -295,12 +307,18 @@ export default function SponsorshipCostEstimatorPage() {
 
                   <button
                     type="button"
-                    onClick={() => setWorkers(workers + 1)}
-                    className="w-12 h-12 rounded-xl bg-white border border-gray-300 text-gray-700 flex items-center justify-center font-bold text-xl hover:bg-gray-100 shadow-xs"
+                    onClick={() => setWorkers(Math.min(MAX_WORKERS, workers + 1))}
+                    disabled={workers >= MAX_WORKERS}
+                    className="w-12 h-12 rounded-xl bg-white border border-gray-300 text-gray-700 flex items-center justify-center font-bold text-xl hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed shadow-xs"
                   >
                     <Plus className="w-5 h-5" />
                   </button>
                 </div>
+                {workers >= MAX_WORKERS && (
+                  <p className="text-xs text-gray-400 text-center mt-2">
+                    For {MAX_WORKERS}+ workers, please book a consultation for a tailored quote.
+                  </p>
+                )}
               </div>
             )}
 
@@ -330,7 +348,7 @@ export default function SponsorshipCostEstimatorPage() {
                     >
                       <div className="text-xl font-bold">{yr} Year{yr > 1 ? 's' : ''}</div>
                       <div className="text-xs text-gray-500 mt-1">
-                        {turnover === 'small' ? `$${(1200 * yr).toLocaleString()} SAF` : `$${(1800 * yr).toLocaleString()} SAF`}
+                        ${(FEES['482'].saf[turnover] * yr).toLocaleString()} SAF
                       </div>
                     </button>
                   ))}
@@ -368,8 +386,9 @@ export default function SponsorshipCostEstimatorPage() {
                     <span className="w-8 text-center font-bold text-lg text-brand-primary">{adults}</span>
                     <button
                       type="button"
-                      onClick={() => setAdults(adults + 1)}
-                      className="w-9 h-9 rounded-lg bg-white border border-gray-300 text-gray-700 flex items-center justify-center font-bold hover:bg-gray-100"
+                      onClick={() => setAdults(Math.min(MAX_FAMILY_MEMBERS, adults + 1))}
+                      disabled={adults >= MAX_FAMILY_MEMBERS}
+                      className="w-9 h-9 rounded-lg bg-white border border-gray-300 text-gray-700 flex items-center justify-center font-bold hover:bg-gray-100 disabled:opacity-40"
                     >
                       <Plus className="w-4 h-4" />
                     </button>
@@ -394,8 +413,9 @@ export default function SponsorshipCostEstimatorPage() {
                     <span className="w-8 text-center font-bold text-lg text-brand-primary">{children}</span>
                     <button
                       type="button"
-                      onClick={() => setChildren(children + 1)}
-                      className="w-9 h-9 rounded-lg bg-white border border-gray-300 text-gray-700 flex items-center justify-center font-bold hover:bg-gray-100"
+                      onClick={() => setChildren(Math.min(MAX_FAMILY_MEMBERS, children + 1))}
+                      disabled={children >= MAX_FAMILY_MEMBERS}
+                      className="w-9 h-9 rounded-lg bg-white border border-gray-300 text-gray-700 flex items-center justify-center font-bold hover:bg-gray-100 disabled:opacity-40"
                     >
                       <Plus className="w-4 h-4" />
                     </button>
@@ -483,56 +503,104 @@ export default function SponsorshipCostEstimatorPage() {
                   </p>
                 </div>
 
-                {/* Table Breakdown */}
-                <div className="border border-gray-200 rounded-2xl overflow-hidden shadow-xs overflow-x-auto">
-                  <table className="w-full text-xs sm:text-sm text-left">
-                    <thead className="bg-slate-50 border-b border-gray-200 text-gray-500 font-bold uppercase text-[10px] sm:text-[11px] tracking-wider">
-                      <tr>
-                        <th className="px-3.5 sm:px-6 py-3 sm:py-3.5">Item</th>
-                        <th className="px-3.5 sm:px-6 py-3 sm:py-3.5 text-right whitespace-nowrap">Subtotal</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                      <tr>
-                        <td className="px-3.5 sm:px-6 py-3 sm:py-3.5 text-gray-800">
-                          Nomination fee{calculation.nominationFeeRate === 0 ? ' (none for this subclass)' : ''}
-                        </td>
-                        <td className="px-3.5 sm:px-6 py-3 sm:py-3.5 text-right font-semibold text-gray-900 whitespace-nowrap">
-                          {fmt(calculation.nominationTotal)}
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="px-3.5 sm:px-6 py-3 sm:py-3.5 text-gray-800">
-                          Skilling Australians Fund (SAF) levy
-                        </td>
-                        <td className="px-3.5 sm:px-6 py-3 sm:py-3.5 text-right font-semibold text-gray-900 whitespace-nowrap">
-                          {fmt(calculation.safTotal)}
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="px-3.5 sm:px-6 py-3 sm:py-3.5 text-gray-800">
-                          Visa application charge — sponsored worker(s)
-                        </td>
-                        <td className="px-3.5 sm:px-6 py-3 sm:py-3.5 text-right font-semibold text-gray-900 whitespace-nowrap">
-                          {fmt(calculation.vacPrimaryTotal)}
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="px-3.5 sm:px-6 py-3 sm:py-3.5 text-gray-800">
-                          Visa application charge — accompanying family
-                        </td>
-                        <td className="px-3.5 sm:px-6 py-3 sm:py-3.5 text-right font-semibold text-gray-900 whitespace-nowrap">
-                          {fmt(calculation.vacFamilyTotal)}
-                        </td>
-                      </tr>
-                      <tr className="bg-slate-50/80 font-bold text-xs sm:text-base border-t-2 border-brand-primary">
-                        <td className="px-3.5 sm:px-6 py-3.5 sm:py-4 text-brand-primary">Total government charges</td>
-                        <td className="px-3.5 sm:px-6 py-3.5 sm:py-4 text-right text-brand-primary font-black whitespace-nowrap">
-                          {fmt(calculation.grandTotal)}
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
+                {/* Sectioned Breakdown: Company Cost / Applicant Cost / Family Charges */}
+                <div className="space-y-4">
+                  {/* Company Cost */}
+                  <div className="border border-gray-200 rounded-2xl overflow-hidden shadow-xs overflow-x-auto">
+                    <div className="px-3.5 sm:px-6 py-2.5 sm:py-3 bg-brand-soft/60 border-b border-gray-200 flex items-center justify-between">
+                      <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-brand-primary">Company cost</span>
+                      <span className="text-[10px] sm:text-[11px] text-gray-500 font-medium">Paid by the sponsoring business</span>
+                    </div>
+                    <table className="w-full text-xs sm:text-sm text-left">
+                      <tbody className="divide-y divide-gray-100">
+                        <tr>
+                          <td className="px-3.5 sm:px-6 py-3 sm:py-3.5 text-gray-800">
+                            Nomination fee{calculation.nominationFeeRate === 0 ? ' (none for this subclass)' : ''}
+                          </td>
+                          <td className="px-3.5 sm:px-6 py-3 sm:py-3.5 text-right font-semibold text-gray-900 whitespace-nowrap">
+                            {fmt(calculation.nominationTotal)}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="px-3.5 sm:px-6 py-3 sm:py-3.5 text-gray-800">
+                            Skilling Australians Fund (SAF) levy
+                          </td>
+                          <td className="px-3.5 sm:px-6 py-3 sm:py-3.5 text-right font-semibold text-gray-900 whitespace-nowrap">
+                            {fmt(calculation.safTotal)}
+                          </td>
+                        </tr>
+                        <tr className="bg-slate-50/80 font-bold">
+                          <td className="px-3.5 sm:px-6 py-3 sm:py-3.5 text-brand-primary">Company cost subtotal</td>
+                          <td className="px-3.5 sm:px-6 py-3 sm:py-3.5 text-right text-brand-primary whitespace-nowrap">
+                            {fmt(companyCostTotal)}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Applicant Cost */}
+                  <div className="border border-gray-200 rounded-2xl overflow-hidden shadow-xs overflow-x-auto">
+                    <div className="px-3.5 sm:px-6 py-2.5 sm:py-3 bg-brand-soft/60 border-b border-gray-200 flex items-center justify-between">
+                      <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-brand-primary">Applicant cost</span>
+                      <span className="text-[10px] sm:text-[11px] text-gray-500 font-medium">Sponsored worker(s) visa application charge</span>
+                    </div>
+                    <table className="w-full text-xs sm:text-sm text-left">
+                      <tbody className="divide-y divide-gray-100">
+                        <tr>
+                          <td className="px-3.5 sm:px-6 py-3 sm:py-3.5 text-gray-800">
+                            Visa application charge — sponsored worker(s)
+                          </td>
+                          <td className="px-3.5 sm:px-6 py-3 sm:py-3.5 text-right font-semibold text-gray-900 whitespace-nowrap">
+                            {fmt(calculation.vacPrimaryTotal)}
+                          </td>
+                        </tr>
+                        <tr className="bg-slate-50/80 font-bold">
+                          <td className="px-3.5 sm:px-6 py-3 sm:py-3.5 text-brand-primary">Applicant cost subtotal</td>
+                          <td className="px-3.5 sm:px-6 py-3 sm:py-3.5 text-right text-brand-primary whitespace-nowrap">
+                            {fmt(applicantCostTotal)}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Family Charges */}
+                  <div className="border border-gray-200 rounded-2xl overflow-hidden shadow-xs overflow-x-auto">
+                    <div className="px-3.5 sm:px-6 py-2.5 sm:py-3 bg-brand-soft/60 border-b border-gray-200 flex items-center justify-between">
+                      <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-brand-primary">Family charges</span>
+                      <span className="text-[10px] sm:text-[11px] text-gray-500 font-medium">Accompanying dependants</span>
+                    </div>
+                    <table className="w-full text-xs sm:text-sm text-left">
+                      <tbody className="divide-y divide-gray-100">
+                        <tr>
+                          <td className="px-3.5 sm:px-6 py-3 sm:py-3.5 text-gray-800">
+                            Visa application charge — accompanying family
+                            {(adults > 0 || children > 0) && (
+                              <span className="text-gray-400"> ({adults} adult{adults !== 1 ? 's' : ''}, {children} child{children !== 1 ? 'ren' : ''})</span>
+                            )}
+                          </td>
+                          <td className="px-3.5 sm:px-6 py-3 sm:py-3.5 text-right font-semibold text-gray-900 whitespace-nowrap">
+                            {fmt(calculation.vacFamilyTotal)}
+                          </td>
+                        </tr>
+                        <tr className="bg-slate-50/80 font-bold">
+                          <td className="px-3.5 sm:px-6 py-3 sm:py-3.5 text-brand-primary">Family charges subtotal</td>
+                          <td className="px-3.5 sm:px-6 py-3 sm:py-3.5 text-right text-brand-primary whitespace-nowrap">
+                            {fmt(familyChargesTotal)}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Grand Total */}
+                  <div className="rounded-2xl border-2 border-brand-primary bg-brand-soft/80 px-4 sm:px-6 py-4 flex items-center justify-between">
+                    <span className="text-sm sm:text-base font-bold text-brand-primary">Total government charges</span>
+                    <span className="text-lg sm:text-xl font-black text-brand-primary whitespace-nowrap">
+                      {fmt(calculation.grandTotal)}
+                    </span>
+                  </div>
                 </div>
 
                 {/* CTA Row */}

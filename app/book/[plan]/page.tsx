@@ -120,10 +120,19 @@ export default function BookPlanPage({
     <div className="bg-slate-50/50 min-h-screen">
       {/* Header Info Section */}
       <div className="bg-[#012269] text-white pt-12 pb-24 px-4 sm:px-6 lg:px-8">
+        <a
+          href="https://migrationrepublic.com.au/book-a-consultation/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center text-white/60 hover:text-white transition-colors mb-6 text-sm font-bold uppercase tracking-widest"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back to Consultations
+        </a>
         <div className="max-w-7xl mx-auto text-center">
           <div className="flex justify-center mb-6">
             <Image
-              src="/images/logobgre.png"
+              src="/images/logo.jpg"
               alt="Migration Republic"
               width={140}
               height={140}
@@ -131,14 +140,7 @@ export default function BookPlanPage({
               priority
             />
           </div>
-          <Link
-            href="/pricing"
-            className="inline-flex items-center text-white/60 hover:text-white transition-colors mb-6 text-sm font-bold uppercase tracking-widest"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Consultations
-          </Link>
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-black mb-4 tracking-tighter text-white">
+          <h1 className="text-[31px] md:text-[43px] lg:text-[55px] font-black mb-4 tracking-tighter text-white">
             Book Your {plan.name}
           </h1>
           <p className="text-xl text-blue-100/80 max-w-2xl mx-auto font-medium">
@@ -151,9 +153,9 @@ export default function BookPlanPage({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-12 pb-20">
         <div className="grid lg:grid-cols-[1fr_380px] gap-8 items-start">
           {/* Main Booking Interface */}
-          <div className="bg-white rounded-3xl shadow-2xl shadow-blue-900/5 border border-blue-50/50 p-6 md:p-10">
+          <div className="bg-white rounded-3xl shadow-2xl shadow-blue-900/5 border border-blue-50/50 p-4 sm:p-6 md:p-8">
             {/* Step Progress */}
-            <div className="flex items-center justify-between mb-10 pb-10 border-b border-gray-100">
+            <div className="flex items-center justify-between mb-6 sm:mb-8 pb-6 sm:pb-8 border-b border-gray-100">
               <div className="flex flex-col items-center gap-2">
                 <div
                   className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black transition-all duration-500 ${step === 1 ? "bg-[#e40229] text-white shadow-lg shadow-[#e40229]/20 scale-110" : "bg-green-500 text-white"}`}
@@ -186,12 +188,12 @@ export default function BookPlanPage({
             </div>
 
             {step === 1 && (
-              <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                <div className="grid md:grid-cols-1 gap-10">
+              <div className="space-y-6 sm:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                <div className="grid md:grid-cols-1 gap-6 sm:gap-8">
                   <section>
-                    <h3 className="text-xl font-black text-[#012269] mb-6 flex items-center gap-3">
-                      <div className="p-2 bg-blue-50 rounded-lg">
-                        <CalendarIcon className="w-5 h-5 text-[#012269]" />
+                    <h3 className="text-lg sm:text-xl font-black text-[#012269] mb-3 sm:mb-4 flex items-center gap-2 sm:gap-3">
+                      <div className="p-1.5 sm:p-2 bg-blue-50 rounded-lg">
+                        <CalendarIcon className="w-4 h-4 sm:w-5 sm:h-5 text-[#012269]" />
                       </div>
                       1. Choose a Date
                     </h3>
@@ -203,12 +205,12 @@ export default function BookPlanPage({
 
                   {selectedDate && (
                     <section className="animate-in fade-in slide-in-from-top-4 duration-700">
-                      <h3 className="text-xl font-black text-[#012269] mb-6 flex items-center gap-3">
-                        <div className="p-2 bg-blue-50 rounded-lg">
-                          <Clock className="w-5 h-5 text-[#012269]" />
+                      <h3 className="text-lg sm:text-xl font-black text-[#012269] mb-3 sm:mb-4 flex flex-wrap items-center gap-2 sm:gap-3">
+                        <div className="p-1.5 sm:p-2 bg-blue-50 rounded-lg">
+                          <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-[#012269]" />
                         </div>
                         2. Available Times for {format(selectedDate, "MMMM d")}
-                        <span className="ml-2 text-xs font-bold text-blue-500 uppercase tracking-widest bg-blue-50 px-2 py-1 rounded-md">
+                        <span className="text-xs font-bold text-blue-500 uppercase tracking-widest bg-blue-50 px-2 py-1 rounded-md">
                           Melbourne Time (AEST/AEDT)
                         </span>
                       </h3>
@@ -223,7 +225,7 @@ export default function BookPlanPage({
                 </div>
 
                 {selectedTime && (
-                  <div className="pt-10 flex justify-center border-t border-gray-100">
+                  <div className="pt-6 sm:pt-8 flex justify-center border-t border-gray-100">
                     <button
                       onClick={() => setStep(2)}
                       className="btn-primary w-full md:w-auto px-12 py-4 text-lg flex items-center justify-center gap-3 group"

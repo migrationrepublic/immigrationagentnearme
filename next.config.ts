@@ -15,6 +15,12 @@ const nextConfig: NextConfig = {
         port: "",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "migrationrepublic.com.au",
+        port: "",
+        pathname: "/**",
+      },
     ],
     // allowedDevOrigins: ["192.168.100.7"],
   },

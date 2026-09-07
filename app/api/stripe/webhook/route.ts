@@ -155,6 +155,7 @@ export async function POST(req: Request) {
         .select("is_booked")
         .eq("date", metadata.date)
         .eq("time", metadata.time)
+        .eq("plan_id", metadata.planId)
         .maybeSingle();
 
       if (existingSlot?.is_booked) {
@@ -209,10 +210,11 @@ export async function POST(req: Request) {
             {
               date: metadata.date,
               time: metadata.time,
+              plan_id: metadata.planId,
               is_booked: true,
             },
             {
-              onConflict: "date,time",
+              onConflict: "date,time,plan_id",
             }
           );
 

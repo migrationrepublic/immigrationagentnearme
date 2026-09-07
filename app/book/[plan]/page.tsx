@@ -79,17 +79,17 @@ export default function BookPlanPage({
   }, [planId]);
 
   useEffect(() => {
-    if (!selectedDate) return;
+    if (!selectedDate || !plan) return;
     async function fetchSlots() {
       setLoadingSlots(true);
       setSelectedTime(null);
       const formattedDate = format(selectedDate!, "yyyy-MM-dd");
-      const availableSlots = await getAvailableSlots(formattedDate);
+      const availableSlots = await getAvailableSlots(formattedDate, plan!.id);
       setSlots(availableSlots);
       setLoadingSlots(false);
     }
     fetchSlots();
-  }, [selectedDate]);
+  }, [selectedDate, plan]);
 
   if (loadingPlan) {
     return (

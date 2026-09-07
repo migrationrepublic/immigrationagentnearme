@@ -63,9 +63,12 @@ export class BookingService {
   }
 
   /**
-   * Retrieves all available consultation slots for a date (filtered for booked slots).
+   * Retrieves all available consultation slots for a date and consultation
+   * type (plan). Each plan (Phone / Online Video / In-Office) has its own
+   * independent availability, so blocking a slot for one type does not
+   * affect the others.
    */
-  static async getAvailableSlots(date: string): Promise<string[]> {
+  static async getAvailableSlots(date: string, planId: string): Promise<string[]> {
     const defaultSlots = [
       "09:00:00",
       "10:00:00",
@@ -76,15 +79,16 @@ export class BookingService {
       "16:00:00",
     ];
 
-    // Fetch booked slots from availability table
+    // Fetch booked slots from availability table, scoped to this plan
     const { data, error } = await supabaseServer
       .from("availability")
       .select("time")
       .eq("date", date)
+      .eq("plan_id", planId)
       .eq("is_booked", true);
 
     if (error) {
-      console.error(`BookingService.getAvailableSlots (${date}) error:`, error);
+      console.error(`BookingService.getAvailableSlots (${date}, ${planId}) error:`, error);
       return defaultSlots;
     }
 
@@ -117,12 +121,13 @@ export class BookingService {
    * Inserts a new booking record and blocks the availability slot.
    */
   static async createBooking(bookingInput: Omit<Booking, "id" | "status" | "created_at">): Promise<Booking> {
-    // 1. Verify slot is not already booked
+    // 1. Verify slot is not already booked for this consultation type
     const { data: slotData, error: slotError } = await supabaseServer
       .from("availability")
       .select("is_booked")
       .eq("date", bookingInput.date)
       .eq("time", bookingInput.time)
+      .eq("plan_id", bookingInput.plan_id)
       .maybeSingle();
 
     if (slotError) {
@@ -157,16 +162,17 @@ export class BookingService {
       throw new Error(`Failed to create booking database entry: ${error.message}`);
     }
 
-    // 3. Mark the availability slot as booked
+    // 3. Mark the availability slot as booked for this consultation type
     const { error: availabilityError } = await supabaseServer
       .from("availability")
       .upsert(
         {
           date: bookingInput.date,
           time: bookingInput.time,
+          plan_id: bookingInput.plan_id,
           is_booked: true,
         },
-        { onConflict: "date,time" }
+        { onConflict: "date,time,plan_id" }
       );
 
     if (availabilityError) {
@@ -182,7 +188,7 @@ export class BookingService {
   static async confirmBookingPayment(sessionId: string): Promise<boolean> {
     const { data: existingBooking, error: checkError } = await supabaseServer
       .from("bookings")
-      .select("id, date, time")
+      .select("id, date, time, plan_id")
       .eq("stripe_session_id", sessionId)
       .maybeSingle();
 
@@ -205,14 +211,15 @@ export class BookingService {
       return false;
     }
 
-    // Ensure slot is booked
+    // Ensure slot is booked for this consultation type
     await supabaseServer.from("availability").upsert(
       {
         date: existingBooking.date,
         time: existingBooking.time,
+        plan_id: existingBooking.plan_id,
         is_booked: true,
       },
-      { onConflict: "date,time" }
+      { onConflict: "date,time,plan_id" }
     );
 
     return true;
@@ -224,7 +231,7 @@ export class BookingService {
   static async cancelBooking(bookingId: string): Promise<boolean> {
     const { data: booking, error: fetchError } = await supabaseServer
       .from("bookings")
-      .select("date, time")
+      .select("date, time, plan_id")
       .eq("id", bookingId)
       .single();
 
@@ -244,12 +251,13 @@ export class BookingService {
       return false;
     }
 
-    // Delete availability record to release slot
+    // Delete availability record to release slot for this consultation type
     const { error: deleteError } = await supabaseServer
       .from("availability")
       .delete()
       .eq("date", booking.date)
-      .eq("time", booking.time);
+      .eq("time", booking.time)
+      .eq("plan_id", booking.plan_id);
 
     if (deleteError) {
       console.error("BookingService.cancelBooking availability release error:", deleteError);

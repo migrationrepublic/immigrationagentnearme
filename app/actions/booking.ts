@@ -47,9 +47,9 @@ export async function getPlanBySlug(slug: string) {
   }
 }
 
-export async function getAvailableSlots(date: string) {
+export async function getAvailableSlots(date: string, planId: string) {
   try {
-    return await BookingService.getAvailableSlots(date);
+    return await BookingService.getAvailableSlots(date, planId);
   } catch (error) {
     console.error("Action getAvailableSlots error:", error);
     return [];

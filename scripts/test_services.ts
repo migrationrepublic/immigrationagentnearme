@@ -252,7 +252,7 @@ async function runTests() {
     const planBySlug = await BookingService.getPlanBySlug("phone-consultation");
     assert(planBySlug !== null && planBySlug.name === "Phone Consultation", "BookingService.getPlanBySlug()");
 
-    const slots = await BookingService.getAvailableSlots("2026-07-10");
+    const slots = await BookingService.getAvailableSlots("2026-07-10", "11111111-1111-1111-1111-111111111111");
     assert(!slots.includes("09:00:00") && slots.includes("10:00:00"), "BookingService.getAvailableSlots()");
 
     const newBooking = await BookingService.createBooking({

@@ -9,6 +9,7 @@ export interface WebsiteLead {
   source_url?: string;
   wordpress_form_id?: string;
   wordpress_lead_id?: string;
+  channel: 'website' | 'facebook' | 'instagram';
   status: 'new' | 'in_progress' | 'contacted' | 'converted' | 'junk' | 'closed';
   notes?: string;
   created_at: string;

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react"
 import { format } from "date-fns"
-import { Loader2, Search, ExternalLink, Info, X, CheckSquare, Square, Check, Archive, MailCheck, Clock, AlertCircle } from "lucide-react"
+import { Loader2, Search, ExternalLink, Info, X, CheckSquare, Square, Check, Archive, MailCheck, Clock, AlertCircle, Globe, Facebook, Instagram } from "lucide-react"
 import { getWebsiteLeadsAction, updateWebsiteLeadStatusAction, bulkUpdateWebsiteLeadStatusAction } from "@/app/actions/admin"
 
 interface WebsiteLead {
@@ -16,6 +16,7 @@ interface WebsiteLead {
   source_url: string | null
   wordpress_form_id: string | null
   wordpress_lead_id: string | null
+  channel: string | null
   status: string | null
   notes: string | null
   created_at: string
@@ -26,6 +27,7 @@ export default function WebsiteLeadsPage() {
   const [leads, setLeads] = useState<WebsiteLead[]>([])
   const [search, setSearch] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
+  const [channelFilter, setChannelFilter] = useState("all")
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -102,8 +104,9 @@ export default function WebsiteLeadsPage() {
       l.message?.toLowerCase().includes(search.toLowerCase())
 
     const matchesStatus = statusFilter === "all" || (l.status || "new") === statusFilter
+    const matchesChannel = channelFilter === "all" || (l.channel || "website") === channelFilter
 
-    return matchesSearch && matchesStatus
+    return matchesSearch && matchesStatus && matchesChannel
   })
 
   // Bulk Selection Handlers
@@ -171,6 +174,21 @@ export default function WebsiteLeadsPage() {
   const archivedCount = leads.filter(l => l.status === "archived").length
   const totalCount = leads.length
 
+  const websiteCount = leads.filter(l => (l.channel || "website") === "website").length
+  const facebookCount = leads.filter(l => l.channel === "facebook").length
+  const instagramCount = leads.filter(l => l.channel === "instagram").length
+
+  const getChannelBadge = (channel: string | null) => {
+    switch (channel) {
+      case "facebook":
+        return { label: "Facebook", className: "bg-blue-50 text-blue-700 border-blue-200", Icon: Facebook }
+      case "instagram":
+        return { label: "Instagram", className: "bg-pink-50 text-pink-700 border-pink-200", Icon: Instagram }
+      default:
+        return { label: "Website", className: "bg-slate-50 text-slate-600 border-slate-200", Icon: Globe }
+    }
+  }
+
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
       case "new":
@@ -208,6 +226,18 @@ export default function WebsiteLeadsPage() {
               className="admin-input pl-9 w-full py-2 px-3 border border-gray-200 rounded-xl text-sm"
             />
           </div>
+
+          {/* Channel Filter */}
+          <select
+            value={channelFilter}
+            onChange={e => setChannelFilter(e.target.value)}
+            className="admin-select w-full sm:w-44 py-2 px-3 border border-gray-200 rounded-xl text-sm font-medium"
+          >
+            <option value="all">All Sources ({totalCount})</option>
+            <option value="website">Website ({websiteCount})</option>
+            <option value="facebook">Facebook ({facebookCount})</option>
+            <option value="instagram">Instagram ({instagramCount})</option>
+          </select>
 
           {/* Status Filter */}
           <select
@@ -404,6 +434,7 @@ export default function WebsiteLeadsPage() {
               ) : (
                 filtered.map(lead => {
                   const isChecked = selectedIds.has(lead.id)
+                  const channelBadge = getChannelBadge(lead.channel)
                   return (
                     <tr
                       key={lead.id}
@@ -420,6 +451,10 @@ export default function WebsiteLeadsPage() {
                         />
                       </td>
                       <td className="py-3.5 px-4">
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border mb-1 ${channelBadge.className}`}>
+                          <channelBadge.Icon className="w-2.5 h-2.5" />
+                          {channelBadge.label}
+                        </span>
                         <span className="font-bold text-gray-900 block">
                           {lead.first_name || lead.last_name ? `${lead.first_name || ""} ${lead.last_name || ""}` : "Anonymous"}
                         </span>
@@ -488,6 +523,18 @@ export default function WebsiteLeadsPage() {
                 <div className="p-4 rounded-2xl bg-gray-50 border border-gray-100 space-y-2.5">
                   <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wide">Contact Information</h4>
                   <div className="text-xs text-gray-700 space-y-1">
+                    <p>
+                      <span className="font-semibold">Source: </span>
+                      {(() => {
+                        const b = getChannelBadge(selectedLead.channel)
+                        return (
+                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border ${b.className}`}>
+                            <b.Icon className="w-2.5 h-2.5" />
+                            {b.label}
+                          </span>
+                        )
+                      })()}
+                    </p>
                     <p><span className="font-semibold">Email: </span><a href={`mailto:${selectedLead.email}`} className="text-blue-600 hover:underline">{selectedLead.email}</a></p>
                     <p><span className="font-semibold">Phone: </span>{selectedLead.phone || "—"}</p>
                     <p>

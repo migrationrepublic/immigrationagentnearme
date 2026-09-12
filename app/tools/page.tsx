@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ToolNavbar } from '@/components/tools/shared/tool-navbar';
-import { Calculator, ClipboardCheck, MessageSquareQuote, ArrowRight, Building2, Receipt } from 'lucide-react';
+import { Calculator, ClipboardCheck, MessageSquareQuote, ArrowRight, Building2, Receipt, User } from 'lucide-react';
 
 const tools = [
   {
@@ -24,6 +24,15 @@ const tools = [
     icon: <Receipt className="w-7 h-7 text-emerald-600" />,
     href: '/tools/sponsorship-cost-estimator',
     color: 'bg-emerald-50',
+  },
+  {
+    id: 'applicant-cost-calculator',
+    title: 'Applicant Cost Estimator',
+    badge: 'Visa Charges',
+    description: 'Calculate the applicant\'s visa application charges (VAC) for themselves and accompanying family.',
+    icon: <User className="w-7 h-7 text-teal-600" />,
+    href: '/tools/applicant-cost-calculator',
+    color: 'bg-teal-50',
   },
   {
     id: 'subclass-482-checker',

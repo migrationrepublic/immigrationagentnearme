@@ -36,6 +36,11 @@ const envSchema = z.object({
   WORDPRESS_WEBHOOK_SECRET: isServer
     ? z.string().min(1, "WordPress Webhook Secret is required")
     : z.string().optional(),
+
+  // Meta (Facebook/Instagram) Lead Ads integration — optional until configured
+  META_VERIFY_TOKEN: z.string().optional(),
+  META_PAGE_ACCESS_TOKEN: z.string().optional(),
+  META_APP_SECRET: z.string().optional(),
 });
 
 const parsed = envSchema.safeParse({
@@ -51,6 +56,9 @@ const parsed = envSchema.safeParse({
   GEMINI_API_KEY: process.env.GEMINI_API_KEY,
   MICROSOFT_MEET_LINK: process.env.MICROSOFT_MEET_LINK,
   WORDPRESS_WEBHOOK_SECRET: process.env.WORDPRESS_WEBHOOK_SECRET,
+  META_VERIFY_TOKEN: process.env.META_VERIFY_TOKEN,
+  META_PAGE_ACCESS_TOKEN: process.env.META_PAGE_ACCESS_TOKEN,
+  META_APP_SECRET: process.env.META_APP_SECRET,
 });
 
 if (!parsed.success) {
@@ -76,4 +84,7 @@ export const env = {
   MICROSOFT_MEET_LINK: validated.MICROSOFT_MEET_LINK || "https://teams.live.com/meet/939983663000?p=pxeipOrwss1489LTOJ",
   APP_URL: validated.NEXT_PUBLIC_APP_URL || "https://immigrationagentnearme.com",
   WORDPRESS_WEBHOOK_SECRET: validated.WORDPRESS_WEBHOOK_SECRET!,
+  META_VERIFY_TOKEN: validated.META_VERIFY_TOKEN,
+  META_PAGE_ACCESS_TOKEN: validated.META_PAGE_ACCESS_TOKEN,
+  META_APP_SECRET: validated.META_APP_SECRET,
 };

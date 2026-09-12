@@ -50,6 +50,7 @@ interface DashboardStats {
   toolLeadsQuizCount: number
   toolLeadsSponsorCount: number
   toolLeadsCostCount: number
+  toolLeadsApplicantCostCount: number
   revenue: number
 }
 
@@ -78,6 +79,7 @@ export default function AdminDashboardPage() {
     toolLeadsQuizCount: 0,
     toolLeadsSponsorCount: 0,
     toolLeadsCostCount: 0,
+    toolLeadsApplicantCostCount: 0,
     revenue: 0,
   })
   const [recentWebsiteLeads, setRecentWebsiteLeads] = useState<DetailedWebsiteLead[]>([])
@@ -127,6 +129,7 @@ export default function AdminDashboardPage() {
       const tEligibility = tLeads.filter(l => l.tool_name === 'Eligibility Checker').length
       const tSponsor = tLeads.filter(l => l.tool_name?.includes('Business Sponsor')).length
       const tCost = tLeads.filter(l => l.tool_name?.includes('Cost Estimator') || l.tool_name?.includes('Sponsorship Cost')).length
+      const tApplicantCost = tLeads.filter(l => l.tool_name?.includes('Applicant Cost')).length
       const tQuiz = tLeads.filter(l => l.tool_name === 'Visa Suggestion Quiz' || (!l.tool_name?.includes('482') && l.tool_name !== 'PR Calculator' && l.tool_name !== 'PR Points Calculator' && l.tool_name !== 'Eligibility Checker' && !l.tool_name?.includes('Business Sponsor') && !l.tool_name?.includes('Cost'))).length
 
       setStats({
@@ -145,6 +148,7 @@ export default function AdminDashboardPage() {
         toolLeadsQuizCount: tQuiz,
         toolLeadsSponsorCount: tSponsor,
         toolLeadsCostCount: tCost,
+        toolLeadsApplicantCostCount: tApplicantCost,
         revenue: totalRev / 100,
       })
 
@@ -306,7 +310,7 @@ export default function AdminDashboardPage() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
             <div className="p-3 bg-slate-50 border border-slate-100 rounded-lg">
               <span className="text-xs text-slate-500 font-medium block">Sponsor Quick</span>
               <span className="text-xl font-bold text-slate-900 mt-1 block">{stats.toolLeadsSponsorCount}</span>
@@ -315,6 +319,11 @@ export default function AdminDashboardPage() {
             <div className="p-3 bg-slate-50 border border-slate-100 rounded-lg">
               <span className="text-xs text-slate-500 font-medium block">Cost Estimator</span>
               <span className="text-xl font-bold text-slate-900 mt-1 block">{stats.toolLeadsCostCount}</span>
+            </div>
+
+            <div className="p-3 bg-slate-50 border border-slate-100 rounded-lg">
+              <span className="text-xs text-slate-500 font-medium block">Applicant Cost</span>
+              <span className="text-xl font-bold text-slate-900 mt-1 block">{stats.toolLeadsApplicantCostCount}</span>
             </div>
 
             <div className="p-3 bg-slate-50 border border-slate-100 rounded-lg">
@@ -444,6 +453,8 @@ export default function AdminDashboardPage() {
                 <tbody className="divide-y divide-slate-100 text-slate-700">
                   {recentToolLeads.map((lead) => {
                     const isPR = lead.tool_name === 'PR Calculator' || lead.tool_name === 'PR Points Calculator'
+                    const isCostEstimator = lead.tool_name?.includes('Cost Estimator') || lead.tool_name?.includes('Sponsorship Cost')
+                    const isApplicantCost = lead.tool_name?.includes('Applicant Cost')
                     return (
                       <tr key={lead.id} className="hover:bg-slate-50/70 transition-colors">
                         <td className="px-6 py-3.5">
@@ -455,6 +466,14 @@ export default function AdminDashboardPage() {
                           {isPR ? (
                             <span className="font-semibold text-slate-900">
                               {(lead.results?.totalPoints as number) ?? 0} Points
+                            </span>
+                          ) : isCostEstimator ? (
+                            <span className="font-semibold text-slate-900">
+                              {(lead.results?.grand_total_government_charges as string) ?? 'Assessed'}
+                            </span>
+                          ) : isApplicantCost ? (
+                            <span className="font-semibold text-slate-900">
+                              {(lead.results?.total_visa_application_charges as string) ?? 'Assessed'}
                             </span>
                           ) : (
                             <span className="text-slate-600">Assessed</span>

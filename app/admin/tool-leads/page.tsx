@@ -59,6 +59,14 @@ interface ToolLeadResults {
   family_vac_total?: string
   grand_total_government_charges?: string
   itemised_breakdown?: Record<string, string>
+  company_cost?: Record<string, string>
+  applicant_cost?: Record<string, string>
+
+  // Applicant Cost Calculator Fields
+  applicant_visa_charge?: string
+  family_visa_charge_adults?: string
+  family_visa_charge_children?: string
+  total_visa_application_charges?: string
 }
 
 export default function ToolLeadsPage() {
@@ -105,6 +113,8 @@ export default function ToolLeadsPage() {
       matchesTool = l.tool_name?.includes("Business Sponsor")
     } else if (toolFilter === "cost") {
       matchesTool = l.tool_name?.includes("Cost Estimator") || l.tool_name?.includes("Sponsorship Cost")
+    } else if (toolFilter === "applicant") {
+      matchesTool = l.tool_name?.includes("Applicant Cost")
     } else if (toolFilter === "482") {
       matchesTool = l.tool_name?.includes("482") && !l.tool_name?.includes("Business Sponsor")
     } else if (toolFilter === "pr") {
@@ -128,6 +138,7 @@ export default function ToolLeadsPage() {
 
   const sponsorCount     = leads.filter(l => l.tool_name?.includes("Business Sponsor")).length
   const costCount        = leads.filter(l => l.tool_name?.includes("Cost Estimator") || l.tool_name?.includes("Sponsorship Cost")).length
+  const applicantCount   = leads.filter(l => l.tool_name?.includes("Applicant Cost")).length
   const count482         = leads.filter(l => l.tool_name?.includes("482") && !l.tool_name?.includes("Business Sponsor")).length
   const prCount          = leads.filter(l => l.tool_name === "PR Calculator" || l.tool_name === "PR Points Calculator").length
   const eligibilityCount = leads.filter(l => l.tool_name === "Eligibility Checker").length
@@ -166,6 +177,7 @@ export default function ToolLeadsPage() {
             <option value="all">All Tools ({totalCount})</option>
             <option value="sponsor">Business Sponsor Quick ({sponsorCount})</option>
             <option value="cost">Sponsorship Cost Estimator ({costCount})</option>
+            <option value="applicant">Applicant Cost Calculator ({applicantCount})</option>
             <option value="482">Subclass 482 Checker ({count482})</option>
             <option value="pr">PR Calculator ({prCount})</option>
             <option value="eligibility">Eligibility Checker ({eligibilityCount})</option>
@@ -175,7 +187,7 @@ export default function ToolLeadsPage() {
       </div>
 
       {/* Corporate Tool KPI Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-8 gap-3">
         {/* All Tools */}
         <div
           onClick={() => setToolFilter("all")}
@@ -213,6 +225,19 @@ export default function ToolLeadsPage() {
             <span className="text-xs font-semibold">Cost Estimator</span>
           </div>
           <div className="text-2xl font-bold text-slate-900">{costCount}</div>
+        </div>
+
+        {/* Applicant Cost Calculator */}
+        <div
+          onClick={() => setToolFilter("applicant")}
+          className={`p-3.5 rounded-xl border bg-white shadow-xs cursor-pointer transition-all ${
+            toolFilter === "applicant" ? "border-teal-700 ring-1 ring-teal-700 bg-teal-50/50" : "border-slate-200 hover:border-slate-300"
+          }`}
+        >
+          <div className="text-teal-700 mb-1">
+            <span className="text-xs font-semibold">Applicant Cost</span>
+          </div>
+          <div className="text-2xl font-bold text-slate-900">{applicantCount}</div>
         </div>
 
         {/* 482 Checker */}
@@ -339,6 +364,17 @@ export default function ToolLeadsPage() {
                             </div>
                             <div className="text-xs text-gray-500">
                               {r.visa_subclass} • {r.number_of_workers} worker(s)
+                            </div>
+                          </div>
+                        )}
+
+                        {lead.tool_name?.includes("Applicant Cost") && (
+                          <div className="space-y-0.5">
+                            <div className="text-xs font-bold text-teal-800 bg-teal-50 px-2 py-0.5 rounded inline-block">
+                              {r.total_visa_application_charges || 'Total Calculated'}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {r.visa_subclass} • {r.accompanying_family}
                             </div>
                           </div>
                         )}
@@ -514,10 +550,30 @@ export default function ToolLeadsPage() {
                       <div className="grid grid-cols-2 gap-3 bg-white border border-gray-100 rounded-xl p-3.5 text-xs text-gray-700">
                         <p><span className="font-bold text-gray-400">Business Turnover:</span> {results.business_turnover}</p>
                         <p><span className="font-bold text-gray-400">Years of Stay:</span> {results.years_of_stay}</p>
-                        <p><span className="font-bold text-gray-400">Nomination Total:</span> {results.nomination_fees_total}</p>
-                        <p><span className="font-bold text-gray-400">SAF Levy Total:</span> {results.saf_levy_total}</p>
-                        <p><span className="font-bold text-gray-400">Primary VAC Total:</span> {results.primary_vac_total}</p>
-                        <p><span className="font-bold text-gray-400">Family VAC Total:</span> {results.family_vac_total}</p>
+                        <p><span className="font-bold text-gray-400">Nomination Fee:</span> {results.company_cost?.nomination_fee ?? results.nomination_fees_total}</p>
+                        <p><span className="font-bold text-gray-400">SAF Levy:</span> {results.company_cost?.saf_levy ?? results.saf_levy_total}</p>
+                        <p><span className="font-bold text-gray-400">Company Cost Subtotal:</span> {results.company_cost?.subtotal}</p>
+                        <p><span className="font-bold text-gray-400">Applicant Cost Subtotal:</span> {results.applicant_cost?.subtotal}</p>
+                        <p className="col-span-2"><span className="font-bold text-gray-400">Family Dependants:</span> {results.accompanying_family}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 2b. APPLICANT COST CALCULATOR RESULTS */}
+                  {lead.tool_name?.includes("Applicant Cost") && (
+                    <div className="space-y-4">
+                      <div className="p-4 rounded-xl text-center bg-teal-50 border border-teal-100">
+                        <p className="text-xs font-bold text-gray-500 uppercase">Estimated Applicant Visa Charges</p>
+                        <h3 className="text-3xl font-black text-teal-800 mt-1">
+                          {results.total_visa_application_charges}
+                        </h3>
+                        <p className="text-xs text-gray-600 mt-1">{results.visa_subclass}</p>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3 bg-white border border-gray-100 rounded-xl p-3.5 text-xs text-gray-700">
+                        <p><span className="font-bold text-gray-400">Applicant VAC:</span> {results.applicant_visa_charge}</p>
+                        <p><span className="font-bold text-gray-400">Family VAC (Adults):</span> {results.family_visa_charge_adults}</p>
+                        <p><span className="font-bold text-gray-400">Family VAC (Children):</span> {results.family_visa_charge_children}</p>
                         <p className="col-span-2"><span className="font-bold text-gray-400">Family Dependants:</span> {results.accompanying_family}</p>
                       </div>
                     </div>

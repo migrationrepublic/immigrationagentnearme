@@ -17,6 +17,11 @@ export const TOOLS_NAV_ITEMS = [
 
   },
   {
+    name: 'Applicant Cost',
+    href: '/tools/applicant-cost-calculator',
+
+  },
+  {
     name: '482 Checker',
     href: '/tools/subclass-482-checker',
   },

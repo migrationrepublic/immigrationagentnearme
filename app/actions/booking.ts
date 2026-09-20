@@ -2,6 +2,8 @@
 
 import { BookingService } from "@/lib/services/booking.service";
 import { EmailService } from "@/lib/services/email.service";
+import { InvoiceService } from "@/lib/services/invoice.service";
+import { supabaseServer } from "@/lib/supabase-server";
 import { stripe } from "@/lib/stripe";
 import { z } from "zod";
 import { headers } from "next/headers";
@@ -76,7 +78,7 @@ export async function createCheckoutSession(input: BookingInput) {
       const mockSessionId = "mock_session_" + Math.random().toString(36).substring(7);
       
       // Call Booking Service
-      await BookingService.createBooking({
+      const freeBooking = await BookingService.createBooking({
         name: validatedData.name,
         email: validatedData.email,
         phone: validatedData.phone,
@@ -85,6 +87,15 @@ export async function createCheckoutSession(input: BookingInput) {
         time: validatedData.time,
         notes: validatedData.notes || "",
         stripe_session_id: mockSessionId,
+      });
+
+      // Booking is considered paid immediately in this bypass path (no
+      // real Stripe key configured, or a $0 plan) — mark the auto-generated
+      // invoice paid and email the client their receipt.
+      await InvoiceService.markInvoicePaidAndSend(freeBooking.id, {
+        mode: plan.price_aud === 0 ? "Free Plan" : "Bypass Checkout",
+        referenceNumber: mockSessionId,
+        amount: plan.price_aud / 100,
       });
 
       // Send Emails via Email Service
@@ -198,6 +209,26 @@ export async function handleSuccessfulPaymentAction(sessionId: string) {
 
     // If it was already confirmed or mock session was pre-filled, we check if it already existed
     if (confirmed) {
+      // Mark the invoice paid + emailed (idempotent — no-ops if the Stripe
+      // webhook already did this, since it skips invoices already "paid").
+      try {
+        const { data: bookingRow } = await supabaseServer
+          .from("bookings")
+          .select("id")
+          .eq("stripe_session_id", sessionId)
+          .maybeSingle();
+
+        if (bookingRow) {
+          await InvoiceService.markInvoicePaidAndSend(bookingRow.id, {
+            mode: "Stripe",
+            referenceNumber: sessionId,
+            amount: session.amount_total ? session.amount_total / 100 : undefined,
+          });
+        }
+      } catch (invoiceError) {
+        console.error("Invoice mark-paid failed in backup action:", invoiceError);
+      }
+
       // Send Confirmation and Admin Emails
       try {
         await EmailService.sendBookingConfirmation(

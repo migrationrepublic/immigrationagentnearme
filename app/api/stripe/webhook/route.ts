@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { supabaseServer } from "@/lib/supabase-server";
+import { InvoiceService } from "@/lib/services/invoice.service";
+import { CustomerService } from "@/lib/services/customer.service";
 import {
   sendBookingConfirmation,
   sendAdminAlert,
@@ -172,7 +174,7 @@ export async function POST(req: Request) {
       // -------------------------------
       // Insert Booking
       // -------------------------------
-      const { error: bookingError } = await supabaseServer
+      const { data: newBooking, error: bookingError } = await supabaseServer
         .from("bookings")
         .insert([
           {
@@ -186,7 +188,9 @@ export async function POST(req: Request) {
             status: "confirmed",
             stripe_session_id: sessionId,
           },
-        ]);
+        ])
+        .select("*")
+        .single();
 
       if (bookingError) {
         console.error(
@@ -223,6 +227,29 @@ export async function POST(req: Request) {
           "Availability update failed:",
           availabilityError
         );
+      }
+
+      // -------------------------------
+      // Customer + Invoice: auto-create the customer record and the draft
+      // invoice, then immediately mark the invoice paid and email the client
+      // a copy — this is the real Stripe payment, so it's authoritative
+      // "payment complete" for the auto-send requirement.
+      // -------------------------------
+      try {
+        await CustomerService.getOrCreateFromBooking({
+          name: newBooking.name,
+          email: newBooking.email,
+          phone: newBooking.phone,
+          bookingId: newBooking.id,
+        });
+        await InvoiceService.createDraftInvoiceForBooking(newBooking);
+        await InvoiceService.markInvoicePaidAndSend(newBooking.id, {
+          mode: "Stripe",
+          referenceNumber: sessionId,
+          amount: session.amount_total ? session.amount_total / 100 : undefined,
+        });
+      } catch (invoiceError) {
+        console.error("Invoice auto-generation failed:", invoiceError);
       }
 
       // -------------------------------

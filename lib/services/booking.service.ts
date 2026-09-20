@@ -1,5 +1,7 @@
 import { supabaseServer } from "@/lib/supabase-server";
 import { Booking, Plan } from "@/lib/types";
+import { InvoiceService } from "@/lib/services/invoice.service";
+import { CustomerService } from "@/lib/services/customer.service";
 
 /**
  * BookingService
@@ -178,6 +180,17 @@ export class BookingService {
     if (availabilityError) {
       console.error("BookingService.createBooking availability upsert error:", availabilityError);
     }
+
+    // 4. Auto-create the customer record (first booking with this email) and
+    // the draft invoice for this booking. Non-blocking — a failure here must
+    // never prevent the booking itself from succeeding.
+    await CustomerService.getOrCreateFromBooking({
+      name: data.name,
+      email: data.email,
+      phone: data.phone,
+      bookingId: data.id,
+    });
+    await InvoiceService.createDraftInvoiceForBooking(data);
 
     return data;
   }

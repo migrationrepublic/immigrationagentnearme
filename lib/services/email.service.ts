@@ -2,23 +2,30 @@ import { Resend } from "resend";
 import { env } from "@/lib/env";
 import { render } from "@react-email/render";
 import React from "react";
+import { Invoice } from "@/lib/types";
+import { SettingsService } from "./settings.service";
 
 // Email Components
 import BookingEmail from "@/emails/booking";
 import SignatureEmail from "@/emails/signature";
 import CompletedEmail from "@/emails/completed";
 import AdminEmail from "@/emails/admin";
+import InvoiceEmail from "@/emails/invoice";
 
 const resend = new Resend(env.RESEND_KEY);
 
 /**
  * EmailService
- * 
+ *
  * Responsible for:
  * - Rendering TSX templates dynamically
  * - Booking confirmations
  * - Signature invitations and reminders
  * - Completed copy alerts dispatch using Resend
+ *
+ * Every send fetches Admin > Settings first so business name, address,
+ * contact details, social links and branding stay in sync everywhere
+ * without a code change.
  */
 export class EmailService {
   /**
@@ -33,12 +40,14 @@ export class EmailService {
     phone?: string
   ): Promise<boolean> {
     try {
+      const settings = await SettingsService.getSettings();
       const isVideo = planName.toLowerCase().includes("video") || planName.toLowerCase().includes("online");
       const meetLink = isVideo ? env.MICROSOFT_MEET_LINK : undefined;
 
       // Render React component to HTML string using @react-email/render
       const htmlContent = await render(
         React.createElement(BookingEmail, {
+          settings,
           clientName: name,
           planName,
           date,
@@ -48,7 +57,7 @@ export class EmailService {
       );
 
       const res = await resend.emails.send({
-        from: `Migration Republic <${env.EMAIL_FROM}>`,
+        from: `${settings.business_name} <${env.EMAIL_FROM}>`,
         to: email,
         subject: `Booking Confirmed: ${planName}`,
         html: htmlContent,
@@ -74,11 +83,13 @@ export class EmailService {
     notes?: string
   ): Promise<boolean> {
     try {
+      const settings = await SettingsService.getSettings();
       const isVideo = planName.toLowerCase().includes("video") || planName.toLowerCase().includes("online");
       const meetLink = isVideo ? env.MICROSOFT_MEET_LINK : undefined;
 
       const htmlContent = await render(
         React.createElement(AdminEmail, {
+          settings,
           type: "booking",
           clientName: name,
           planName,
@@ -114,10 +125,12 @@ export class EmailService {
     requestId: string
   ): Promise<boolean> {
     try {
+      const settings = await SettingsService.getSettings();
       const signatureLink = `${env.APP_URL}/sign/${requestId}`;
 
       const htmlContent = await render(
         React.createElement(SignatureEmail, {
+          settings,
           signerName,
           documentName,
           signLink: signatureLink,
@@ -126,7 +139,7 @@ export class EmailService {
       );
 
       const res = await resend.emails.send({
-        from: `Migration Republic <${env.EMAIL_FROM}>`,
+        from: `${settings.business_name} <${env.EMAIL_FROM}>`,
         to: email,
         subject: `Signature Request: ${documentName}`,
         html: htmlContent,
@@ -162,10 +175,12 @@ export class EmailService {
     expiresAt?: string
   ): Promise<boolean> {
     try {
+      const settings = await SettingsService.getSettings();
       const signatureLink = `${env.APP_URL}/sign/${requestId}`;
 
       const htmlContent = await render(
         React.createElement(SignatureEmail, {
+          settings,
           signerName,
           documentName,
           signLink: signatureLink,
@@ -174,7 +189,7 @@ export class EmailService {
       );
 
       const res = await resend.emails.send({
-        from: `Migration Republic <${env.EMAIL_FROM}>`,
+        from: `${settings.business_name} <${env.EMAIL_FROM}>`,
         to: email,
         subject: `Reminder: Signature Request for ${documentName}`,
         html: htmlContent,
@@ -197,8 +212,11 @@ export class EmailService {
     downloadUrl: string
   ): Promise<boolean> {
     try {
+      const settings = await SettingsService.getSettings();
+
       const htmlContent = await render(
         React.createElement(CompletedEmail, {
+          settings,
           signerName,
           documentName,
           downloadLink: downloadUrl,
@@ -206,7 +224,7 @@ export class EmailService {
       );
 
       const res = await resend.emails.send({
-        from: `Migration Republic <${env.EMAIL_FROM}>`,
+        from: `${settings.business_name} <${env.EMAIL_FROM}>`,
         to: email,
         subject: `Completed: ${documentName} is signed`,
         html: htmlContent,
@@ -228,8 +246,11 @@ export class EmailService {
     downloadUrl: string
   ): Promise<boolean> {
     try {
+      const settings = await SettingsService.getSettings();
+
       const htmlContent = await render(
         React.createElement(AdminEmail, {
+          settings,
           type: "signature",
           signerName,
           documentName,
@@ -262,11 +283,13 @@ export class EmailService {
     time: string
   ): Promise<boolean> {
     try {
+      const settings = await SettingsService.getSettings();
       const isVideo = planName.toLowerCase().includes("video") || planName.toLowerCase().includes("online");
       const meetLink = isVideo ? env.MICROSOFT_MEET_LINK : undefined;
 
       const htmlContent = await render(
         React.createElement(BookingEmail, {
+          settings,
           clientName: name,
           planName,
           date,
@@ -276,7 +299,7 @@ export class EmailService {
       );
 
       const res = await resend.emails.send({
-        from: `Migration Republic <${env.EMAIL_FROM}>`,
+        from: `${settings.business_name} <${env.EMAIL_FROM}>`,
         to: email,
         subject: `Reminder: Upcoming Consultation - ${planName}`,
         html: htmlContent,
@@ -295,46 +318,49 @@ export class EmailService {
   static async sendGoogleReviewRequest(
     email: string,
     name: string,
-    reviewUrl: string = "https://g.page/r/CblNnrjAvvg5EAI/review"
+    reviewUrl?: string
   ): Promise<boolean> {
     try {
+      const settings = await SettingsService.getSettings();
+      const finalReviewUrl = reviewUrl || settings.google_review_url || "https://g.page/r/CblNnrjAvvg5EAI/review";
+
       const htmlContent = `
         <div style="background-color: #f3f4f6; padding: 30px 15px; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; min-height: 100%;">
           <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid #e2e8f0;">
             <!-- Header -->
             <div style="background-color: #ffffff; padding: 28px 24px 20px 24px; text-align: center; border-bottom: 2px solid #D4AF37;">
-              <img src="https://immigrationagentnearme.com/images/logo.jpg" alt="Migration Republic" style="width: 85px; height: auto; display: block; margin: 0 auto 10px auto; border-radius: 50%; border: none; outline: none; box-shadow: none;" />
-              <div style="color: #06276C; margin: 0; font-size: 22px; font-weight: 800; letter-spacing: 0.5px; line-height: 1.2;">Migration Republic</div>
-              <div style="color: #D4AF37; margin: 4px 0 0 0; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px;">Registered Migration Agents</div>
+              <img src="${settings.logo_url}" alt="${settings.business_name}" style="width: 85px; height: auto; display: block; margin: 0 auto 10px auto; border-radius: 50%; border: none; outline: none; box-shadow: none;" />
+              <div style="color: #06276C; margin: 0; font-size: 22px; font-weight: 800; letter-spacing: 0.5px; line-height: 1.2;">${settings.business_name}</div>
+              <div style="color: #D4AF37; margin: 4px 0 0 0; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px;">${settings.tagline}</div>
             </div>
-            
+
             <!-- Body Content -->
             <div style="padding: 32px 24px; color: #1e293b; line-height: 1.6; font-size: 15px;">
               <h2 style="color: #06276C; margin-top: 0; font-size: 20px; font-weight: bold; border-bottom: 2px solid #D4AF37; padding-bottom: 8px; text-align: center;">How was your consultation experience?</h2>
-              <p style="color: #64748b; font-size: 15px; margin: 16px 0; text-align: center;">Hi <strong>${name}</strong>, thank you for choosing <strong>Migration Republic</strong> for your Australian immigration consultation.</p>
-              
+              <p style="color: #64748b; font-size: 15px; margin: 16px 0; text-align: center;">Hi <strong>${name}</strong>, thank you for choosing <strong>${settings.business_name}</strong> for your Australian immigration consultation.</p>
+
               <div style="background-color: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; padding: 24px 20px; text-align: center; margin: 24px 0;">
                 <p style="font-size: 15px; color: #334155; margin: 0 0 20px 0;">We would really appreciate it if you could take 30 seconds to share your experience with a Google Review!</p>
-                <a href="${reviewUrl}" target="_blank" rel="noopener noreferrer" style="background-color: #E40229; color: #ffffff; font-weight: bold; text-decoration: none; padding: 14px 28px; border-radius: 8px; display: inline-block; font-size: 15px; box-shadow: 0 4px 6px -1px rgba(228, 2, 41, 0.25);">
+                <a href="${finalReviewUrl}" target="_blank" rel="noopener noreferrer" style="background-color: #E40229; color: #ffffff; font-weight: bold; text-decoration: none; padding: 14px 28px; border-radius: 8px; display: inline-block; font-size: 15px; box-shadow: 0 4px 6px -1px rgba(228, 2, 41, 0.25);">
                   ★ Leave a Google Review
                 </a>
               </div>
-              
+
               <p style="text-align: center; font-size: 13px; color: #94a3b8; margin: 0;">If you have any further questions regarding your visa application, feel free to reach out to our support team.</p>
             </div>
-            
+
             <!-- Footer -->
             <div style="background-color: #f8fafc; border-top: 1px solid #f1f5f9; padding: 28px 24px; text-align: center; color: #64748b; font-size: 13px;">
-              <div style="font-weight: bold; color: #06276C; margin-bottom: 8px; font-size: 14px;">Migration Republic</div>
+              <div style="font-weight: bold; color: #06276C; margin-bottom: 8px; font-size: 14px;">${settings.business_name}</div>
               <div style="margin-bottom: 16px; line-height: 1.5;">
-                📍 470 St Kilda Road, Melbourne, VIC 3004<br/>
-                📞 <a href="tel:+61435321219" style="color: #06276C; text-decoration: none; font-weight: 600;">+61 435 321 219</a><br/>
-                ✉️ <a href="mailto:info@migrationrepublic.com.au" style="color: #06276C; text-decoration: none; font-weight: 600;">info@migrationrepublic.com.au</a><br/>
-                🌐 <a href="https://migrationrepublic.com.au" target="_blank" rel="noopener noreferrer" style="color: #D4AF37; text-decoration: none; font-weight: 600;">migrationrepublic.com.au</a>
+                📍 ${settings.office_address}<br/>
+                📞 <a href="tel:${settings.contact_phone.replace(/\s+/g, "")}" style="color: #06276C; text-decoration: none; font-weight: 600;">${settings.contact_phone}</a><br/>
+                ✉️ <a href="mailto:${settings.contact_email}" style="color: #06276C; text-decoration: none; font-weight: 600;">${settings.contact_email}</a><br/>
+                🌐 <a href="${settings.website_url}" target="_blank" rel="noopener noreferrer" style="color: #D4AF37; text-decoration: none; font-weight: 600;">${settings.website_url.replace(/^https?:\/\//, "").replace(/\/$/, "")}</a>
               </div>
               <div style="font-size: 11px; color: #94a3b8; margin-top: 16px; line-height: 1.5; border-top: 1px solid #e2e8f0; padding-top: 16px;">
-                🏛️ MARN: 2518961 | All agents MARA registered.<br/>
-                © 2026 Migration Republic. All rights reserved.
+                🏛️ MARN: ${settings.marn_number} | All agents MARA registered.<br/>
+                © ${new Date().getFullYear()} ${settings.business_name}. All rights reserved.
               </div>
             </div>
           </div>
@@ -342,9 +368,9 @@ export class EmailService {
       `;
 
       const res = await resend.emails.send({
-        from: `Migration Republic <${env.EMAIL_FROM}>`,
+        from: `${settings.business_name} <${env.EMAIL_FROM}>`,
         to: email,
-        subject: `Your Feedback Matters - Leave a Google Review for Migration Republic`,
+        subject: `Your Feedback Matters - Leave a Google Review for ${settings.business_name}`,
         html: htmlContent,
       });
 
@@ -354,5 +380,51 @@ export class EmailService {
       return true; // Fallback for dev mode
     }
   }
-}
 
+  /**
+   * Emails a client their invoice with the generated PDF attached.
+   */
+  static async sendInvoiceEmail(
+    email: string,
+    name: string,
+    invoice: Invoice,
+    pdfBuffer: Buffer
+  ): Promise<boolean> {
+    try {
+      const settings = await SettingsService.getSettings();
+      const isPaid = invoice.status === "paid";
+
+      const htmlContent = await render(
+        React.createElement(InvoiceEmail, {
+          settings,
+          clientName: name,
+          invoiceNumber: invoice.invoice_number,
+          total: invoice.total,
+          balanceDue: invoice.balance_due,
+          dueDate: invoice.due_date,
+          isPaid,
+        })
+      );
+
+      const res = await resend.emails.send({
+        from: `${settings.business_name} <${env.EMAIL_FROM}>`,
+        to: email,
+        subject: isPaid
+          ? `Payment Received - Invoice ${invoice.invoice_number}`
+          : `Invoice ${invoice.invoice_number} from ${settings.business_name}`,
+        html: htmlContent,
+        attachments: [
+          {
+            filename: `${invoice.invoice_number}.pdf`,
+            content: pdfBuffer,
+          },
+        ],
+      });
+
+      return !!res.data?.id;
+    } catch (e) {
+      console.error("EmailService.sendInvoiceEmail error:", e);
+      return false;
+    }
+  }
+}

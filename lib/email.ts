@@ -1,5 +1,7 @@
 import { Resend } from 'resend'
 import { env } from './env'
+import { SettingsService } from './services/settings.service'
+import { AppSettings } from './types'
 
 export const resend = new Resend(env.RESEND_KEY)
 
@@ -18,42 +20,51 @@ export function escapeHtml(value: unknown): string {
     .replace(/'/g, '&#39;')
 }
 
-export function wrapEmailTemplate(contentHtml: string): string {
+// Business name/address/contact/social links come from Admin > Settings so
+// every email below stays in sync without a code change.
+export function wrapEmailTemplate(contentHtml: string, settings: AppSettings): string {
+  const websiteLabel = settings.website_url.replace(/^https?:\/\//, '').replace(/\/$/, '')
+  const socialLinks = [
+    { url: settings.facebook_url, label: 'Facebook', bg: '#3b5998' },
+    { url: settings.instagram_url, label: 'Instagram', bg: '#e1306c' },
+    { url: settings.linkedin_url, label: 'LinkedIn', bg: '#0077b5' },
+  ].filter(s => !!s.url)
+
   return `
     <div style="background-color: #f3f4f6; padding: 30px 15px; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; min-height: 100%;">
       <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid #e2e8f0;">
         <!-- Header -->
         <div style="background-color: #ffffff; padding: 28px 24px 20px 24px; text-align: center; border-bottom: 2px solid #D4AF37;">
-          <img src="https://immigrationagentnearme.com/images/logo.jpg" alt="Migration Republic" style="width: 85px; height: auto; display: block; margin: 0 auto 10px auto; border-radius: 50%; border: none; outline: none; box-shadow: none;" />
-          <div style="color: #06276C; margin: 0; font-size: 22px; font-weight: 800; letter-spacing: 0.5px; line-height: 1.2;">Migration Republic</div>
-          <div style="color: #D4AF37; margin: 4px 0 0 0; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px;">Registered Migration Agents</div>
+          <img src="${settings.logo_url}" alt="${settings.business_name}" style="width: 85px; height: auto; display: block; margin: 0 auto 10px auto; border-radius: 50%; border: none; outline: none; box-shadow: none;" />
+          <div style="color: #06276C; margin: 0; font-size: 22px; font-weight: 800; letter-spacing: 0.5px; line-height: 1.2;">${settings.business_name}</div>
+          <div style="color: #D4AF37; margin: 4px 0 0 0; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px;">${settings.tagline}</div>
         </div>
-        
+
         <!-- Body Content -->
         <div style="padding: 32px 24px; color: #1e293b; line-height: 1.6; font-size: 15px;">
           ${contentHtml}
         </div>
-        
+
         <!-- Footer -->
         <div style="background-color: #f8fafc; border-top: 1px solid #f1f5f9; padding: 28px 24px; text-align: center; color: #64748b; font-size: 13px;">
-          <div style="font-weight: bold; color: #06276C; margin-bottom: 8px; font-size: 14px;">Migration Republic</div>
+          <div style="font-weight: bold; color: #06276C; margin-bottom: 8px; font-size: 14px;">${settings.business_name}</div>
           <div style="margin-bottom: 16px; line-height: 1.5;">
-            📍 470 St Kilda Road, Melbourne, VIC 3004<br/>
-            📞 <a href="tel:+61435321219" style="color: #06276C; text-decoration: none; font-weight: 600;">+61 435 321 219</a><br/>
-            ✉️ <a href="mailto:info@migrationrepublic.com.au" style="color: #06276C; text-decoration: none; font-weight: 600;">info@migrationrepublic.com.au</a><br/>
-            🌐 <a href="https://migrationrepublic.com.au" target="_blank" rel="noopener noreferrer" style="color: #D4AF37; text-decoration: none; font-weight: 600;">migrationrepublic.com.au</a>
+            📍 ${settings.office_address}<br/>
+            📞 <a href="tel:${settings.contact_phone.replace(/\s+/g, '')}" style="color: #06276C; text-decoration: none; font-weight: 600;">${settings.contact_phone}</a><br/>
+            ✉️ <a href="mailto:${settings.contact_email}" style="color: #06276C; text-decoration: none; font-weight: 600;">${settings.contact_email}</a><br/>
+            🌐 <a href="${settings.website_url}" target="_blank" rel="noopener noreferrer" style="color: #D4AF37; text-decoration: none; font-weight: 600;">${websiteLabel}</a>
           </div>
-          
+
+          ${socialLinks.length > 0 ? `
           <div style="margin: 20px 0; border-top: 1px solid #e2e8f0; padding-top: 16px;">
             <span style="font-weight: 600; color: #06276C; display: block; margin-bottom: 10px; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Follow Us</span>
-            <a href="https://www.facebook.com/" target="_blank" rel="noopener noreferrer" style="display: inline-block; background-color: #3b5998; color: #ffffff; padding: 6px 14px; border-radius: 4px; text-decoration: none; font-size: 12px; font-weight: bold; margin: 0 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">Facebook</a>
-            <a href="https://www.instagram.com/" target="_blank" rel="noopener noreferrer" style="display: inline-block; background-color: #e1306c; color: #ffffff; padding: 6px 14px; border-radius: 4px; text-decoration: none; font-size: 12px; font-weight: bold; margin: 0 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">Instagram</a>
-            <a href="https://www.linkedin.com/" target="_blank" rel="noopener noreferrer" style="display: inline-block; background-color: #0077b5; color: #ffffff; padding: 6px 14px; border-radius: 4px; text-decoration: none; font-size: 12px; font-weight: bold; margin: 0 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">LinkedIn</a>
+            ${socialLinks.map(s => `<a href="${s.url}" target="_blank" rel="noopener noreferrer" style="display: inline-block; background-color: ${s.bg}; color: #ffffff; padding: 6px 14px; border-radius: 4px; text-decoration: none; font-size: 12px; font-weight: bold; margin: 0 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">${s.label}</a>`).join('')}
           </div>
-          
+          ` : ''}
+
           <div style="font-size: 11px; color: #94a3b8; margin-top: 20px; line-height: 1.5; border-top: 1px solid #e2e8f0; padding-top: 16px;">
-            🏛️ MARN: 2518961 | All agents MARA registered.<br/>
-            © 2026 Migration Republic. All rights reserved.
+            🏛️ MARN: ${settings.marn_number} | All agents MARA registered.<br/>
+            © ${new Date().getFullYear()} ${settings.business_name}. All rights reserved.
           </div>
         </div>
       </div>
@@ -70,6 +81,7 @@ export async function sendBookingConfirmation(
   phone?: string
 ) {
   try {
+    const settings = await SettingsService.getSettings()
     const isVideoConsultation = planName.toLowerCase().includes("video") || planName.toLowerCase().includes("online");
     const meetLink = env.MICROSOFT_MEET_LINK;
 
@@ -91,7 +103,7 @@ export async function sendBookingConfirmation(
       <h2 style="color: #06276C; margin-top: 0; font-size: 20px; font-weight: bold; border-bottom: 2px solid #D4AF37; padding-bottom: 8px;">Booking Confirmed</h2>
       <p>Hi <strong>${name}</strong>,</p>
       <p>Your booking for a <strong>${planName}</strong> has been successfully confirmed. Below are your booking details:</p>
-      
+
       <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 16px; margin: 20px 0;">
         <table style="width: 100%; border-collapse: collapse;">
           <tr>
@@ -108,14 +120,14 @@ export async function sendBookingConfirmation(
           </tr>
         </table>
       </div>
-      
+
       ${videoLinkSection}
-      
-      <p style="margin-top: 24px;">Thank you for choosing Migration Republic. We look forward to assisting you.</p>
-    `);
+
+      <p style="margin-top: 24px;">Thank you for choosing ${settings.business_name}. We look forward to assisting you.</p>
+    `, settings);
 
     await resend.emails.send({
-      from: `Migration Republic <${fromEmail}>`,
+      from: `${settings.business_name} <${fromEmail}>`,
       to: email,
       subject: `Booking Confirmed: ${planName}`,
       html: htmlContent
@@ -135,6 +147,7 @@ export async function sendAdminAlert(
   notes?: string
 ) {
   try {
+    const settings = await SettingsService.getSettings()
     const isVideoConsultation = planName.toLowerCase().includes("video") || planName.toLowerCase().includes("online");
     const meetLink = env.MICROSOFT_MEET_LINK;
 
@@ -150,7 +163,7 @@ export async function sendAdminAlert(
     const htmlContent = wrapEmailTemplate(`
       <h2 style="color: #06276C; margin-top: 0; font-size: 20px; font-weight: bold; border-bottom: 2px solid #D4AF37; padding-bottom: 8px;">New Booking Received</h2>
       <p>A new consultation has been booked through the website. Here are the client's details:</p>
-      
+
       <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 16px; margin: 20px 0;">
         <table style="width: 100%; border-collapse: collapse;">
           <tr style="border-bottom: 1px solid #f1f5f9;">
@@ -184,7 +197,7 @@ export async function sendAdminAlert(
           </tr>
         </table>
       </div>
-    `);
+    `, settings);
 
     await resend.emails.send({
       from: `System Notification <${fromEmail}>`,
@@ -205,10 +218,11 @@ export async function sendToolLeadAdminAlert(
   resultsSummary: string
 ) {
   try {
+    const settings = await SettingsService.getSettings()
     const htmlContent = wrapEmailTemplate(`
       <h2 style="color: #06276C; margin-top: 0; font-size: 20px; font-weight: bold; border-bottom: 2px solid #D4AF37; padding-bottom: 8px;">New Tool Lead Captured</h2>
       <p>A new lead has been captured from the migration tools section. Here are the client's details:</p>
-      
+
       <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 16px; margin: 20px 0;">
         <table style="width: 100%; border-collapse: collapse;">
           <tr style="border-bottom: 1px solid #f1f5f9;">
@@ -233,7 +247,7 @@ export async function sendToolLeadAdminAlert(
           </tr>
         </table>
       </div>
-    `);
+    `, settings);
 
     await resend.emails.send({
       from: `System Notification <${fromEmail}>`,
@@ -253,10 +267,11 @@ export async function sendToolResultClientEmail(
   phone?: string
 ) {
   try {
+    const settings = await SettingsService.getSettings()
     const htmlContent = wrapEmailTemplate(`
       <h2 style="color: #06276C; margin-top: 0; font-size: 20px; font-weight: bold; border-bottom: 2px solid #D4AF37; padding-bottom: 8px;">Your Tool Results Are Ready</h2>
       <p>Hi <strong>${escapeHtml(name)}</strong>,</p>
-      <p>Thank you for using our <strong>${escapeHtml(toolName)}</strong> at Migration Republic.</p>
+      <p>Thank you for using our <strong>${escapeHtml(toolName)}</strong> at ${settings.business_name}.</p>
 
       <p>We have successfully received your assessment details. Below are the contact details you submitted for confirmation:</p>
       <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 16px; margin: 20px 0;">
@@ -271,20 +286,20 @@ export async function sendToolResultClientEmail(
           </tr>
         </table>
       </div>
-      
+
       <p>Please note that the tool provides an initial estimate based on current migration guidelines. For a comprehensive legal assessment of your specific eligibility, visa pathways, and options, we highly recommend booking a formal consultation with one of our registered MARA agents.</p>
-      
+
       <div style="text-align: center; margin: 30px 0;">
-        <a href="https://migrationrepublic.com.au/book-a-consultation/" style="background-color: #e40229; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; font-size: 15px; box-shadow: 0 4px 6px rgba(228, 2, 41, 0.15);">Book a Consultation</a>
+        <a href="${settings.website_url.replace(/\/$/, '')}/book-a-consultation/" style="background-color: #e40229; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; font-size: 15px; box-shadow: 0 4px 6px rgba(228, 2, 41, 0.15);">Book a Consultation</a>
       </div>
-      
-      <p>Thank you,<br/><strong>Migration Republic Team</strong></p>
-    `);
+
+      <p>Thank you,<br/><strong>${settings.business_name} Team</strong></p>
+    `, settings);
 
     await resend.emails.send({
-      from: `Migration Republic <${fromEmail}>`,
+      from: `${settings.business_name} <${fromEmail}>`,
       to: email,
-      subject: `Your ${toolName} Results - Migration Republic`,
+      subject: `Your ${toolName} Results - ${settings.business_name}`,
       html: htmlContent
     });
   } catch (error) {

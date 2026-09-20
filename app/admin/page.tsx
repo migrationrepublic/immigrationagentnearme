@@ -1,7 +1,7 @@
 'use client'
 
-import React, { useEffect, useState, useCallback } from 'react'
-import { supabase } from '@/lib/supabase'
+import React, { useEffect, useState } from 'react'
+import { getDashboardStatsAction } from '@/app/actions/admin'
 import {
   Wrench,
   Globe,
@@ -62,6 +62,24 @@ interface AuditLog {
   details: Record<string, unknown>
 }
 
+function StatTile({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="admin-card-padded space-y-1">
+      <p className="admin-label">{label}</p>
+      <p className="admin-value text-xl sm:text-2xl">{value}</p>
+    </div>
+  )
+}
+
+function MiniTile({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="p-3 rounded-xl" style={{ background: 'var(--color-admin-table-head)', border: '1px solid var(--color-admin-card-border)' }}>
+      <span className="admin-cell-muted block">{label}</span>
+      <span className="text-xl font-bold mt-1 block" style={{ color: 'var(--color-admin-heading)' }}>{value}</span>
+    </div>
+  )
+}
+
 export default function AdminDashboardPage() {
   const [stats, setStats] = useState<DashboardStats>({
     todayBookings: 0,
@@ -89,297 +107,181 @@ export default function AdminDashboardPage() {
   const [activeTab, setActiveTab] = useState<'website' | 'tool' | 'audit'>('website')
   const [refreshing, setRefreshing] = useState(false)
 
-  const loadStats = useCallback(async () => {
+  // Single server round trip: fans out to Supabase server-side with the
+  // service-role client (no RLS re-check per row, minimal columns per query)
+  // instead of ~7 separate full-table browser queries.
+  async function applyDashboardStats() {
+    const { stats: dashboardStats, recentWebsiteLeads: rwl, recentToolLeads: rtl, activity: log } =
+      await getDashboardStatsAction()
+    setStats(dashboardStats)
+    setRecentWebsiteLeads(rwl as DetailedWebsiteLead[])
+    setRecentToolLeads(rtl as unknown as DetailedToolLead[])
+    setActivity(log as AuditLog[])
+  }
+
+  useEffect(() => {
+    let ignore = false
+    async function load() {
+      try {
+        await applyDashboardStats()
+      } catch (e) {
+        console.error('Error fetching dashboard stats:', e)
+      } finally {
+        if (!ignore) {
+          setLoading(false)
+          setRefreshing(false)
+        }
+      }
+    }
+    load()
+    return () => { ignore = true }
+  }, [])
+
+  const handleRefresh = async () => {
+    setRefreshing(true)
     try {
-      const todayStr = format(new Date(), 'yyyy-MM-dd')
-
-      const [
-        { count: todayBookings },
-        { count: pendingDocs },
-        { count: pendingSignatures },
-        { data: websiteLeadsData },
-        { data: toolLeadsData },
-        { data: bookingsData },
-        { data: logsData }
-      ] = await Promise.all([
-        supabase.from('bookings').select('*', { count: 'exact', head: true }).eq('date', todayStr),
-        supabase.from('documents').select('*', { count: 'exact', head: true }).eq('status', 'pending_review'),
-        supabase.from('signature_requests').select('*', { count: 'exact', head: true }).eq('status', 'sent'),
-        supabase.from('website_leads').select('*').order('created_at', { ascending: false }),
-        supabase.from('tool_submissions').select('*').order('created_at', { ascending: false }),
-        supabase.from('bookings').select('plans(price_aud)').eq('status', 'confirmed'),
-        supabase.from('audit_logs').select('*').order('created_at', { ascending: false }).limit(10)
-      ])
-
-      let totalRev = 0
-      const typedBookings = bookingsData as unknown as Array<{ plans: { price_aud: number } | null }> | null
-      typedBookings?.forEach(b => { if (b.plans?.price_aud) totalRev += b.plans.price_aud })
-
-      const wLeads = (websiteLeadsData as DetailedWebsiteLead[]) || []
-      const wTotal = wLeads.length
-      const wNew = wLeads.filter(l => (l.status || 'new') === 'new').length
-      const wContacted = wLeads.filter(l => l.status === 'contacted').length
-      const wInProgress = wLeads.filter(l => l.status === 'in_progress').length
-      const wArchived = wLeads.filter(l => l.status === 'archived').length
-
-      const tLeads = (toolLeadsData as DetailedToolLead[]) || []
-      const tTotal = tLeads.length
-      const tPR = tLeads.filter(l => l.tool_name === 'PR Calculator' || l.tool_name === 'PR Points Calculator').length
-      const t482 = tLeads.filter(l => l.tool_name?.includes('482') && !l.tool_name?.includes('Business Sponsor')).length
-      const tEligibility = tLeads.filter(l => l.tool_name === 'Eligibility Checker').length
-      const tSponsor = tLeads.filter(l => l.tool_name?.includes('Business Sponsor')).length
-      const tCost = tLeads.filter(l => l.tool_name?.includes('Cost Estimator') || l.tool_name?.includes('Sponsorship Cost')).length
-      const tApplicantCost = tLeads.filter(l => l.tool_name?.includes('Applicant Cost')).length
-      const tQuiz = tLeads.filter(l => l.tool_name === 'Visa Suggestion Quiz' || (!l.tool_name?.includes('482') && l.tool_name !== 'PR Calculator' && l.tool_name !== 'PR Points Calculator' && l.tool_name !== 'Eligibility Checker' && !l.tool_name?.includes('Business Sponsor') && !l.tool_name?.includes('Cost'))).length
-
-      setStats({
-        todayBookings: todayBookings || 0,
-        pendingDocs: pendingDocs || 0,
-        pendingSignatures: pendingSignatures || 0,
-        websiteLeadsTotal: wTotal,
-        websiteLeadsNew: wNew,
-        websiteLeadsContacted: wContacted,
-        websiteLeadsInProgress: wInProgress,
-        websiteLeadsArchived: wArchived,
-        toolLeadsTotal: tTotal,
-        toolLeadsPRCount: tPR,
-        toolLeads482Count: t482,
-        toolLeadsEligibilityCount: tEligibility,
-        toolLeadsQuizCount: tQuiz,
-        toolLeadsSponsorCount: tSponsor,
-        toolLeadsCostCount: tCost,
-        toolLeadsApplicantCostCount: tApplicantCost,
-        revenue: totalRev / 100,
-      })
-
-      setRecentWebsiteLeads(wLeads.slice(0, 7))
-      setRecentToolLeads(tLeads.slice(0, 7))
-      setActivity((logsData as AuditLog[]) || [])
+      await applyDashboardStats()
     } catch (e) {
-      console.error('Error fetching dashboard stats:', e)
+      console.error('Error refreshing dashboard stats:', e)
     } finally {
       setLoading(false)
       setRefreshing(false)
     }
-  }, [])
-
-  useEffect(() => {
-    loadStats()
-  }, [loadStats])
-
-  const handleRefresh = () => {
-    setRefreshing(true)
-    loadStats()
   }
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-[60vh]">
-        <Loader2 className="w-8 h-8 text-slate-400 animate-spin" />
+      <div className="admin-loader h-[60vh]">
+        <Loader2 className="admin-loader-icon animate-spin" />
       </div>
     )
   }
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto font-sans">
+    <div className="admin-page">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-slate-200">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Overview</h1>
-          <p className="text-sm text-slate-500 mt-0.5">Key performance metrics and lead activity across your portal.</p>
+          <h1 className="admin-heading">Overview</h1>
+          <p className="admin-subheading">Key performance metrics and lead activity across your portal.</p>
         </div>
         <button
           onClick={handleRefresh}
           disabled={refreshing}
-          className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-lg shadow-xs transition-colors"
+          className="flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 shadow-xs transition-all cursor-pointer disabled:opacity-50"
         >
-          <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
           {refreshing ? 'Refreshing' : 'Refresh'}
         </button>
       </div>
 
-      {/* Top 6 Standard Metric Cards */}
+      {/* Top Metric Tiles */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-        {/* Bookings */}
-        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
-          <p className="text-xs font-medium text-slate-500">Today&apos;s Bookings</p>
-          <p className="text-2xl font-bold text-slate-900 mt-2">{stats.todayBookings}</p>
-        </div>
-
-        {/* Website Leads */}
-        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-medium text-slate-500">Website Leads</p>
-            {stats.websiteLeadsNew > 0 && (
-              <span className="bg-amber-100 text-amber-800 text-[10px] font-semibold px-2 py-0.5 rounded-full">
-                {stats.websiteLeadsNew} new
-              </span>
-            )}
-          </div>
-          <p className="text-2xl font-bold text-slate-900 mt-2">{stats.websiteLeadsTotal}</p>
-        </div>
-
-        {/* Tool Leads */}
-        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
-          <p className="text-xs font-medium text-slate-500">Tool Submissions</p>
-          <p className="text-2xl font-bold text-slate-900 mt-2">{stats.toolLeadsTotal}</p>
-        </div>
-
-        {/* Pending Docs */}
-        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
-          <p className="text-xs font-medium text-slate-500">Pending Review</p>
-          <p className="text-2xl font-bold text-slate-900 mt-2">{stats.pendingDocs}</p>
-        </div>
-
-        {/* Pending Signatures */}
-        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
-          <p className="text-xs font-medium text-slate-500">Signatures Sent</p>
-          <p className="text-2xl font-bold text-slate-900 mt-2">{stats.pendingSignatures}</p>
-        </div>
-
-        {/* Total Revenue */}
-        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
-          <p className="text-xs font-medium text-slate-500">Total Revenue</p>
-          <p className="text-2xl font-bold text-slate-900 mt-2">${stats.revenue.toLocaleString('en-AU')}</p>
-        </div>
+        <StatTile label="Today's Bookings" value={stats.todayBookings} />
+        <StatTile
+          label="Website Leads"
+          value={
+            <span className="flex items-center gap-2">
+              {stats.websiteLeadsTotal}
+              {stats.websiteLeadsNew > 0 && (
+                <span className="admin-badge admin-badge-warn text-[10px] px-1.5 py-0">{stats.websiteLeadsNew} new</span>
+              )}
+            </span>
+          }
+        />
+        <StatTile label="Tool Submissions" value={stats.toolLeadsTotal} />
+        <StatTile label="Pending Review" value={stats.pendingDocs} />
+        <StatTile label="Signatures Sent" value={stats.pendingSignatures} />
+        <StatTile label="Total Revenue" value={`$${stats.revenue.toLocaleString('en-AU')}`} />
       </div>
 
-      {/* Two Clean Main KPI Breakdown Cards: Website Leads vs Tool Leads */}
+      {/* Website Leads vs Tool Leads breakdown */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-        {/* 1. Website Leads Summary */}
-        <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-xs flex flex-col justify-between space-y-6">
+        <div className="admin-card-padded flex flex-col justify-between space-y-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700">
-                <Globe className="w-5 h-5" />
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'color-mix(in srgb, var(--color-admin-navy), white 90%)' }}>
+                <Globe className="w-5 h-5" style={{ color: 'var(--color-admin-navy)' }} />
               </div>
               <div>
-                <h2 className="text-base font-bold text-slate-900">Website Contact Inquiries</h2>
-                <p className="text-xs text-slate-500">Forms submitted on migrationrepublic.com.au</p>
+                <h2 className="admin-cell-primary text-base">Website Contact Inquiries</h2>
+                <p className="admin-cell-muted">Forms submitted on migrationrepublic.com.au</p>
               </div>
             </div>
             <Link
               href="/admin/website-leads"
-              className="text-xs font-semibold text-slate-700 hover:text-slate-900 inline-flex items-center gap-1 border border-slate-200 rounded-lg px-3 py-1.5 hover:bg-slate-50 transition-colors"
+              className="flex items-center gap-1 text-xs font-bold hover:underline"
+              style={{ color: 'var(--color-admin-navy)' }}
             >
               View All <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="p-3 bg-slate-50 border border-slate-100 rounded-lg">
-              <span className="text-xs text-slate-500 font-medium block">New</span>
-              <span className="text-xl font-bold text-slate-900 mt-1 block">{stats.websiteLeadsNew}</span>
-            </div>
-
-            <div className="p-3 bg-slate-50 border border-slate-100 rounded-lg">
-              <span className="text-xs text-slate-500 font-medium block">Contacted</span>
-              <span className="text-xl font-bold text-slate-900 mt-1 block">{stats.websiteLeadsContacted}</span>
-            </div>
-
-            <div className="p-3 bg-slate-50 border border-slate-100 rounded-lg">
-              <span className="text-xs text-slate-500 font-medium block">In Progress</span>
-              <span className="text-xl font-bold text-slate-900 mt-1 block">{stats.websiteLeadsInProgress}</span>
-            </div>
-
-            <div className="p-3 bg-slate-50 border border-slate-100 rounded-lg">
-              <span className="text-xs text-slate-500 font-medium block">Archived</span>
-              <span className="text-xl font-bold text-slate-900 mt-1 block">{stats.websiteLeadsArchived}</span>
-            </div>
+            <MiniTile label="New" value={stats.websiteLeadsNew} />
+            <MiniTile label="Contacted" value={stats.websiteLeadsContacted} />
+            <MiniTile label="In Progress" value={stats.websiteLeadsInProgress} />
+            <MiniTile label="Archived" value={stats.websiteLeadsArchived} />
           </div>
         </div>
 
-        {/* 2. Tool Submissions Summary */}
-        <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-xs flex flex-col justify-between space-y-6">
+        <div className="admin-card-padded flex flex-col justify-between space-y-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700">
-                <Wrench className="w-5 h-5" />
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'color-mix(in srgb, var(--color-admin-navy), white 90%)' }}>
+                <Wrench className="w-5 h-5" style={{ color: 'var(--color-admin-navy)' }} />
               </div>
               <div>
-                <h2 className="text-base font-bold text-slate-900">Interactive Tool Submissions</h2>
-                <p className="text-xs text-slate-500">Points calculators, 482 visa checkers &amp; quizzes</p>
+                <h2 className="admin-cell-primary text-base">Interactive Tool Submissions</h2>
+                <p className="admin-cell-muted">Points calculators, 482 visa checkers &amp; quizzes</p>
               </div>
             </div>
             <Link
               href="/admin/tool-leads"
-              className="text-xs font-semibold text-slate-700 hover:text-slate-900 inline-flex items-center gap-1 border border-slate-200 rounded-lg px-3 py-1.5 hover:bg-slate-50 transition-colors"
+              className="flex items-center gap-1 text-xs font-bold hover:underline"
+              style={{ color: 'var(--color-admin-navy)' }}
             >
               View All <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
-            <div className="p-3 bg-slate-50 border border-slate-100 rounded-lg">
-              <span className="text-xs text-slate-500 font-medium block">Sponsor Quick</span>
-              <span className="text-xl font-bold text-slate-900 mt-1 block">{stats.toolLeadsSponsorCount}</span>
-            </div>
-
-            <div className="p-3 bg-slate-50 border border-slate-100 rounded-lg">
-              <span className="text-xs text-slate-500 font-medium block">Cost Estimator</span>
-              <span className="text-xl font-bold text-slate-900 mt-1 block">{stats.toolLeadsCostCount}</span>
-            </div>
-
-            <div className="p-3 bg-slate-50 border border-slate-100 rounded-lg">
-              <span className="text-xs text-slate-500 font-medium block">Applicant Cost</span>
-              <span className="text-xl font-bold text-slate-900 mt-1 block">{stats.toolLeadsApplicantCostCount}</span>
-            </div>
-
-            <div className="p-3 bg-slate-50 border border-slate-100 rounded-lg">
-              <span className="text-xs text-slate-500 font-medium block">482 Checker</span>
-              <span className="text-xl font-bold text-slate-900 mt-1 block">{stats.toolLeads482Count}</span>
-            </div>
-
-            <div className="p-3 bg-slate-50 border border-slate-100 rounded-lg">
-              <span className="text-xs text-slate-500 font-medium block">PR Calc</span>
-              <span className="text-xl font-bold text-slate-900 mt-1 block">{stats.toolLeadsPRCount}</span>
-            </div>
-
-            <div className="p-3 bg-slate-50 border border-slate-100 rounded-lg">
-              <span className="text-xs text-slate-500 font-medium block">Eligibility</span>
-              <span className="text-xl font-bold text-slate-900 mt-1 block">{stats.toolLeadsEligibilityCount}</span>
-            </div>
-
-            <div className="p-3 bg-slate-50 border border-slate-100 rounded-lg">
-              <span className="text-xs text-slate-500 font-medium block">Visa Quiz</span>
-              <span className="text-xl font-bold text-slate-900 mt-1 block">{stats.toolLeadsQuizCount}</span>
-            </div>
+            <MiniTile label="Sponsor Quick" value={stats.toolLeadsSponsorCount} />
+            <MiniTile label="Cost Estimator" value={stats.toolLeadsCostCount} />
+            <MiniTile label="Applicant Cost" value={stats.toolLeadsApplicantCostCount} />
+            <MiniTile label="482 Checker" value={stats.toolLeads482Count} />
+            <MiniTile label="PR Calc" value={stats.toolLeadsPRCount} />
+            <MiniTile label="Eligibility" value={stats.toolLeadsEligibilityCount} />
+            <MiniTile label="Visa Quiz" value={stats.toolLeadsQuizCount} />
           </div>
         </div>
-
       </div>
 
-      {/* Tabbed Activity Feed Table */}
-      <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
-        <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
-          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg">
-            <button
-              onClick={() => setActiveTab('website')}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${activeTab === 'website' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
-                }`}
-            >
-              Website Leads ({recentWebsiteLeads.length})
-            </button>
-            <button
-              onClick={() => setActiveTab('tool')}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${activeTab === 'tool' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
-                }`}
-            >
-              Tool Submissions ({recentToolLeads.length})
-            </button>
-            <button
-              onClick={() => setActiveTab('audit')}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${activeTab === 'audit' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
-                }`}
-            >
-              Audit Logs ({activity.length})
-            </button>
+      {/* Tabbed Activity Feed */}
+      <div className="admin-table-card">
+        <div className="px-4 sm:px-6 py-4 border-b flex flex-col sm:flex-row sm:items-center justify-between gap-3" style={{ borderColor: 'var(--color-admin-card-border)' }}>
+          <div className="flex items-center gap-1 p-1 rounded-xl" style={{ background: 'var(--color-admin-page)' }}>
+            {(['website', 'tool', 'audit'] as const).map(tab => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className="px-3 py-1.5 text-xs font-bold rounded-lg transition-colors cursor-pointer"
+                style={activeTab === tab
+                  ? { background: '#fff', color: 'var(--color-admin-heading)', boxShadow: '0 1px 2px rgba(0,0,0,0.06)' }
+                  : { color: 'var(--color-admin-subtext)' }
+                }
+              >
+                {tab === 'website' ? `Website Leads (${recentWebsiteLeads.length})`
+                  : tab === 'tool' ? `Tool Submissions (${recentToolLeads.length})`
+                  : `Audit Logs (${activity.length})`}
+              </button>
+            ))}
           </div>
 
           <Link
             href={activeTab === 'website' ? '/admin/website-leads' : activeTab === 'tool' ? '/admin/tool-leads' : '/admin'}
-            className="text-xs font-semibold text-slate-600 hover:text-slate-900"
+            className="text-xs font-bold hover:underline"
+            style={{ color: 'var(--color-admin-navy)' }}
           >
             View full log &rarr;
           </Link>
@@ -389,41 +291,41 @@ export default function AdminDashboardPage() {
         {activeTab === 'website' && (
           <div className="overflow-x-auto">
             {recentWebsiteLeads.length === 0 ? (
-              <p className="text-center text-xs text-slate-500 py-10">No recent website leads found.</p>
+              <p className="text-center text-xs py-10" style={{ color: 'var(--color-admin-subtext)' }}>No recent website leads found.</p>
             ) : (
-              <table className="w-full text-left text-xs whitespace-nowrap">
-                <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200">
+              <table className="w-full text-left text-sm whitespace-nowrap">
+                <thead className="admin-thead">
                   <tr>
-                    <th className="px-6 py-3">Lead Contact</th>
-                    <th className="px-6 py-3">Subject / Message</th>
-                    <th className="px-6 py-3">Status</th>
-                    <th className="px-6 py-3">Submitted</th>
-                    <th className="px-6 py-3 text-right">Action</th>
+                    <th>Lead Contact</th>
+                    <th>Subject / Message</th>
+                    <th>Status</th>
+                    <th>Submitted</th>
+                    <th className="text-right">Action</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 text-slate-700">
+                <tbody className="admin-tbody">
                   {recentWebsiteLeads.map((lead) => (
-                    <tr key={lead.id} className="hover:bg-slate-50/70 transition-colors">
-                      <td className="px-6 py-3.5">
-                        <p className="font-semibold text-slate-900">
+                    <tr key={lead.id} className="admin-tr">
+                      <td className="admin-td">
+                        <p className="admin-cell-primary">
                           {lead.first_name || lead.last_name ? `${lead.first_name || ''} ${lead.last_name || ''}` : 'Anonymous Contact'}
                         </p>
-                        <p className="text-slate-500">{lead.email}</p>
+                        <p className="admin-cell-muted">{lead.email}</p>
                       </td>
-                      <td className="px-6 py-3.5 max-w-xs truncate">
-                        <p className="font-medium text-slate-900 truncate">{lead.subject || 'No Subject'}</p>
-                        <p className="text-slate-400 truncate">{lead.message || '—'}</p>
+                      <td className="admin-td max-w-xs truncate">
+                        <p className="admin-cell-primary truncate">{lead.subject || 'No Subject'}</p>
+                        <p className="admin-cell-muted truncate">{lead.message || '—'}</p>
                       </td>
-                      <td className="px-6 py-3.5">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 text-slate-700 capitalize">
+                      <td className="admin-td">
+                        <span className="admin-badge admin-badge-navy capitalize">
                           {(lead.status || 'new').replace('_', ' ')}
                         </span>
                       </td>
-                      <td className="px-6 py-3.5 text-slate-500">
+                      <td className="admin-td admin-cell-muted">
                         {format(new Date(lead.created_at), 'MMM d, yyyy h:mm a')}
                       </td>
-                      <td className="px-6 py-3.5 text-right">
-                        <Link href="/admin/website-leads" className="text-slate-900 hover:underline font-semibold">
+                      <td className="admin-td text-right">
+                        <Link href="/admin/website-leads" className="admin-cell-primary hover:underline">
                           View details
                         </Link>
                       </td>
@@ -438,52 +340,46 @@ export default function AdminDashboardPage() {
         {activeTab === 'tool' && (
           <div className="overflow-x-auto">
             {recentToolLeads.length === 0 ? (
-              <p className="text-center text-xs text-slate-500 py-10">No recent tool submissions found.</p>
+              <p className="text-center text-xs py-10" style={{ color: 'var(--color-admin-subtext)' }}>No recent tool submissions found.</p>
             ) : (
-              <table className="w-full text-left text-xs whitespace-nowrap">
-                <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200">
+              <table className="w-full text-left text-sm whitespace-nowrap">
+                <thead className="admin-thead">
                   <tr>
-                    <th className="px-6 py-3">User Contact</th>
-                    <th className="px-6 py-3">Tool Name</th>
-                    <th className="px-6 py-3">Result / Score</th>
-                    <th className="px-6 py-3">Submitted</th>
-                    <th className="px-6 py-3 text-right">Action</th>
+                    <th>User Contact</th>
+                    <th>Tool Name</th>
+                    <th>Result / Score</th>
+                    <th>Submitted</th>
+                    <th className="text-right">Action</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 text-slate-700">
+                <tbody className="admin-tbody">
                   {recentToolLeads.map((lead) => {
                     const isPR = lead.tool_name === 'PR Calculator' || lead.tool_name === 'PR Points Calculator'
                     const isCostEstimator = lead.tool_name?.includes('Cost Estimator') || lead.tool_name?.includes('Sponsorship Cost')
                     const isApplicantCost = lead.tool_name?.includes('Applicant Cost')
                     return (
-                      <tr key={lead.id} className="hover:bg-slate-50/70 transition-colors">
-                        <td className="px-6 py-3.5">
-                          <p className="font-semibold text-slate-900">{lead.user_name}</p>
-                          <p className="text-slate-500">{lead.user_email}</p>
+                      <tr key={lead.id} className="admin-tr">
+                        <td className="admin-td">
+                          <p className="admin-cell-primary">{lead.user_name}</p>
+                          <p className="admin-cell-muted">{lead.user_email}</p>
                         </td>
-                        <td className="px-6 py-3.5 font-medium text-slate-900">{lead.tool_name}</td>
-                        <td className="px-6 py-3.5">
+                        <td className="admin-td admin-cell-primary">{lead.tool_name}</td>
+                        <td className="admin-td">
                           {isPR ? (
-                            <span className="font-semibold text-slate-900">
-                              {(lead.results?.totalPoints as number) ?? 0} Points
-                            </span>
+                            <span className="admin-cell-primary">{(lead.results?.totalPoints as number) ?? 0} Points</span>
                           ) : isCostEstimator ? (
-                            <span className="font-semibold text-slate-900">
-                              {(lead.results?.grand_total_government_charges as string) ?? 'Assessed'}
-                            </span>
+                            <span className="admin-cell-primary">{(lead.results?.grand_total_government_charges as string) ?? 'Assessed'}</span>
                           ) : isApplicantCost ? (
-                            <span className="font-semibold text-slate-900">
-                              {(lead.results?.total_visa_application_charges as string) ?? 'Assessed'}
-                            </span>
+                            <span className="admin-cell-primary">{(lead.results?.total_visa_application_charges as string) ?? 'Assessed'}</span>
                           ) : (
-                            <span className="text-slate-600">Assessed</span>
+                            <span className="admin-cell-muted">Assessed</span>
                           )}
                         </td>
-                        <td className="px-6 py-3.5 text-slate-500">
+                        <td className="admin-td admin-cell-muted">
                           {format(new Date(lead.created_at), 'MMM d, yyyy h:mm a')}
                         </td>
-                        <td className="px-6 py-3.5 text-right">
-                          <Link href="/admin/tool-leads" className="text-slate-900 hover:underline font-semibold">
+                        <td className="admin-td text-right">
+                          <Link href="/admin/tool-leads" className="admin-cell-primary hover:underline">
                             View details
                           </Link>
                         </td>
@@ -499,30 +395,28 @@ export default function AdminDashboardPage() {
         {activeTab === 'audit' && (
           <div className="overflow-x-auto">
             {activity.length === 0 ? (
-              <p className="text-center text-xs text-slate-500 py-10">No recent audit activity.</p>
+              <p className="text-center text-xs py-10" style={{ color: 'var(--color-admin-subtext)' }}>No recent audit activity.</p>
             ) : (
-              <table className="w-full text-left text-xs whitespace-nowrap">
-                <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200">
+              <table className="w-full text-left text-sm whitespace-nowrap">
+                <thead className="admin-thead">
                   <tr>
-                    <th className="px-6 py-3">Action</th>
-                    <th className="px-6 py-3">Entity Type</th>
-                    <th className="px-6 py-3">Details</th>
-                    <th className="px-6 py-3">Timestamp</th>
+                    <th>Action</th>
+                    <th>Entity Type</th>
+                    <th>Details</th>
+                    <th>Timestamp</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 text-slate-700">
+                <tbody className="admin-tbody">
                   {activity.map((log) => (
-                    <tr key={log.id} className="hover:bg-slate-50/70 transition-colors">
-                      <td className="px-6 py-3.5">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 text-slate-800">
-                          {log.action.replace(/_/g, ' ')}
-                        </span>
+                    <tr key={log.id} className="admin-tr">
+                      <td className="admin-td">
+                        <span className="admin-badge admin-badge-navy capitalize">{log.action.replace(/_/g, ' ')}</span>
                       </td>
-                      <td className="px-6 py-3.5 font-medium text-slate-900">{log.entity_type}</td>
-                      <td className="px-6 py-3.5 max-w-[280px] truncate text-slate-500">
+                      <td className="admin-td admin-cell-primary">{log.entity_type}</td>
+                      <td className="admin-td max-w-[280px] truncate admin-cell-muted">
                         {JSON.stringify(log.details)}
                       </td>
-                      <td className="px-6 py-3.5 text-slate-500">
+                      <td className="admin-td admin-cell-muted">
                         {new Date(log.created_at).toLocaleString('en-AU')}
                       </td>
                     </tr>

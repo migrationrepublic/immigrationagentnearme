@@ -4,6 +4,9 @@ export * from "./types/document";
 export * from "./types/signature";
 export * from "./types/toolLead";
 export * from "./types/pdfjs";
+export * from "./types/invoice";
+export * from "./types/customer";
+export * from "./types/settings";
 
 
 export interface Plan {

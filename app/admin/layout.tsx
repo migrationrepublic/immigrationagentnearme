@@ -19,12 +19,115 @@ import {
   Globe,
   PanelLeftClose,
   PanelLeftOpen,
+  Receipt,
+  Users,
+  Settings,
+  type LucideIcon,
 } from 'lucide-react'
 import { Session } from '@supabase/supabase-js'
 import { checkIsAdminAction } from '@/app/actions/admin'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
+
+interface NavItem {
+  label: string
+  href: string
+  icon: LucideIcon
+}
+
+interface NavGroup {
+  id: string
+  label: string
+  icon: LucideIcon
+  children: NavItem[]
+}
+
+// Two-tier navigation: a narrow primary rail of categories, each opening a
+// secondary panel of the pages inside it.
+const navGroups: NavGroup[] = [
+  {
+    id: 'dashboard',
+    label: 'Dashboard',
+    icon: LayoutDashboard,
+    children: [
+      { label: 'Overview', href: '/admin', icon: LayoutDashboard },
+    ],
+  },
+  {
+    id: 'bookings',
+    label: 'Bookings',
+    icon: Calendar,
+    children: [
+      { label: 'Booking Leads', href: '/admin/bookings', icon: Calendar },
+      { label: 'Manage Availability', href: '/admin/availability', icon: UserCheck },
+    ],
+  },
+  {
+    id: 'customers',
+    label: 'Customers',
+    icon: Users,
+    children: [
+      { label: 'All Customers', href: '/admin/customers', icon: Users },
+    ],
+  },
+  {
+    id: 'finance',
+    label: 'Finance',
+    icon: Receipt,
+    children: [
+      { label: 'Invoices', href: '/admin/invoices', icon: Receipt },
+    ],
+  },
+  {
+    id: 'leads',
+    label: 'Leads',
+    icon: Globe,
+    children: [
+      { label: 'Website Leads', href: '/admin/website-leads', icon: Globe },
+      { label: 'Tool Leads', href: '/admin/tool-leads', icon: Wrench },
+    ],
+  },
+  {
+    id: 'documents',
+    label: 'Documents',
+    icon: FolderOpen,
+    children: [
+      { label: 'Document Templates', href: '/admin/document-templates', icon: FileText },
+      { label: 'PDF Field Mapper', href: '/admin/pdf-editor', icon: FileCode },
+      { label: 'Client Documents', href: '/admin/documents', icon: FolderOpen },
+      { label: 'Signature Requests', href: '/admin/signature-requests', icon: Signature },
+    ],
+  },
+  {
+    id: 'settings',
+    label: 'Settings',
+    icon: Settings,
+    children: [
+      { label: 'General Settings', href: '/admin/settings', icon: Settings },
+    ],
+  },
+]
+
+function isChildActive(pathname: string, href: string) {
+  return pathname === href || (href !== '/admin' && pathname.startsWith(`${href}/`))
+}
+
+function resolveActiveGroupId(pathname: string): string {
+  const match = navGroups.find(group => group.children.some(child => isChildActive(pathname, child.href)))
+  return match?.id ?? navGroups[0].id
+}
+
+/** "Group Label / Page Label" (or just the group label when it has one page) for the header breadcrumb. Plain function — not a hook — so it's safe to call after early returns. */
+function getCurrentTitle(pathname: string): string {
+  for (const group of navGroups) {
+    const child = group.children.find(c => isChildActive(pathname, c.href))
+    if (child) {
+      return group.children.length > 1 ? `${group.label} / ${child.label}` : group.label
+    }
+  }
+  return 'Admin Portal'
+}
 
 interface SidebarProps {
   pathname: string
@@ -34,111 +137,179 @@ interface SidebarProps {
   isMobile?: boolean
 }
 
-// Reusable Navigation Items Definition (Removed Site Settings as requested)
-const navItems = [
-  { label: 'Dashboard', href: '/admin', icon: LayoutDashboard },
-  { label: 'Booking Leads', href: '/admin/bookings', icon: Calendar },
-  { label: 'Website Leads', href: '/admin/website-leads', icon: Globe },
-  { label: 'Tool Leads', href: '/admin/tool-leads', icon: Wrench },
-  { label: 'Manage Availability', href: '/admin/availability', icon: UserCheck },
-  { label: 'Document Templates', href: '/admin/document-templates', icon: FileText },
-  { label: 'PDF Field Mapper', href: '/admin/pdf-editor', icon: FileCode },
-  { label: 'Client Documents', href: '/admin/documents', icon: FolderOpen },
-  { label: 'Signature Requests', href: '/admin/signature-requests', icon: Signature },
-]
-
 function SidebarContent({ pathname, setSidebarOpen, isCollapsed = false, setIsCollapsed, isMobile = false }: SidebarProps) {
-  const isActive = (href: string) => pathname === href
+  // The group whose sub-panel is showing. Defaults to (and stays in sync
+  // with) whichever group owns the current route, but a click on the
+  // primary rail can switch it instantly for a snappier feel while the
+  // route transition completes. Adjusted during render (not an effect) —
+  // the recommended way to reset state when a prop-derived value changes.
+  const routeGroupId = resolveActiveGroupId(pathname)
+  const [openGroupId, setOpenGroupId] = useState(routeGroupId)
+  const [syncedRouteGroupId, setSyncedRouteGroupId] = useState(routeGroupId)
+  if (routeGroupId !== syncedRouteGroupId) {
+    setSyncedRouteGroupId(routeGroupId)
+    setOpenGroupId(routeGroupId)
+  }
+
+  const openGroup = navGroups.find(g => g.id === openGroupId) ?? navGroups[0]
+  const collapsedDesktop = isCollapsed && !isMobile
 
   return (
-    <div className="flex flex-col h-full text-white border-r border-white/10 select-none transition-all duration-300" style={{ background: 'var(--color-admin-sidebar)' }}>
-      {/* Brand Header — Logo */}
-      <div className={`pt-5 pb-4 border-b border-white/10 flex items-center ${isCollapsed && !isMobile ? 'justify-center px-2' : 'justify-between px-5'}`}>
-        <div className={`flex items-center gap-3 ${isCollapsed && !isMobile ? 'justify-center' : 'min-w-0'}`}>
-          <div className="relative w-16 h-16 flex-shrink-0">
-            <Image
-              src="/images/logo.jpg"
-              alt="Migration Republic"
-              fill
-              className="object-contain"
-              sizes="60px"
-            />
+    <div className="flex h-full text-white select-none">
+      {/* ── Primary Rail ─────────────────────────────────────────────── */}
+      <div
+        className="flex flex-col h-full border-r border-white/10 transition-all duration-300 w-24 shrink-0"
+        style={{ background: 'var(--color-admin-sidebar)' }}
+      >
+        {/* Brand mark */}
+        <div className="pt-5 pb-4 border-b border-white/10 flex items-center justify-center">
+          <div className="relative w-10 h-10 flex-shrink-0">
+            <Image src="/images/logo.jpg" alt="Migration Republic" fill className="object-contain rounded-full" sizes="40px" />
           </div>
-
         </div>
-        {isMobile && (
-          <button
-            className="p-1.5 hover:bg-white/10 rounded-lg shrink-0"
-            onClick={() => setSidebarOpen(false)}
-          >
-            <X className="w-5 h-5 text-white/60" />
-          </button>
-        )}
-      </div>
 
-      {/* Navigation Items */}
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto custom-scrollbar">
-        {navItems.map((item) => {
-          const Icon = item.icon
-          const active = isActive(item.href)
-          const collapsedDesktop = isCollapsed && !isMobile
+        <nav className="flex-1 px-2 py-4 space-y-1.5 overflow-y-auto custom-scrollbar">
+          {navGroups.map(group => {
+            const Icon = group.icon
+            const active = group.id === routeGroupId
+            const firstChild = group.children[0]
 
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={() => setSidebarOpen(false)}
-              title={collapsedDesktop ? item.label : undefined}
-              className={`group relative flex items-center ${collapsedDesktop ? 'justify-center px-2 py-3' : 'gap-3.5 px-3.5 py-2.5'} rounded-xl text-sm font-semibold transition-all duration-200`}
-              style={active
-                ? { background: 'var(--color-admin-nav-active)', color: '#fff', boxShadow: '0 4px 14px rgba(228,2,41,0.3)' }
-                : { color: 'rgba(255,255,255,0.70)' }
-              }
-              onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'var(--color-admin-nav-hover)'; if (!active) (e.currentTarget as HTMLElement).style.color = '#fff' }}
-              onMouseLeave={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'transparent'; if (!active) (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.70)' }}
+            return (
+              <Link
+                key={group.id}
+                href={firstChild.href}
+                onClick={() => {
+                  setOpenGroupId(group.id)
+                  setSidebarOpen(false)
+                  // Clicking a category always reveals its pages — even if
+                  // the sidebar was left collapsed from a previous visit.
+                  setIsCollapsed?.(false)
+                }}
+                className="group relative flex flex-col items-center gap-1 py-2.5 px-1 rounded-lg text-[10px] font-bold transition-all duration-200"
+                style={active
+                  ? { background: 'var(--color-admin-nav-active)', color: '#fff', boxShadow: '0 4px 14px rgba(228,2,41,0.3)' }
+                  : { color: 'rgba(255,255,255,0.65)' }
+                }
+                onMouseEnter={e => { if (!active) { (e.currentTarget as HTMLElement).style.background = 'var(--color-admin-nav-hover)'; (e.currentTarget as HTMLElement).style.color = '#fff' } }}
+                onMouseLeave={e => { if (!active) { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.65)' } }}
+              >
+                <Icon className="w-5 h-5 shrink-0 transition-transform duration-200 group-hover:scale-110" />
+                <span className="truncate max-w-full">{group.label}</span>
+
+                {/* Collapsed-desktop flyout: lets you jump straight to any
+                    page in the group without opening the secondary panel */}
+                {collapsedDesktop && (
+                  group.children.length > 1 ? (
+                    <div className="absolute left-full top-0 ml-3 w-52 py-2 bg-white text-gray-800 rounded-xl shadow-2xl opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity duration-150 z-50">
+                      <p className="px-3.5 pb-1.5 mb-1 text-[10px] font-black uppercase tracking-widest text-gray-400 border-b border-gray-100">{group.label}</p>
+                      {group.children.map(child => (
+                        <span key={child.href} className={`block px-3.5 py-1.5 text-xs font-semibold ${isChildActive(pathname, child.href) ? 'text-[#e40229]' : 'text-gray-600'}`}>
+                          {child.label}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 px-3 py-1.5 bg-gray-900 text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-50">
+                      {group.label}
+                    </div>
+                  )
+                )}
+              </Link>
+            )
+          })}
+        </nav>
+
+        {/* Collapse toggle + Sign out */}
+        <div className="p-2 border-t border-white/10 space-y-1.5">
+          {!isMobile && setIsCollapsed && (
+            <button
+              onClick={() => setIsCollapsed(prev => !prev)}
+              className="w-full flex items-center justify-center py-2 rounded-xl text-white/60 hover:text-white hover:bg-white/10 transition-all"
+              title={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
             >
-              <Icon className="w-5 h-5 shrink-0 transition-transform duration-200 group-hover:scale-110" />
-              {(!isCollapsed || isMobile) && (
-                <span className="truncate">{item.label}</span>
-              )}
-              {/* Tooltip on hover when sidebar is collapsed */}
-              {collapsedDesktop && (
-                <div className="absolute left-full ml-3 px-3 py-1.5 bg-gray-900 text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-50">
-                  {item.label}
-                </div>
-              )}
-            </Link>
-          )
-        })}
-      </nav>
-
-      {/* Collapse Toggle Footer & Sign Out */}
-      <div className="p-3 border-t border-white/10 space-y-2">
-        {!isMobile && setIsCollapsed && (
-          <button
-            onClick={() => setIsCollapsed(prev => !prev)}
-            className={`w-full flex items-center ${isCollapsed ? 'justify-center px-2' : 'justify-between px-3.5'} py-2 rounded-xl text-xs font-semibold text-white/60 hover:text-white hover:bg-white/10 transition-all`}
-            title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
-          >
-            {!isCollapsed && <span>Collapse Sidebar</span>}
-            {isCollapsed ? <PanelLeftOpen className="w-5 h-5" /> : <PanelLeftClose className="w-5 h-5" />}
-          </button>
-        )}
-
-        <button
-          onClick={() => supabase.auth.signOut()}
-          title={isCollapsed && !isMobile ? "Sign Out" : undefined}
-          className={`w-full flex items-center ${isCollapsed && !isMobile ? 'justify-center px-2' : 'gap-3 px-3.5'} py-2.5 rounded-xl text-sm font-semibold text-red-300 hover:bg-red-500/15 hover:text-red-100 transition-all text-left group relative`}
-        >
-          <LogOut className="w-5 h-5 shrink-0 transition-transform duration-200 group-hover:-translate-x-0.5" />
-          {(!isCollapsed || isMobile) && <span>Sign Out</span>}
-          {isCollapsed && !isMobile && (
-            <div className="absolute left-full ml-3 px-3 py-1.5 bg-red-900 text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-50">
-              Sign Out
-            </div>
+              {isCollapsed ? <PanelLeftOpen className="w-5 h-5" /> : <PanelLeftClose className="w-5 h-5" />}
+            </button>
           )}
-        </button>
+          <button
+            onClick={() => supabase.auth.signOut()}
+            title="Sign Out"
+            className="w-full flex items-center justify-center py-2.5 rounded-xl text-red-300 hover:bg-red-500/15 hover:text-red-100 transition-all"
+          >
+            <LogOut className="w-5 h-5" />
+          </button>
+        </div>
       </div>
+
+      {/* ── Secondary Panel ──────────────────────────────────────────── */}
+      {!collapsedDesktop && (
+        <div
+          className={`flex flex-col h-full border-r border-white/10 overflow-hidden transition-all duration-300 ${isMobile ? 'flex-1' : 'w-56 shrink-0'}`}
+          style={{ background: 'color-mix(in srgb, var(--color-admin-sidebar), black 12%)' }}
+        >
+          {isMobile ? (
+            /* Mobile: one scrollable column, every group shown with a header */
+            <>
+              <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-white/10">
+                <span className="font-extrabold text-sm tracking-wide text-white">Migration Republic</span>
+                <button className="p-1.5 hover:bg-white/10 rounded-lg" onClick={() => setSidebarOpen(false)}>
+                  <X className="w-5 h-5 text-white/60" />
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto custom-scrollbar px-3 py-4 space-y-5">
+                {navGroups.map(group => (
+                  <div key={group.id}>
+                    <p className="px-2.5 pb-1.5 text-[10px] font-black uppercase tracking-widest text-white/40">{group.label}</p>
+                    <div className="space-y-1">
+                      {group.children.map(child => {
+                        const ChildIcon = child.icon
+                        const active = isChildActive(pathname, child.href)
+                        return (
+                          <Link
+                            key={child.href}
+                            href={child.href}
+                            onClick={() => setSidebarOpen(false)}
+                            className="flex items-center gap-3 px-2.5 py-2.5 rounded-xl text-sm font-semibold transition-all"
+                            style={active ? { background: 'var(--color-admin-nav-active)', color: '#fff' } : { color: 'rgba(255,255,255,0.75)' }}
+                          >
+                            <ChildIcon className="w-4.5 h-4.5 shrink-0" />
+                            <span className="truncate">{child.label}</span>
+                          </Link>
+                        )
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : (
+            /* Desktop: only the currently-open group's pages */
+            <>
+              <div className="pt-5 pb-4 px-5 border-b border-white/10">
+                <p className="text-[10px] font-black uppercase tracking-widest text-white/40">{openGroup.label}</p>
+              </div>
+              <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto custom-scrollbar">
+                {openGroup.children.map(child => {
+                  const ChildIcon = child.icon
+                  const active = isChildActive(pathname, child.href)
+                  return (
+                    <Link
+                      key={child.href}
+                      href={child.href}
+                      className="group flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150"
+                      style={active ? { background: 'var(--color-admin-nav-active)', color: '#fff', boxShadow: '0 4px 14px rgba(228,2,41,0.3)' } : { color: 'rgba(255,255,255,0.70)' }}
+                      onMouseEnter={e => { if (!active) { (e.currentTarget as HTMLElement).style.background = 'var(--color-admin-nav-hover)'; (e.currentTarget as HTMLElement).style.color = '#fff' } }}
+                      onMouseLeave={e => { if (!active) { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.70)' } }}
+                    >
+                      <ChildIcon className="w-4.5 h-4.5 shrink-0 transition-transform duration-200 group-hover:scale-110" />
+                      <span className="truncate">{child.label}</span>
+                    </Link>
+                  )
+                })}
+              </nav>
+            </>
+          )}
+        </div>
+      )}
     </div>
   )
 }
@@ -256,14 +427,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     )
   }
 
-  // Get active item title for top header title
-  const activeNavItem = navItems.find(item => item.href === pathname)
-  const currentTitle = activeNavItem ? activeNavItem.label : 'Admin Portal'
+  // Breadcrumb title = the current page's label within its group
+  const currentTitle = getCurrentTitle(pathname)
 
   return (
     <div className="min-h-screen flex text-gray-800" style={{ background: 'var(--color-admin-page)' }}>
       {/* Desktop Sidebar (Fixed & Collapsible) */}
-      <aside className={`hidden md:block fixed inset-y-0 left-0 z-20 transition-all duration-300 ease-in-out ${isCollapsed ? 'w-20' : 'w-64'}`}>
+      <aside className={`hidden md:block fixed inset-y-0 left-0 z-20 transition-all duration-300 ease-in-out ${isCollapsed ? 'w-24' : 'w-[20rem]'}`}>
         <SidebarContent
           pathname={pathname}
           setSidebarOpen={setSidebarOpen}
@@ -276,7 +446,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {sidebarOpen && (
         <div className="md:hidden fixed inset-0 z-30 flex">
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity" onClick={() => setSidebarOpen(false)} />
-          <aside className="relative w-64 max-w-xs flex-shrink-0 z-40">
+          <aside className="relative w-80 max-w-[85vw] flex-shrink-0 z-40">
             <SidebarContent
               pathname={pathname}
               setSidebarOpen={setSidebarOpen}
@@ -288,7 +458,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       )}
 
       {/* Page Body Wrapper */}
-      <div className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ease-in-out ${isCollapsed ? 'md:pl-20' : 'md:pl-64'}`}>
+      <div className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ease-in-out ${isCollapsed ? 'md:pl-24' : 'md:pl-[20rem]'}`}>
         {/* Desktop Top Header Navigation Bar */}
         <header className="hidden md:flex items-center justify-between h-16 px-6 bg-white border-b border-gray-200/80 sticky top-0 z-10 shadow-xs">
           <div className="flex items-center gap-4">
@@ -372,4 +542,3 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     </div>
   )
 }
-

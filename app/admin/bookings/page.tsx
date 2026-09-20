@@ -22,18 +22,45 @@ import {
   Star,
   Sparkles,
   Download,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Receipt
 } from 'lucide-react'
 import { format } from 'date-fns'
+import Link from 'next/link'
 import { Booking, Plan } from '@/lib/types'
-import { 
-  getBookingsAction, 
-  createAdminBookingAction, 
-  updateBookingStatusAction, 
+import {
+  getBookingsAction,
+  createAdminBookingAction,
+  updateBookingStatusAction,
   getAdminPlansAction,
   sendBookingReminderAction,
   sendGoogleReviewRequestAction
 } from '@/app/actions/admin'
+import { generateInvoiceForBookingAction } from '@/app/actions/invoice'
+
+function formatMoney(cents: number) {
+  return `$${cents.toLocaleString('en-AU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+}
+
+function InvoiceBadge({ booking }: { booking: Booking }) {
+  const invoice = booking.invoices?.[0]
+  if (!invoice) {
+    return <span className="admin-badge admin-badge-warn">No Invoice</span>
+  }
+  const statusClass =
+    invoice.status === 'paid' ? 'admin-badge-success'
+    : invoice.status === 'sent' ? 'admin-badge-info'
+    : invoice.status === 'overdue' ? 'admin-badge-error'
+    : invoice.status === 'cancelled' ? 'admin-badge-error'
+    : 'admin-badge-navy'
+  return (
+    <Link href={`/admin/invoices/${invoice.id}`} className={`admin-badge ${statusClass} hover:opacity-80 transition-opacity`}>
+      <Receipt className="w-3 h-3" />
+      {invoice.invoice_number}
+      <span className="capitalize opacity-75">· {invoice.status}</span>
+    </Link>
+  )
+}
 
 export default function BookingsLeadsPage() {
   const [bookings, setBookings] = useState<Booking[]>([])
@@ -53,6 +80,7 @@ export default function BookingsLeadsPage() {
   // One-click actions state
   const [sendingReminderId, setSendingReminderId] = useState<string | null>(null)
   const [sendingReviewId, setSendingReviewId] = useState<string | null>(null)
+  const [generatingInvoiceId, setGeneratingInvoiceId] = useState<string | null>(null)
   const [actionSuccessMsg, setActionSuccessMsg] = useState<string | null>(null)
 
   // Form state
@@ -204,6 +232,27 @@ export default function BookingsLeadsPage() {
       alert(err instanceof Error ? err.message : String(err))
     } finally {
       setSendingReviewId(null)
+    }
+  }
+
+  async function handleGenerateInvoice(bookingId: string) {
+    try {
+      setGeneratingInvoiceId(bookingId)
+      const res = await generateInvoiceForBookingAction(bookingId)
+      if (res.invoice) {
+        type InvoiceSummary = NonNullable<Booking['invoices']>[number]
+        const updater = (b: Booking) =>
+          b.id === bookingId ? { ...b, invoices: [res.invoice as unknown as InvoiceSummary] } : b
+        setBookings(prev => prev.map(updater))
+        if (selectedBooking && selectedBooking.id === bookingId) {
+          setSelectedBooking(updater(selectedBooking))
+        }
+      }
+    } catch (err) {
+      console.error('Error generating invoice:', err)
+      alert(err instanceof Error ? err.message : String(err))
+    } finally {
+      setGeneratingInvoiceId(null)
     }
   }
 
@@ -379,7 +428,7 @@ export default function BookingsLeadsPage() {
             placeholder="Search client name, email or phone..."
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            className="admin-input pl-9"
+            className="admin-input !pl-10"
           />
         </div>
         <div className="flex items-center gap-3 w-full md:w-auto">
@@ -440,6 +489,10 @@ export default function BookingsLeadsPage() {
                   </div>
                 </div>
 
+                <div className="pt-2 border-t border-slate-100">
+                  <InvoiceBadge booking={b} />
+                </div>
+
                 {b.notes && (
                   <p className="text-xs text-slate-500 italic bg-slate-50 p-2 rounded-lg truncate">
                     Note: {b.notes}
@@ -469,6 +522,7 @@ export default function BookingsLeadsPage() {
                     <th>Session Option</th>
                     <th>Schedule Date</th>
                     <th>Booking Status</th>
+                    <th>Invoice</th>
                     <th className="text-right">Actions</th>
                   </tr>
                 </thead>
@@ -518,6 +572,9 @@ export default function BookingsLeadsPage() {
                             : <XCircle className="w-3.5 h-3.5" />}
                           {b.status}
                         </span>
+                      </td>
+                      <td className="admin-td">
+                        <InvoiceBadge booking={b} />
                       </td>
                       <td className="admin-td text-right">
                         <button 
@@ -785,6 +842,57 @@ export default function BookingsLeadsPage() {
                     )}
                   </div>
                 </div>
+              </div>
+
+              {/* Invoice Card */}
+              <div className="p-4 rounded-2xl bg-gray-50 border border-gray-100 space-y-3">
+                <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wide flex items-center gap-1.5">
+                  <Receipt className="w-3.5 h-3.5 text-red-600" />
+                  Linked Invoice
+                </h4>
+                {selectedBooking.invoices?.[0] ? (
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="text-xs space-y-1">
+                      <p className="font-bold text-slate-800 text-sm">{selectedBooking.invoices[0].invoice_number}</p>
+                      <p className="text-gray-500">
+                        Total <span className="font-semibold text-slate-700">{formatMoney(selectedBooking.invoices[0].total)}</span>
+                        {selectedBooking.invoices[0].balance_due > 0 && (
+                          <> · Balance due <span className="font-semibold text-red-600">{formatMoney(selectedBooking.invoices[0].balance_due)}</span></>
+                        )}
+                      </p>
+                      <InvoiceBadge booking={selectedBooking} />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Link
+                        href={`/admin/invoices/${selectedBooking.invoices[0].id}`}
+                        className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs"
+                      >
+                        View Invoice <ExternalLink className="w-3 h-3" />
+                      </Link>
+                      <a
+                        href={`/api/invoices/${selectedBooking.invoices[0].id}/pdf?download=1`}
+                        className="px-3.5 py-2 rounded-xl border border-gray-300 hover:bg-gray-100 text-gray-700 font-bold text-xs flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Download className="w-3.5 h-3.5" /> PDF
+                      </a>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-xs text-gray-500">No invoice has been generated for this booking yet.</p>
+                    <button
+                      disabled={generatingInvoiceId === selectedBooking.id}
+                      onClick={() => handleGenerateInvoice(selectedBooking.id)}
+                      className="px-3.5 py-2 rounded-xl bg-[#012269] hover:bg-[#011a4f] text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs disabled:opacity-50 shrink-0"
+                    >
+                      {generatingInvoiceId === selectedBooking.id ? (
+                        <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Generating...</>
+                      ) : (
+                        <><Receipt className="w-3.5 h-3.5" /> Generate Invoice</>
+                      )}
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Notes Card */}

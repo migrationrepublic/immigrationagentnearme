@@ -164,7 +164,7 @@ export default function ToolLeadsPage() {
               placeholder="Search user, email, business..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="admin-input pl-9 w-full py-2 px-3 border border-gray-200 rounded-xl text-sm"
+              className="admin-input !pl-10 w-full"
             />
           </div>
 
@@ -172,7 +172,7 @@ export default function ToolLeadsPage() {
           <select
             value={toolFilter}
             onChange={e => setToolFilter(e.target.value)}
-            className="admin-select w-full sm:w-60 py-2 px-3 border border-gray-200 rounded-xl text-sm font-medium"
+            className="admin-select w-full sm:w-60"
           >
             <option value="all">All Tools ({totalCount})</option>
             <option value="sponsor">Business Sponsor Quick ({sponsorCount})</option>
@@ -186,111 +186,35 @@ export default function ToolLeadsPage() {
         </div>
       </div>
 
-      {/* Corporate Tool KPI Cards */}
+      {/* Tool Filter Tiles */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-8 gap-3">
-        {/* All Tools */}
-        <div
-          onClick={() => setToolFilter("all")}
-          className={`p-3.5 rounded-xl border bg-white shadow-xs cursor-pointer transition-all ${
-            toolFilter === "all" ? "border-slate-900 ring-1 ring-slate-900 bg-slate-50" : "border-slate-200 hover:border-slate-300"
-          }`}
-        >
-          <div className="text-slate-500 mb-1">
-            <span className="text-xs font-semibold">All Leads</span>
-          </div>
-          <div className="text-2xl font-bold text-slate-900">{totalCount}</div>
-        </div>
-
-        {/* Business Sponsor Quick */}
-        <div
-          onClick={() => setToolFilter("sponsor")}
-          className={`p-3.5 rounded-xl border bg-white shadow-xs cursor-pointer transition-all ${
-            toolFilter === "sponsor" ? "border-blue-700 ring-1 ring-blue-700 bg-blue-50/50" : "border-slate-200 hover:border-slate-300"
-          }`}
-        >
-          <div className="text-blue-700 mb-1">
-            <span className="text-xs font-semibold">Sponsor Quick</span>
-          </div>
-          <div className="text-2xl font-bold text-slate-900">{sponsorCount}</div>
-        </div>
-
-        {/* Cost Estimator */}
-        <div
-          onClick={() => setToolFilter("cost")}
-          className={`p-3.5 rounded-xl border bg-white shadow-xs cursor-pointer transition-all ${
-            toolFilter === "cost" ? "border-emerald-700 ring-1 ring-emerald-700 bg-emerald-50/50" : "border-slate-200 hover:border-slate-300"
-          }`}
-        >
-          <div className="text-emerald-700 mb-1">
-            <span className="text-xs font-semibold">Cost Estimator</span>
-          </div>
-          <div className="text-2xl font-bold text-slate-900">{costCount}</div>
-        </div>
-
-        {/* Applicant Cost Calculator */}
-        <div
-          onClick={() => setToolFilter("applicant")}
-          className={`p-3.5 rounded-xl border bg-white shadow-xs cursor-pointer transition-all ${
-            toolFilter === "applicant" ? "border-teal-700 ring-1 ring-teal-700 bg-teal-50/50" : "border-slate-200 hover:border-slate-300"
-          }`}
-        >
-          <div className="text-teal-700 mb-1">
-            <span className="text-xs font-semibold">Applicant Cost</span>
-          </div>
-          <div className="text-2xl font-bold text-slate-900">{applicantCount}</div>
-        </div>
-
-        {/* 482 Checker */}
-        <div
-          onClick={() => setToolFilter("482")}
-          className={`p-3.5 rounded-xl border bg-white shadow-xs cursor-pointer transition-all ${
-            toolFilter === "482" ? "border-amber-700 ring-1 ring-amber-700 bg-amber-50/50" : "border-slate-200 hover:border-slate-300"
-          }`}
-        >
-          <div className="text-amber-700 mb-1">
-            <span className="text-xs font-semibold">482 Visa</span>
-          </div>
-          <div className="text-2xl font-bold text-slate-900">{count482}</div>
-        </div>
-
-        {/* PR Calc */}
-        <div
-          onClick={() => setToolFilter("pr")}
-          className={`p-3.5 rounded-xl border bg-white shadow-xs cursor-pointer transition-all ${
-            toolFilter === "pr" ? "border-indigo-700 ring-1 ring-indigo-700 bg-indigo-50/50" : "border-slate-200 hover:border-slate-300"
-          }`}
-        >
-          <div className="text-indigo-700 mb-1">
-            <span className="text-xs font-semibold">PR Calc</span>
-          </div>
-          <div className="text-2xl font-bold text-slate-900">{prCount}</div>
-        </div>
-
-        {/* Eligibility */}
-        <div
-          onClick={() => setToolFilter("eligibility")}
-          className={`p-3.5 rounded-xl border bg-white shadow-xs cursor-pointer transition-all ${
-            toolFilter === "eligibility" ? "border-green-700 ring-1 ring-green-700 bg-green-50/50" : "border-slate-200 hover:border-slate-300"
-          }`}
-        >
-          <div className="text-green-700 mb-1">
-            <span className="text-xs font-semibold">Eligibility</span>
-          </div>
-          <div className="text-2xl font-bold text-slate-900">{eligibilityCount}</div>
-        </div>
-
-        {/* Visa Quiz */}
-        <div
-          onClick={() => setToolFilter("quiz")}
-          className={`p-3.5 rounded-xl border bg-white shadow-xs cursor-pointer transition-all ${
-            toolFilter === "quiz" ? "border-purple-700 ring-1 ring-purple-700 bg-purple-50/50" : "border-slate-200 hover:border-slate-300"
-          }`}
-        >
-          <div className="text-purple-700 mb-1">
-            <span className="text-xs font-semibold">Visa Quiz</span>
-          </div>
-          <div className="text-2xl font-bold text-slate-900">{quizCount}</div>
-        </div>
+        {([
+          { key: "all", label: "All Leads", count: totalCount },
+          { key: "sponsor", label: "Sponsor Quick", count: sponsorCount },
+          { key: "cost", label: "Cost Estimator", count: costCount },
+          { key: "applicant", label: "Applicant Cost", count: applicantCount },
+          { key: "482", label: "482 Visa", count: count482 },
+          { key: "pr", label: "PR Calc", count: prCount },
+          { key: "eligibility", label: "Eligibility", count: eligibilityCount },
+          { key: "quiz", label: "Visa Quiz", count: quizCount },
+        ] as const).map(tile => {
+          const active = toolFilter === tile.key
+          return (
+            <button
+              key={tile.key}
+              type="button"
+              onClick={() => setToolFilter(tile.key)}
+              className="admin-card-padded text-left space-y-1 cursor-pointer transition-all"
+              style={active
+                ? { borderColor: 'var(--color-admin-navy)', background: 'color-mix(in srgb, var(--color-admin-navy), white 94%)', boxShadow: '0 0 0 1px var(--color-admin-navy)' }
+                : undefined
+              }
+            >
+              <p className="admin-label">{tile.label}</p>
+              <p className="admin-value text-xl sm:text-2xl">{tile.count}</p>
+            </button>
+          )
+        })}
       </div>
 
       {/* Table */}

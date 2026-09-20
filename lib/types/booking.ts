@@ -13,4 +13,11 @@ export interface Booking {
   plans?: {
     name: string;
   };
+  invoices?: {
+    id: string;
+    invoice_number: string;
+    status: string;
+    total: number;
+    balance_due: number;
+  }[];
 }

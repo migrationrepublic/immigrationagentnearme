@@ -299,7 +299,7 @@ export default function ManageAvailabilityPage() {
             type="date"
             value={selectedDate}
             onChange={e => setSelectedDate(e.target.value)}
-            className="admin-input pl-10"
+            className="admin-input !pl-11"
           />
         </div>
       </div>

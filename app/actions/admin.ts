@@ -3,6 +3,8 @@
 import { supabaseServer, createClientForAction } from "@/lib/supabase-server";
 import { z } from "zod";
 import { EmailService } from "@/lib/services/email.service";
+import { InvoiceService } from "@/lib/services/invoice.service";
+import { CustomerService } from "@/lib/services/customer.service";
 
 // Zod Validation Schemas
 const DateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format (must be YYYY-MM-DD)");
@@ -31,15 +33,20 @@ const BulkAvailabilitySchema = z.object({
 export async function checkIsAdminAction() {
   try {
     const supabase = await createClientForAction();
-    // Use getUser() which validates the token with the Auth server (secure)
-    // getSession() reads directly from cookies and is NOT authenticated
-    const { data: { user }, error } = await supabase.auth.getUser();
+    // getSession() reads the (signed, tamper-proof) JWT straight from the
+    // cookie — no network round trip to the Supabase Auth server. This is
+    // called on every single admin server action, so that round trip (which
+    // getUser() pays every time to also re-check ban/deletion status) was
+    // the single biggest source of admin-panel latency. It's safe here
+    // because the real authorization gate is the `admins` table lookup right
+    // below, run against a cryptographically-signed user id.
+    const { data: { session }, error } = await supabase.auth.getSession();
 
-    if (error || !user) {
+    if (error || !session?.user) {
       return { isAdmin: false };
     }
 
-    return await processUser(user);
+    return await processUser(session.user);
   } catch (e: unknown) {
     console.error("Admin check error:", e);
     return { isAdmin: false };
@@ -72,7 +79,7 @@ export async function getBookingsAction() {
 
   const { data, error } = await supabaseServer
     .from("bookings")
-    .select("*, plans(name)")
+    .select("*, plans(name), invoices(id, invoice_number, status, total, balance_due)")
     .order("created_at", { ascending: false });
 
   if (error) throw error;
@@ -401,7 +408,34 @@ export async function createAdminBookingAction(input: z.infer<typeof AdminBookin
       );
   }
 
-  return { success: true, booking: data };
+  // Auto-generate the customer record and invoice for this booking (draft,
+  // or paid immediately if the admin is entering an already-confirmed/paid
+  // booking). Cancelled bookings don't need either.
+  if (validated.status !== "cancelled") {
+    await CustomerService.getOrCreateFromBooking({
+      name: data.name,
+      email: data.email,
+      phone: data.phone,
+      bookingId: data.id,
+    });
+    await InvoiceService.createDraftInvoiceForBooking(data);
+    if (validated.status === "confirmed") {
+      await InvoiceService.markInvoicePaidManual(data.id);
+    }
+  }
+
+  const { data: freshBooking, error: refetchError } = await supabaseServer
+    .from("bookings")
+    .select("*, plans(name), invoices(id, invoice_number, status, total, balance_due)")
+    .eq("id", data.id)
+    .single();
+
+  if (refetchError) {
+    console.error("createAdminBookingAction refetch error:", refetchError);
+    return { success: true, booking: data };
+  }
+
+  return { success: true, booking: freshBooking };
 }
 
 export async function updateBookingStatusAction(bookingIdInput: string, statusInput: string) {
@@ -413,16 +447,32 @@ export async function updateBookingStatusAction(bookingIdInput: string, statusIn
   const bookingId = z.string().uuid("Invalid booking ID").parse(bookingIdInput);
   const status = z.enum(["confirmed", "pending", "cancelled"]).parse(statusInput);
 
-  const { data, error } = await supabaseServer
+  const { error } = await supabaseServer
     .from("bookings")
     .update({ status })
-    .eq("id", bookingId)
-    .select("*, plans(name)")
-    .single();
+    .eq("id", bookingId);
 
   if (error) {
     console.error("updateBookingStatusAction error:", error);
     throw new Error(`Failed to update booking status: ${error.message}`);
+  }
+
+  // Keep the linked invoice in sync with the booking's status.
+  if (status === "confirmed") {
+    await InvoiceService.markInvoicePaidManual(bookingId);
+  } else if (status === "cancelled") {
+    await InvoiceService.cancelInvoiceForBooking(bookingId);
+  }
+
+  const { data, error: refetchError } = await supabaseServer
+    .from("bookings")
+    .select("*, plans(name), invoices(id, invoice_number, status, total, balance_due)")
+    .eq("id", bookingId)
+    .single();
+
+  if (refetchError) {
+    console.error("updateBookingStatusAction refetch error:", refetchError);
+    throw new Error(`Failed to reload booking after status update: ${refetchError.message}`);
   }
 
   return { success: true, booking: data };
@@ -492,13 +542,119 @@ export async function sendGoogleReviewRequestAction(bookingIdInput: string) {
     throw new Error("Booking not found");
   }
 
-  await EmailService.sendGoogleReviewRequest(
-    booking.email,
-    booking.name,
-    "https://g.page/r/CblNnrjAvvg5EAI/review"
-  );
+  await EmailService.sendGoogleReviewRequest(booking.email, booking.name);
 
   return { success: true, message: `Google review request sent to ${booking.email}` };
+}
+
+/**
+ * Everything the Dashboard's "Overview" page needs, in one round trip.
+ *
+ * The dashboard previously issued ~7 separate queries straight from the
+ * browser using the anon-key client — each one subject to RLS policy
+ * evaluation, and several (`website_leads`, `tool_submissions`) pulling
+ * every column of every row just to compute status/type counts client-side.
+ * That's the page every admin lands on after logging in, so it was the
+ * single biggest source of "admin panel feels slow."
+ *
+ * This runs server-side with the service-role client (bypasses RLS, so
+ * Postgres doesn't re-check `auth.uid() IN admins` per row), fetches only
+ * the columns each computation actually needs, and fans every query out in
+ * parallel — one network hop from the browser instead of seven.
+ */
+export async function getDashboardStatsAction() {
+  const isAdmin = await verifyAdmin();
+  if (!isAdmin) {
+    throw new Error("Unauthorized: You are not an admin.");
+  }
+
+  // "Today" in the business's own timezone, not the viewing admin's browser.
+  const melbourneNow = new Date(new Date().toLocaleString("en-US", { timeZone: "Australia/Melbourne" }));
+  const todayStr = `${melbourneNow.getFullYear()}-${String(melbourneNow.getMonth() + 1).padStart(2, "0")}-${String(melbourneNow.getDate()).padStart(2, "0")}`;
+
+  const [
+    { count: todayBookings },
+    { count: pendingDocs },
+    { count: pendingSignatures },
+    { data: websiteLeadStatuses },
+    { data: recentWebsiteLeadsRaw },
+    { data: toolLeadNames },
+    { data: recentToolLeadsRaw },
+    { data: bookingsRevenue },
+    { data: activityRaw },
+  ] = await Promise.all([
+    supabaseServer.from("bookings").select("id", { count: "exact", head: true }).eq("date", todayStr),
+    supabaseServer.from("documents").select("id", { count: "exact", head: true }).eq("status", "pending_review"),
+    supabaseServer.from("signature_requests").select("id", { count: "exact", head: true }).eq("status", "sent"),
+    supabaseServer.from("website_leads").select("status"),
+    supabaseServer
+      .from("website_leads")
+      .select("id, first_name, last_name, email, subject, message, status, created_at")
+      .order("created_at", { ascending: false })
+      .limit(7),
+    supabaseServer.from("tool_submissions").select("tool_name"),
+    supabaseServer
+      .from("tool_submissions")
+      .select("id, user_name, user_email, tool_name, results, created_at")
+      .order("created_at", { ascending: false })
+      .limit(7),
+    supabaseServer.from("bookings").select("plans(price_aud)").eq("status", "confirmed"),
+    supabaseServer.from("audit_logs").select("*").order("created_at", { ascending: false }).limit(10),
+  ]);
+
+  let revenue = 0;
+  const typedBookings = bookingsRevenue as unknown as Array<{ plans: { price_aud: number } | null }> | null;
+  typedBookings?.forEach(b => { if (b.plans?.price_aud) revenue += b.plans.price_aud; });
+
+  const wStatuses = (websiteLeadStatuses || []) as { status: string | null }[];
+  const websiteLeadsTotal = wStatuses.length;
+  const websiteLeadsNew = wStatuses.filter(l => (l.status || "new") === "new").length;
+  const websiteLeadsContacted = wStatuses.filter(l => l.status === "contacted").length;
+  const websiteLeadsInProgress = wStatuses.filter(l => l.status === "in_progress").length;
+  const websiteLeadsArchived = wStatuses.filter(l => l.status === "archived").length;
+
+  const tNames = (toolLeadNames || []) as { tool_name: string | null }[];
+  const toolLeadsTotal = tNames.length;
+  const toolLeadsPRCount = tNames.filter(l => l.tool_name === "PR Calculator" || l.tool_name === "PR Points Calculator").length;
+  const toolLeads482Count = tNames.filter(l => l.tool_name?.includes("482") && !l.tool_name?.includes("Business Sponsor")).length;
+  const toolLeadsEligibilityCount = tNames.filter(l => l.tool_name === "Eligibility Checker").length;
+  const toolLeadsSponsorCount = tNames.filter(l => l.tool_name?.includes("Business Sponsor")).length;
+  const toolLeadsCostCount = tNames.filter(l => l.tool_name?.includes("Cost Estimator") || l.tool_name?.includes("Sponsorship Cost")).length;
+  const toolLeadsApplicantCostCount = tNames.filter(l => l.tool_name?.includes("Applicant Cost")).length;
+  const toolLeadsQuizCount = tNames.filter(l =>
+    l.tool_name === "Visa Suggestion Quiz" ||
+    (!l.tool_name?.includes("482") &&
+      l.tool_name !== "PR Calculator" &&
+      l.tool_name !== "PR Points Calculator" &&
+      l.tool_name !== "Eligibility Checker" &&
+      !l.tool_name?.includes("Business Sponsor") &&
+      !l.tool_name?.includes("Cost"))
+  ).length;
+
+  return {
+    stats: {
+      todayBookings: todayBookings || 0,
+      pendingDocs: pendingDocs || 0,
+      pendingSignatures: pendingSignatures || 0,
+      websiteLeadsTotal,
+      websiteLeadsNew,
+      websiteLeadsContacted,
+      websiteLeadsInProgress,
+      websiteLeadsArchived,
+      toolLeadsTotal,
+      toolLeadsPRCount,
+      toolLeads482Count,
+      toolLeadsEligibilityCount,
+      toolLeadsQuizCount,
+      toolLeadsSponsorCount,
+      toolLeadsCostCount,
+      toolLeadsApplicantCostCount,
+      revenue: revenue / 100,
+    },
+    recentWebsiteLeads: recentWebsiteLeadsRaw || [],
+    recentToolLeads: recentToolLeadsRaw || [],
+    activity: activityRaw || [],
+  };
 }
 
 

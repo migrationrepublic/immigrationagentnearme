@@ -192,15 +192,15 @@ export default function WebsiteLeadsPage() {
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
       case "new":
-        return "bg-amber-100 text-amber-800 border-amber-200"
+        return "admin-badge-warn"
       case "contacted":
-        return "bg-green-100 text-green-800 border-green-200"
+        return "admin-badge-success"
       case "in_progress":
-        return "bg-blue-100 text-blue-800 border-blue-200"
+        return "admin-badge-info"
       case "archived":
-        return "bg-slate-100 text-slate-700 border-slate-200"
+        return "admin-badge-navy"
       default:
-        return "bg-slate-100 text-slate-700 border-slate-200"
+        return "admin-badge-navy"
     }
   }
 
@@ -223,7 +223,7 @@ export default function WebsiteLeadsPage() {
               placeholder="Search website leads..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="admin-input pl-9 w-full py-2 px-3 border border-gray-200 rounded-xl text-sm"
+              className="admin-input !pl-10 w-full"
             />
           </div>
 
@@ -231,7 +231,7 @@ export default function WebsiteLeadsPage() {
           <select
             value={channelFilter}
             onChange={e => setChannelFilter(e.target.value)}
-            className="admin-select w-full sm:w-44 py-2 px-3 border border-gray-200 rounded-xl text-sm font-medium"
+            className="admin-select w-full sm:w-44"
           >
             <option value="all">All Sources ({totalCount})</option>
             <option value="website">Website ({websiteCount})</option>
@@ -243,7 +243,7 @@ export default function WebsiteLeadsPage() {
           <select
             value={statusFilter}
             onChange={e => setStatusFilter(e.target.value)}
-            className="admin-select w-full sm:w-44 py-2 px-3 border border-gray-200 rounded-xl text-sm font-medium"
+            className="admin-select w-full sm:w-44"
           >
             <option value="all">All Statuses ({totalCount})</option>
             <option value="new">New ({newCount})</option>
@@ -254,67 +254,32 @@ export default function WebsiteLeadsPage() {
         </div>
       </div>
 
-      {/* Corporate KPI Cards */}
+      {/* Status Filter Tiles */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-        {/* Total Leads */}
-        <div
-          onClick={() => setStatusFilter("all")}
-          className={`p-4 rounded-xl border bg-white shadow-xs cursor-pointer transition-all ${
-            statusFilter === "all" ? "border-slate-900 ring-1 ring-slate-900 bg-slate-50" : "border-slate-200 hover:border-slate-300"
-          }`}
-        >
-          <p className="text-xs font-semibold text-slate-500">Total Leads</p>
-          <p className="text-2xl font-bold text-slate-900 mt-1">{totalCount}</p>
-        </div>
-
-        {/* New Leads */}
-        <div
-          onClick={() => setStatusFilter("new")}
-          className={`p-4 rounded-xl border bg-white shadow-xs cursor-pointer transition-all ${
-            statusFilter === "new" ? "border-amber-700 ring-1 ring-amber-700 bg-amber-50/50" : "border-slate-200 hover:border-slate-300"
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-semibold text-amber-700">New Action</p>
-            {newCount > 0 && (
-              <span className="w-2 h-2 rounded-full bg-amber-500" />
-            )}
-          </div>
-          <p className="text-2xl font-bold text-slate-900 mt-1">{newCount}</p>
-        </div>
-
-        {/* Contacted */}
-        <div
-          onClick={() => setStatusFilter("contacted")}
-          className={`p-4 rounded-xl border bg-white shadow-xs cursor-pointer transition-all ${
-            statusFilter === "contacted" ? "border-green-700 ring-1 ring-green-700 bg-green-50/50" : "border-slate-200 hover:border-slate-300"
-          }`}
-        >
-          <p className="text-xs font-semibold text-green-700">Contacted</p>
-          <p className="text-2xl font-bold text-slate-900 mt-1">{contactedCount}</p>
-        </div>
-
-        {/* In Progress */}
-        <div
-          onClick={() => setStatusFilter("in_progress")}
-          className={`p-4 rounded-xl border bg-white shadow-xs cursor-pointer transition-all ${
-            statusFilter === "in_progress" ? "border-blue-700 ring-1 ring-blue-700 bg-blue-50/50" : "border-slate-200 hover:border-slate-300"
-          }`}
-        >
-          <p className="text-xs font-semibold text-blue-700">In Progress</p>
-          <p className="text-2xl font-bold text-slate-900 mt-1">{inProgressCount}</p>
-        </div>
-
-        {/* Archived */}
-        <div
-          onClick={() => setStatusFilter("archived")}
-          className={`p-4 rounded-xl border bg-white shadow-xs cursor-pointer transition-all ${
-            statusFilter === "archived" ? "border-slate-700 ring-1 ring-slate-700 bg-slate-100" : "border-slate-200 hover:border-slate-300"
-          }`}
-        >
-          <p className="text-xs font-semibold text-slate-700">Archived</p>
-          <p className="text-2xl font-bold text-slate-900 mt-1">{archivedCount}</p>
-        </div>
+        {([
+          { key: "all", label: "Total Leads", count: totalCount },
+          { key: "new", label: "New Action", count: newCount },
+          { key: "contacted", label: "Contacted", count: contactedCount },
+          { key: "in_progress", label: "In Progress", count: inProgressCount },
+          { key: "archived", label: "Archived", count: archivedCount },
+        ] as const).map(tile => {
+          const active = statusFilter === tile.key
+          return (
+            <button
+              key={tile.key}
+              type="button"
+              onClick={() => setStatusFilter(tile.key)}
+              className="admin-card-padded text-left space-y-1 cursor-pointer transition-all"
+              style={active
+                ? { borderColor: 'var(--color-admin-navy)', background: 'color-mix(in srgb, var(--color-admin-navy), white 94%)', boxShadow: '0 0 0 1px var(--color-admin-navy)' }
+                : undefined
+              }
+            >
+              <p className="admin-label">{tile.label}</p>
+              <p className="admin-value text-xl sm:text-2xl">{tile.count}</p>
+            </button>
+          )
+        })}
       </div>
 
       {/* Bulk Success Notification */}
@@ -468,7 +433,7 @@ export default function WebsiteLeadsPage() {
                         </span>
                       </td>
                       <td className="py-3.5 px-4">
-                        <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold border capitalize ${getStatusBadgeClass(lead.status || "new")}`}>
+                        <span className={`admin-badge capitalize ${getStatusBadgeClass(lead.status || "new")}`}>
                           {lead.status || "new"}
                         </span>
                       </td>

@@ -8,6 +8,8 @@ import {
   Loader2,
   ArrowRight,
   RefreshCw,
+  Eye,
+  EyeOff,
 } from 'lucide-react'
 import { format } from 'date-fns'
 import Link from 'next/link'
@@ -62,11 +64,37 @@ interface AuditLog {
   details: Record<string, unknown>
 }
 
-function StatTile({ label, value }: { label: string; value: React.ReactNode }) {
+function StatTile({
+  label,
+  value,
+  masked,
+  revealed,
+  onToggleReveal,
+}: {
+  label: string
+  value: React.ReactNode
+  masked?: boolean
+  revealed?: boolean
+  onToggleReveal?: () => void
+}) {
   return (
     <div className="admin-card-padded space-y-1">
-      <p className="admin-label">{label}</p>
-      <p className="admin-value text-xl sm:text-2xl">{value}</p>
+      <div className="flex items-center justify-between gap-2">
+        <p className="admin-label">{label}</p>
+        {masked && (
+          <button
+            type="button"
+            onClick={onToggleReveal}
+            className="text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+            aria-label={revealed ? `Hide ${label}` : `Show ${label}`}
+          >
+            {revealed ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+          </button>
+        )}
+      </div>
+      <p className="admin-value text-xl sm:text-2xl">
+        {masked && !revealed ? '••••••' : value}
+      </p>
     </div>
   )
 }
@@ -106,6 +134,7 @@ export default function AdminDashboardPage() {
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'website' | 'tool' | 'audit'>('website')
   const [refreshing, setRefreshing] = useState(false)
+  const [revenueRevealed, setRevenueRevealed] = useState(false)
 
   // Single server round trip: fans out to Supabase server-side with the
   // service-role client (no RLS re-check per row, minimal columns per query)
@@ -192,7 +221,13 @@ export default function AdminDashboardPage() {
         <StatTile label="Tool Submissions" value={stats.toolLeadsTotal} />
         <StatTile label="Pending Review" value={stats.pendingDocs} />
         <StatTile label="Signatures Sent" value={stats.pendingSignatures} />
-        <StatTile label="Total Revenue" value={`$${stats.revenue.toLocaleString('en-AU')}`} />
+        <StatTile
+          label="Total Revenue"
+          value={`$${stats.revenue.toLocaleString('en-AU')}`}
+          masked
+          revealed={revenueRevealed}
+          onToggleReveal={() => setRevenueRevealed(v => !v)}
+        />
       </div>
 
       {/* Website Leads vs Tool Leads breakdown */}

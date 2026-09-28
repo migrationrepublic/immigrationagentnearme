@@ -150,7 +150,7 @@ export async function POST(req: Request) {
       }
 
       // -------------------------------
-      // Check Slot Availability
+      // Check Slot Availability (admin-blocked, this consultation type)
       // -------------------------------
       const { data: existingSlot } = await supabaseServer
         .from("availability")
@@ -172,7 +172,33 @@ export async function POST(req: Request) {
       }
 
       // -------------------------------
-      // Insert Booking
+      // Check Slot Availability (any client, any consultation type) — only
+      // one client can be booked at a given date+time across Phone/Video/Office
+      // -------------------------------
+      const { data: crossTypeBookings } = await supabaseServer
+        .from("bookings")
+        .select("id")
+        .eq("date", metadata.date)
+        .eq("time", metadata.time)
+        .not("status", "eq", "cancelled")
+        .limit(1);
+
+      if (crossTypeBookings && crossTypeBookings.length > 0) {
+        console.error(
+          `Slot already booked by another consultation type: ${metadata.date} ${metadata.time}`
+        );
+
+        return NextResponse.json(
+          { error: "Slot already booked" },
+          { status: 409 }
+        );
+      }
+
+      // -------------------------------
+      // Insert Booking. A unique index on bookings(date, time) for
+      // non-cancelled rows is the real guarantee against a race between two
+      // simultaneous checkouts — the checks above are a fast, friendly
+      // pre-check only.
       // -------------------------------
       const { data: newBooking, error: bookingError } = await supabaseServer
         .from("bookings")
@@ -193,6 +219,16 @@ export async function POST(req: Request) {
         .single();
 
       if (bookingError) {
+        if (bookingError.code === "23505") {
+          console.error(
+            `Slot taken between check and insert: ${metadata.date} ${metadata.time}`
+          );
+          return NextResponse.json(
+            { error: "Slot already booked" },
+            { status: 409 }
+          );
+        }
+
         console.error(
           "Booking insert failed:",
           bookingError

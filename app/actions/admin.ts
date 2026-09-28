@@ -171,12 +171,13 @@ export async function getAvailabilityForDateAction(dateInput: string, planIdInpu
     throw new Error("Unauthorized: You are not an admin.");
   }
 
-  // Fetch actual bookings for this date, scoped to this consultation type
+  // Fetch actual bookings for this date across EVERY consultation type — only
+  // one client can be booked at a given time, so a Phone booking at 2pm must
+  // show as "Booked by Client" on the Video/Office tabs too, not just Phone's.
   const { data: realBookings, error: bookingsError } = await supabaseServer
     .from("bookings")
     .select("time")
     .eq("date", date)
-    .eq("plan_id", planId)
     .not("status", "eq", "cancelled");
 
   if (bookingsError) throw bookingsError;
@@ -372,6 +373,23 @@ export async function createAdminBookingAction(input: z.infer<typeof AdminBookin
     formattedTime = `${formattedTime}:00`;
   }
 
+  // Only one client can be booked at a given date+time, across every
+  // consultation type — check before creating a live (non-cancelled) booking.
+  if (validated.status !== "cancelled") {
+    const { data: crossTypeBookings, error: crossTypeError } = await supabaseServer
+      .from("bookings")
+      .select("id")
+      .eq("date", validated.date)
+      .eq("time", formattedTime)
+      .not("status", "eq", "cancelled")
+      .limit(1);
+
+    if (crossTypeError) throw crossTypeError;
+    if (crossTypeBookings && crossTypeBookings.length > 0) {
+      throw new Error("This time slot is already booked by another client.");
+    }
+  }
+
   const { data, error } = await supabaseServer
     .from("bookings")
     .insert([
@@ -390,6 +408,9 @@ export async function createAdminBookingAction(input: z.infer<typeof AdminBookin
     .single();
 
   if (error) {
+    if (error.code === "23505") {
+      throw new Error("This time slot is already booked by another client.");
+    }
     console.error("createAdminBookingAction error:", error);
     throw new Error(`Failed to create booking: ${error.message}`);
   }

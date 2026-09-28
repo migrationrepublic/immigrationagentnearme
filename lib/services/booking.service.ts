@@ -81,7 +81,7 @@ export class BookingService {
       "16:00:00",
     ];
 
-    // Fetch booked slots from availability table, scoped to this plan
+    // Fetch admin-blocked slots from the availability table, scoped to this plan
     const { data, error } = await supabaseServer
       .from("availability")
       .select("time")
@@ -94,7 +94,23 @@ export class BookingService {
       return defaultSlots;
     }
 
-    const bookedTimes = new Set(data?.map((slot) => slot.time) || []);
+    // Fetch every non-cancelled booking for this date, across ALL consultation
+    // types. There is only one consultant, so a Phone booking at 2pm must also
+    // remove 2pm from Video/Office — not just from Phone's own availability.
+    const { data: allBookings, error: bookingsError } = await supabaseServer
+      .from("bookings")
+      .select("time")
+      .eq("date", date)
+      .not("status", "eq", "cancelled");
+
+    if (bookingsError) {
+      console.error(`BookingService.getAvailableSlots (${date}) cross-type bookings error:`, bookingsError);
+    }
+
+    const bookedTimes = new Set([
+      ...(data?.map((slot) => slot.time) || []),
+      ...(allBookings?.map((b) => b.time) || []),
+    ]);
     let availableSlots = defaultSlots.filter((time) => !bookedTimes.has(time));
 
     // Handle today's date filter (Australia/Melbourne timezone check)
@@ -123,7 +139,7 @@ export class BookingService {
    * Inserts a new booking record and blocks the availability slot.
    */
   static async createBooking(bookingInput: Omit<Booking, "id" | "status" | "created_at">): Promise<Booking> {
-    // 1. Verify slot is not already booked for this consultation type
+    // 1. Verify slot is not admin-blocked for this consultation type
     const { data: slotData, error: slotError } = await supabaseServer
       .from("availability")
       .select("is_booked")
@@ -140,7 +156,29 @@ export class BookingService {
       throw new Error("This time slot is no longer available.");
     }
 
-    // 2. Insert the booking
+    // 2. Verify no OTHER client already holds this date+time — across every
+    //    consultation type. Only one client can be booked at a time; a real
+    //    booking under Phone must block Video/Office at the same clock time.
+    const { data: crossTypeBookings, error: crossTypeError } = await supabaseServer
+      .from("bookings")
+      .select("id")
+      .eq("date", bookingInput.date)
+      .eq("time", bookingInput.time)
+      .not("status", "eq", "cancelled")
+      .limit(1);
+
+    if (crossTypeError) {
+      throw new Error(`Booking verify failed: ${crossTypeError.message}`);
+    }
+
+    if (crossTypeBookings && crossTypeBookings.length > 0) {
+      throw new Error("This time slot is no longer available.");
+    }
+
+    // 3. Insert the booking. A unique index on bookings(date, time) for
+    //    non-cancelled rows is the real guarantee against a race between two
+    //    simultaneous requests — the check above is just a fast, friendly
+    //    pre-check.
     const { data, error } = await supabaseServer
       .from("bookings")
       .insert([
@@ -160,6 +198,9 @@ export class BookingService {
       .single();
 
     if (error) {
+      if (error.code === "23505") {
+        throw new Error("This time slot is no longer available.");
+      }
       console.error("BookingService.createBooking insert error:", error);
       throw new Error(`Failed to create booking database entry: ${error.message}`);
     }

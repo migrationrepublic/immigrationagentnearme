@@ -173,10 +173,15 @@ END;
 $$ language 'plpgsql';
 
 -- Bind triggers
+DROP TRIGGER IF EXISTS update_website_leads_updated_at ON website_leads;
 CREATE TRIGGER update_website_leads_updated_at BEFORE UPDATE ON website_leads FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DROP TRIGGER IF EXISTS update_doc_templates_updated_at ON document_templates;
 CREATE TRIGGER update_doc_templates_updated_at BEFORE UPDATE ON document_templates FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DROP TRIGGER IF EXISTS update_doc_fields_updated_at ON document_fields;
 CREATE TRIGGER update_doc_fields_updated_at BEFORE UPDATE ON document_fields FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DROP TRIGGER IF EXISTS update_documents_updated_at ON documents;
 CREATE TRIGGER update_documents_updated_at BEFORE UPDATE ON documents FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DROP TRIGGER IF EXISTS update_signature_requests_updated_at ON signature_requests;
 CREATE TRIGGER update_signature_requests_updated_at BEFORE UPDATE ON signature_requests FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- 4. Enable Row Level Security (RLS)
@@ -319,13 +324,10 @@ CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at);
 
 -- 7. Seed Core Setup Consultation Plans
 INSERT INTO plans (name, slug, price_aud, duration_minutes) VALUES
-    ('Phone Consultation', 'phone-consultation', 10000, 30), -- prices represented in cents ($100.00 AUD)
-    ('Online Video Consultation', 'online-video-consultation', 15000, 45), -- $150.00 AUD
-    ('In-Office Consultation', 'in-office-consultation', 20000, 60) -- $200.00 AUD
-ON CONFLICT (slug) DO UPDATE 
-SET name = EXCLUDED.name, 
-    price_aud = EXCLUDED.price_aud, 
-    duration_minutes = EXCLUDED.duration_minutes;
+    ('Phone Consultation', 'phone-consultation', 11500, 30), -- prices in cents, incl. GST ($115.00 AUD)
+    ('Online Video Consultation', 'online-video-consultation', 17500, 30), -- $175.00 AUD
+    ('In-Office Consultation', 'in-office-consultation', 34500, 30) -- $345.00 AUD
+ON CONFLICT (slug) DO NOTHING; -- never overwrite prices already edited in the live database
 
 
 -- 8. Storage Buckets Setup

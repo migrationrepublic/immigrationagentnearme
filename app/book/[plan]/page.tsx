@@ -70,7 +70,7 @@ export default function BookPlanPage({
         setPlan({
           id: planId,
           name: "Selected Plan",
-          price_aud: 11407,
+          price_aud: 11500,
           duration_minutes: 30,
         });
       setLoadingPlan(false);
@@ -324,7 +324,7 @@ export default function BookPlanPage({
                       Total Amount
                     </span>
                     <span className="text-xs text-gray-400 font-bold uppercase tracking-widest mt-1">
-                      ${Math.round(plan.price_aud / 114.07)} + GST
+                      Incl. GST
                     </span>
                   </div>
 
@@ -333,9 +333,6 @@ export default function BookPlanPage({
                     <span className="text-sm text-gray-400 ml-1">AUD</span>
                   </span>
                 </div>
-                <span className="text-[10px] text-gray-500 font-bold uppercase tracking-tight leading-relaxed">
-                  Includes Card Surcharge
-                </span>
               </div>
 
               <div className="mt-8 p-4 bg-blue-50/50 rounded-2xl flex items-center gap-4 border border-blue-100">

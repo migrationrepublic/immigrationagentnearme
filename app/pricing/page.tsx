@@ -15,9 +15,9 @@ export default async function PricingPage() {
   // If Supabase isn't hooked up yet, plans might be empty.
   // Fallback for development/UI design:
   const displayPlans = plans.length > 0 ? plans : [
-    { id: '1', slug: 'phone-consultation', name: 'Phone Consultation', price_aud: 11407, duration_minutes: 30, base_price: 100 },
-    { id: '2', slug: 'online-video-consultation', name: 'Online Video Consultation', price_aud: 17111, duration_minutes: 30, base_price: 150 },
-    { id: '3', slug: 'in-office-consultation', name: 'In-Office Consultation', price_aud: 34221, duration_minutes: 30, base_price: 300 },
+    { id: '1', slug: 'phone-consultation', name: 'Phone Consultation', price_aud: 11500, duration_minutes: 30 },
+    { id: '2', slug: 'online-video-consultation', name: 'Online Video Consultation', price_aud: 17500, duration_minutes: 30 },
+    { id: '3', slug: 'in-office-consultation', name: 'In-Office Consultation', price_aud: 34500, duration_minutes: 30 },
   ]
 
   return (
@@ -61,7 +61,7 @@ export default async function PricingPage() {
                     <span className="text-gray-500 dark:text-gray-400 font-medium">AUD</span>
                   </div>
                   <span className="text-sm text-gray-400 mt-1 font-medium">
-                    ${plan.base_price || (plan.price_aud / 114.07 * 100 / 100).toFixed(0)} + GST
+                    Incl. GST
                   </span>
                 </div>
 

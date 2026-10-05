@@ -28,7 +28,6 @@ function fmt(n: number) {
 }
 
 const MAX_WORKERS = 50;
-const MAX_FAMILY_MEMBERS = 50;
 
 export default function SponsorshipCostEstimatorPage() {
   const [step, setStep] = useState(1);
@@ -36,17 +35,16 @@ export default function SponsorshipCostEstimatorPage() {
   const [turnover, setTurnover] = useState<'small' | 'large'>('small');
   const [workers, setWorkers] = useState<number>(1);
   const [years, setYears] = useState<number>(4);
-  const [adults, setAdults] = useState<number>(0);
-  const [children, setChildren] = useState<number>(0);
 
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // If 482: 5 question steps (Visa, Turnover, Workers, Years, Family).
-  // If 186/494: 4 question steps (Years skipped).
+  // If 482: 4 question steps (Visa, Turnover, Workers, Years).
+  // If 186/494: 3 question steps (Years skipped).
   const is482 = visa === '482';
-  const totalQuestions = is482 ? 5 : 4;
+  const totalQuestions = is482 ? 4 : 3;
+  const lastQuestion = totalQuestions;
   const progress = Math.min(100, (step / totalQuestions) * 100);
 
   const calculation: CostCalculationBreakdown = calculateSponsorshipCosts({
@@ -54,38 +52,22 @@ export default function SponsorshipCostEstimatorPage() {
     turnover,
     workers,
     years: is482 ? years : undefined,
-    adults,
-    children,
+    adults: 0,
+    children: 0,
   });
 
   // Company Cost = charges the sponsoring business pays (nomination + SAF levy).
-  // Applicant Cost = the sponsored worker's own visa application charge.
-  // Family Charges = visa application charges for accompanying dependants, shown separately.
   const companyCostTotal = calculation.nominationTotal + calculation.safTotal;
-  const applicantCostTotal = calculation.vacPrimaryTotal;
-  const familyChargesTotal = calculation.vacFamilyTotal;
 
   const handleNext = () => {
-    // If not 482 and moving from step 3 (Workers), skip step 4 (Years) to step 5 (Family)
-    if (!is482 && step === 3) {
-      setStep(5);
-      return;
-    }
-
-    if (step < 5) {
-      setStep(step + 1);
-    } else {
+    if (step >= lastQuestion) {
       setStep(6); // Lead capture step
+    } else {
+      setStep(step + 1);
     }
   };
 
   const handleBack = () => {
-    // If not 482 and moving back from step 5 (Family), jump to step 3 (Workers)
-    if (!is482 && step === 5) {
-      setStep(3);
-      return;
-    }
-
     if (step > 1) {
       setStep(step - 1);
     }
@@ -97,8 +79,6 @@ export default function SponsorshipCostEstimatorPage() {
     setTurnover('small');
     setWorkers(1);
     setYears(4);
-    setAdults(0);
-    setChildren(0);
     setSubmitted(false);
     setErrorMsg(null);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -126,18 +106,11 @@ export default function SponsorshipCostEstimatorPage() {
         business_turnover: turnover === 'small' ? 'Under $10 million' : '$10 million or more',
         number_of_workers: workers,
         years_of_stay: is482 ? `${years} years` : 'N/A (One-off)',
-        accompanying_family: `${adults} adult(s) (18+), ${children} child(ren) (<18)`,
-        grand_total_government_charges: fmt(calculation.grandTotal),
+        grand_total_government_charges: fmt(companyCostTotal),
         company_cost: {
           nomination_fee: fmt(calculation.nominationTotal),
           saf_levy: fmt(calculation.safTotal),
           subtotal: fmt(companyCostTotal),
-        },
-        applicant_cost: {
-          vac_sponsored_workers: fmt(calculation.vacPrimaryTotal),
-          vac_accompanying_family_adults: adults > 0 ? fmt(adults * calculation.vacAdultRate) : 'N/A',
-          vac_accompanying_family_children: children > 0 ? fmt(children * calculation.vacChildRate) : 'N/A',
-          subtotal: fmt(applicantCostTotal + familyChargesTotal),
         },
       }
     };
@@ -162,12 +135,12 @@ export default function SponsorshipCostEstimatorPage() {
       />
 
       <div className="max-w-3xl mx-auto px-3 sm:px-6">
-        {/* Progress Bar (For question steps 1 to 5) */}
-        {step <= 5 && (
+        {/* Progress Bar  */}
+        {step <= lastQuestion && (
           <div className="mb-5 sm:mb-6">
             <div className="flex justify-between items-end mb-2">
               <span className="text-xs font-semibold uppercase tracking-wider text-brand-primary">
-                Question {is482 ? step : (step === 5 ? 4 : step)} of {totalQuestions}
+                Question {step} of {totalQuestions}
               </span>
               <span className="text-xs font-medium text-gray-500">
                 {Math.round(progress)}% Complete
@@ -354,74 +327,6 @@ export default function SponsorshipCostEstimatorPage() {
               </div>
             )}
 
-            {/* STEP 5: Accompanying Family */}
-            {step === 5 && (
-              <div className="animate-fadeIn space-y-6">
-                <div>
-                  <h2 className="text-xl sm:text-2xl font-bold text-brand-primary mb-2">
-                    Accompanying family members
-                  </h2>
-                  <p className="text-xs sm:text-sm text-gray-500">
-                    Total accompanying family members across all sponsored workers (leave 0 if none).
-                  </p>
-                </div>
-
-                {/* Adults 18+ */}
-                <div className="p-4 bg-slate-50 rounded-2xl border border-gray-200 flex items-center justify-between">
-                  <div>
-                    <div className="text-sm font-bold text-gray-900">Accompanying family — adults (18+)</div>
-                    <div className="text-xs text-gray-500">Total across all workers (${FEES[visa].vacAdult.toLocaleString()} VAC each)</div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setAdults(Math.max(0, adults - 1))}
-                      disabled={adults <= 0}
-                      className="w-9 h-9 rounded-lg bg-white border border-gray-300 text-gray-700 flex items-center justify-center font-bold hover:bg-gray-100 disabled:opacity-40"
-                    >
-                      <Minus className="w-4 h-4" />
-                    </button>
-                    <span className="w-8 text-center font-bold text-lg text-brand-primary">{adults}</span>
-                    <button
-                      type="button"
-                      onClick={() => setAdults(Math.min(MAX_FAMILY_MEMBERS, adults + 1))}
-                      disabled={adults >= MAX_FAMILY_MEMBERS}
-                      className="w-9 h-9 rounded-lg bg-white border border-gray-300 text-gray-700 flex items-center justify-center font-bold hover:bg-gray-100 disabled:opacity-40"
-                    >
-                      <Plus className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-
-                {/* Children under 18 */}
-                <div className="p-4 bg-slate-50 rounded-2xl border border-gray-200 flex items-center justify-between">
-                  <div>
-                    <div className="text-sm font-bold text-gray-900">Accompanying family — children (under 18)</div>
-                    <div className="text-xs text-gray-500">Total across all workers (${FEES[visa].vacChild.toLocaleString()} VAC each)</div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setChildren(Math.max(0, children - 1))}
-                      disabled={children <= 0}
-                      className="w-9 h-9 rounded-lg bg-white border border-gray-300 text-gray-700 flex items-center justify-center font-bold hover:bg-gray-100 disabled:opacity-40"
-                    >
-                      <Minus className="w-4 h-4" />
-                    </button>
-                    <span className="w-8 text-center font-bold text-lg text-brand-primary">{children}</span>
-                    <button
-                      type="button"
-                      onClick={() => setChildren(Math.min(MAX_FAMILY_MEMBERS, children + 1))}
-                      disabled={children >= MAX_FAMILY_MEMBERS}
-                      className="w-9 h-9 rounded-lg bg-white border border-gray-300 text-gray-700 flex items-center justify-center font-bold hover:bg-gray-100 disabled:opacity-40"
-                    >
-                      <Plus className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
             {/* STEP 6: Lead Capture Gating */}
             {step === 6 && (
               <div className="animate-fadeIn space-y-4">
@@ -497,11 +402,11 @@ export default function SponsorshipCostEstimatorPage() {
                     Estimated government charges — {calculation.visaLabel}
                   </h2>
                   <p className="text-xs sm:text-sm text-gray-500 mt-1">
-                    {workers} worker{workers > 1 ? 's' : ''}, {adults} adult dependant{adults !== 1 ? 's' : ''}, {children} child dependant{children !== 1 ? 's' : ''}{calculation.yearsNote}
+                    {workers} worker{workers > 1 ? 's' : ''}{calculation.yearsNote}
                   </p>
                 </div>
 
-                {/* Sectioned Breakdown: Company Cost / Applicant Cost / Family Charges */}
+                {/* Sectioned Breakdown: Company Cost */}
                 <div className="space-y-4">
                   {/* Company Cost */}
                   <div className="border border-gray-200 rounded-2xl overflow-hidden shadow-xs overflow-x-auto">
@@ -537,67 +442,11 @@ export default function SponsorshipCostEstimatorPage() {
                     </table>
                   </div>
 
-                  {/* Applicant Cost (includes accompanying family charges) */}
-                  <div className="border border-gray-200 rounded-2xl overflow-hidden shadow-xs overflow-x-auto">
-                    <div className="px-3.5 sm:px-6 py-2.5 sm:py-3 bg-brand-soft/60 border-b border-gray-200 flex items-center justify-between">
-                      <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-brand-primary">Applicant cost</span>
-                      <span className="text-[10px] sm:text-[11px] text-gray-500 font-medium">Visa application charges — worker(s) &amp; family</span>
-                    </div>
-                    <table className="w-full text-xs sm:text-sm text-left">
-                      <tbody className="divide-y divide-gray-100">
-                        <tr>
-                          <td className="px-3.5 sm:px-6 py-3 sm:py-3.5 text-gray-800">
-                            Visa application charge — sponsored worker(s)
-                          </td>
-                          <td className="px-3.5 sm:px-6 py-3 sm:py-3.5 text-right font-semibold text-gray-900 whitespace-nowrap">
-                            {fmt(calculation.vacPrimaryTotal)}
-                          </td>
-                        </tr>
-                        {adults > 0 && (
-                          <tr>
-                            <td className="px-3.5 sm:px-6 py-3 sm:py-3.5 text-gray-800">
-                              Visa application charge — accompanying family ({adults} adult{adults !== 1 ? 's' : ''})
-                            </td>
-                            <td className="px-3.5 sm:px-6 py-3 sm:py-3.5 text-right font-semibold text-gray-900 whitespace-nowrap">
-                              {fmt(adults * calculation.vacAdultRate)}
-                            </td>
-                          </tr>
-                        )}
-                        {children > 0 && (
-                          <tr>
-                            <td className="px-3.5 sm:px-6 py-3 sm:py-3.5 text-gray-800">
-                              Visa application charge — accompanying family ({children} child{children !== 1 ? 'ren' : ''})
-                            </td>
-                            <td className="px-3.5 sm:px-6 py-3 sm:py-3.5 text-right font-semibold text-gray-900 whitespace-nowrap">
-                              {fmt(children * calculation.vacChildRate)}
-                            </td>
-                          </tr>
-                        )}
-                        {adults === 0 && children === 0 && (
-                          <tr>
-                            <td className="px-3.5 sm:px-6 py-3 sm:py-3.5 text-gray-800">
-                              Visa application charge — accompanying family
-                            </td>
-                            <td className="px-3.5 sm:px-6 py-3 sm:py-3.5 text-right font-semibold text-gray-900 whitespace-nowrap">
-                              {fmt(0)}
-                            </td>
-                          </tr>
-                        )}
-                        <tr className="bg-slate-50/80 font-bold">
-                          <td className="px-3.5 sm:px-6 py-3 sm:py-3.5 text-brand-primary">Applicant cost subtotal</td>
-                          <td className="px-3.5 sm:px-6 py-3 sm:py-3.5 text-right text-brand-primary whitespace-nowrap">
-                            {fmt(applicantCostTotal + familyChargesTotal)}
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-
                   {/* Grand Total */}
                   <div className="rounded-2xl border-2 border-brand-primary bg-brand-soft/80 px-4 sm:px-6 py-4 flex items-center justify-between">
                     <span className="text-sm sm:text-base font-bold text-brand-primary">Total government charges</span>
                     <span className="text-lg sm:text-xl font-black text-brand-primary whitespace-nowrap">
-                      {fmt(calculation.grandTotal)}
+                      {fmt(companyCostTotal)}
                     </span>
                   </div>
                 </div>
@@ -633,8 +482,8 @@ export default function SponsorshipCostEstimatorPage() {
 
           </div>
 
-          {/* Footer Navigation (For question steps 1 to 5) */}
-          {step <= 5 && (
+          {/* Footer Navigation  */}
+          {step <= lastQuestion && (
             <div className="px-4 sm:px-8 py-3.5 sm:py-4 bg-gray-50 border-t border-gray-100 flex justify-between items-center">
               <Button
                 type="button"

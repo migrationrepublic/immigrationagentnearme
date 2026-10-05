@@ -91,10 +91,11 @@ export class InvoicePdfService {
       color: GRAY,
     });
 
+    // Share the company name's baseline so the two headings line up.
     const invoiceTitleWidth = bold.widthOfTextAtSize("INVOICE", 26);
     page.drawText("INVOICE", {
       x: PAGE_WIDTH - MARGIN - invoiceTitleWidth,
-      y: y - 6,
+      y: y - 4,
       size: 26,
       font: bold,
       color: NAVY,
@@ -126,9 +127,10 @@ export class InvoicePdfService {
     // ---------------------------------------------------------------
     // Bill To  /  Invoice meta (two columns)
     // ---------------------------------------------------------------
-    const colGap = 20;
-    const leftColW = 300;
-    const rightColX = MARGIN + leftColW + colGap;
+    // One shared grid for the right-hand blocks: the same x as the item
+    // table's Discount column (item column is 36%, qty 9%, rate 15%).
+    const gridX = MARGIN + (PAGE_WIDTH - MARGIN * 2) * 0.6;
+    const rightColX = gridX;
 
     page.drawText("BILL TO", { x: MARGIN, y, size: 9, font: bold, color: GRAY });
     let leftY = y - 16;
@@ -253,8 +255,7 @@ export class InvoicePdfService {
     // ---------------------------------------------------------------
     // Totals block (right aligned)
     // ---------------------------------------------------------------
-    const totalsW = 220;
-    const totalsX = PAGE_WIDTH - MARGIN - totalsW;
+    const totalsX = gridX;
     const totalsRows: [string, string, boolean][] = [
       ["Subtotal", money(invoice.subtotal), false],
       ...(invoice.discount_total ? ([["Discount", `- ${money(invoice.discount_total)}`, false]] as [string, string, boolean][]) : []),
@@ -265,16 +266,18 @@ export class InvoicePdfService {
     ];
 
     for (const [label, value, emphasize] of totalsRows) {
+      const size = emphasize ? 11.5 : 10;
       if (emphasize) {
+        // Rule sits in the gap above the bold row's cap height, never through the text.
+        y -= 4;
         page.drawLine({
-          start: { x: totalsX, y: y + 4 },
-          end: { x: PAGE_WIDTH - MARGIN, y: y + 4 },
+          start: { x: totalsX, y: y + size + 3 },
+          end: { x: PAGE_WIDTH - MARGIN, y: y + size + 3 },
           thickness: 0.75,
           color: BORDER,
         });
       }
       const f = emphasize ? bold : font;
-      const size = emphasize ? 11.5 : 10;
       page.drawText(label, { x: totalsX, y, size, font: f, color: emphasize ? NAVY : GRAY });
       const valW = f.widthOfTextAtSize(value, size);
       page.drawText(value, {

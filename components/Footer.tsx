@@ -107,7 +107,7 @@ export default function Footer() {
                 expert immigration advice near you in Sydney, Melbourne,
                 Brisbane, Perth, Adelaide and beyond.
               </p>
-              <div className="marn-badge">🏛️ MARN: 2516981</div>
+              <div className="marn-badge">🏛️ MARN: 2518961</div>
             </div>
 
             <div className="footer-col">

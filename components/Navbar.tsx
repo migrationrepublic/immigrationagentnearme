@@ -19,7 +19,7 @@ export default function Navbar() {
           <div className="flex items-center gap-4">
             <span className="flex items-center gap-1.5 font-medium">
               <ShieldCheck className="w-4 h-4 text-brand-accent" /> MARN:
-              2516981
+              2518961
             </span>
             <span className="text-white/40">|</span>
             <span className="font-medium">MARA Registered Immigration Agents</span>

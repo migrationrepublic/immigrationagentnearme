@@ -942,9 +942,9 @@ export default function SignPage() {
       <div className="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center shrink-0">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/images/logobgre.png"
+          src="/images/logo.jpg"
           alt="Migration Republic Logo"
-          className="w-full h-full object-contain"
+          className="w-full h-full object-contain rounded-full"
         />
       </div>
       <div>
@@ -954,6 +954,14 @@ export default function SignPage() {
         <p className="text-[9px] text-gray-500 leading-tight mt-1">
           Secure Document Signing Portal
         </p>
+        <a
+          href="https://bshsolutions.net"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-block text-[8px] text-gray-400 hover:text-gray-600 leading-tight mt-1 transition-colors"
+        >
+          Developed by BSH Solutions
+        </a>
       </div>
     </header>
   )
@@ -963,9 +971,9 @@ export default function SignPage() {
       <div className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center shrink-0">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/images/logobgre.png"
+          src="/images/logo.jpg"
           alt="Migration Republic Logo"
-          className="w-full h-full object-contain"
+          className="w-full h-full object-contain rounded-full"
         />
       </div>
       <div className="min-w-0">
@@ -975,6 +983,14 @@ export default function SignPage() {
         <p className="text-[8px] sm:text-[9px] text-gray-300 leading-tight mt-1 hidden sm:block">
           Secure Document Signing Portal
         </p>
+        <a
+          href="https://bshsolutions.net"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block text-[7px] sm:text-[8px] text-gray-400 hover:text-gray-300 leading-tight mt-0.5 transition-colors truncate"
+        >
+          Developed by BSH Solutions
+        </a>
       </div>
     </header>
   )

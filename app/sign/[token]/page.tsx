@@ -1187,7 +1187,15 @@ export default function SignPage() {
                   className="relative mx-auto bg-white border border-gray-300 shadow-xl"
                   style={{
                     width: canvasDimensions[pNum] ? `${canvasDimensions[pNum].width}px` : 'auto',
-                    height: canvasDimensions[pNum] ? `${canvasDimensions[pNum].height}px` : 'auto',
+                    // Height must scale with width using the page's own aspect
+                    // ratio (not a fixed px value) — otherwise on a narrow mobile
+                    // viewport the canvas shrinks via max-w-full/h-auto while this
+                    // wrapper (which the field overlays are positioned against as
+                    // % of its box) stays at full desktop height, so every
+                    // overlay's top/left % lands on the wrong spot of the PDF.
+                    aspectRatio: canvasDimensions[pNum]
+                      ? `${canvasDimensions[pNum].width} / ${canvasDimensions[pNum].height}`
+                      : undefined,
                     maxWidth: '100%',
                   }}
                 >

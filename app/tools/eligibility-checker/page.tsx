@@ -111,11 +111,11 @@ export default function EligibilityCheckerPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50/50 pb-20" suppressHydrationWarning>
+    <div className="bg-slate-50/50 pb-8 sm:pb-10" suppressHydrationWarning>
       <ToolHeader 
         badge="General Assessment"
-        title="Eligibility Checker" 
-        description="Check if you meet the fundamental requirements to apply for an Australian visa."
+        title="Australian Visa Eligibility Checker: Can You Migrate to Australia?" 
+        description="Answer a few quick questions to see whether you meet the basic requirements to apply for an Australian visa."
       />
 
       <div className="w-full">

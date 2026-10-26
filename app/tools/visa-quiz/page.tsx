@@ -112,11 +112,11 @@ export default function VisaQuizPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50/50 pb-20" suppressHydrationWarning>
+    <div className="bg-slate-50/50 pb-8 sm:pb-10" suppressHydrationWarning>
       <ToolHeader
         badge="Interactive Quiz"
-        title="Visa Suggestion Quiz"
-        description="Find the right visa subclass based on your personal circumstances and migration goals."
+        title="Visa Suggestion Quiz: Find the Right Australian Visa for You"
+        description="Not sure which visa subclass fits? Tell us your goals and get tailored Australian visa suggestions."
       />
 
       <div className="w-full">

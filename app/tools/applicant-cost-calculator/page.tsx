@@ -121,11 +121,11 @@ export default function ApplicantCostCalculatorPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50/50 pb-20" suppressHydrationWarning>
+    <div className="bg-slate-50/50 pb-8 sm:pb-10" suppressHydrationWarning>
       <ToolHeader
         badge="Visa Application Charges"
-        title="Applicant Cost Estimator"
-        description="Applicant visa application charges only — company sponsorship charges are calculated separately."
+        title="Applicant Cost Calculator: Estimate Your Australian Visa Application Charges"
+        description="Calculate visa application charges for yourself and accompanying family members. Company sponsorship charges are separate."
       />
 
       <div className="max-w-3xl mx-auto px-3 sm:px-6">

@@ -127,11 +127,11 @@ export default function SponsorshipCostEstimatorPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50/50 pb-20" suppressHydrationWarning>
+    <div className="bg-slate-50/50 pb-8 sm:pb-10" suppressHydrationWarning>
       <ToolHeader
         badge="Government Charges"
-        title="Sponsorship Cost Estimator"
-        description="Government charges only — our professional fee is quoted separately."
+        title="Sponsorship Cost Estimator: Know Your Government Fees Upfront"
+        description="Calculate itemised government charges for employer sponsorship, including nomination fees, the SAF levy and visa application charges."
       />
 
       <div className="max-w-3xl mx-auto px-3 sm:px-6">

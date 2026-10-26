@@ -171,11 +171,11 @@ export default function BusinessSponsorCheckerPage() {
   const result = processAssessment();
 
   return (
-    <div className="min-h-screen bg-slate-50/50 pb-20" suppressHydrationWarning>
+    <div className="bg-slate-50/50 pb-8 sm:pb-10" suppressHydrationWarning>
       <ToolHeader
         badge="Employer Sponsorship"
-        title="Can My Business Sponsor? Eligibility Quick-Check"
-        description="A few questions, indicative result in under a minute. Not a formal assessment."
+        title="Business Sponsor Checker: Can Your Business Sponsor Overseas Workers?"
+        description="Answer a few questions for an indicative result on your business's eligibility to sponsor under the 482, 186 and 494 visas."
       />
 
       <div className="max-w-3xl mx-auto px-3 sm:px-6">

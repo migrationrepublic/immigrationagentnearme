@@ -252,11 +252,11 @@ export default function Subclass482CheckerPage() {
   const { resultType, flags } = processAssessment();
 
   return (
-    <div className="min-h-screen bg-slate-50/50 pb-20" suppressHydrationWarning>
+    <div className="bg-slate-50/50 pb-8 sm:pb-10" suppressHydrationWarning>
       <ToolHeader
         badge="Work Visa"
-        title="Subclass 482 Visa Eligibility Checker"
-        description="Assess your preliminary eligibility criteria for the Subclass 482 Skills in Demand Visa."
+        title="Subclass 482 Eligibility Checker: Are You Eligible for the Skills in Demand Visa?"
+        description="Check your preliminary eligibility for the Subclass 482 Skills in Demand visa in a few minutes."
       />
 
       <div className="max-w-4xl mx-auto px-3 sm:px-6">

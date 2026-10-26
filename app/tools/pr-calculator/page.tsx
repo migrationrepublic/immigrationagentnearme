@@ -130,11 +130,11 @@ export default function PRCalculatorPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50/50 pb-20" suppressHydrationWarning>
+    <div className="bg-slate-50/50 pb-8 sm:pb-10" suppressHydrationWarning>
       <ToolHeader 
         badge="Skilled Migration"
-        title="PR Points Calculator" 
-        description="Check your eligibility for Australian Permanent Residency (General Skilled Migration) in minutes."
+        title="PR Points Calculator: Check Your Australian Skilled Visa Score" 
+        description="Estimate your points for Australian Permanent Residency (subclass 189, 190 and 491) in under two minutes."
       />
 
       <div className="w-full">

@@ -27,7 +27,7 @@ const tools = [
   },
   {
     id: 'applicant-cost-calculator',
-    title: 'Applicant Cost Estimator',
+    title: 'Applicant Cost Calculator',
     badge: 'Visa Charges',
     description: 'Calculate the applicant\'s visa application charges (VAC) for themselves and accompanying family.',
     icon: <User className="w-7 h-7 text-teal-600" />,
@@ -150,7 +150,7 @@ export default function ToolsDirectoryPage() {
             </p>
           </div>
           <Link
-            href="/pricing"
+            href="https://migrationrepublic.com.au/book-a-consultation/"
             className="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 text-xs sm:text-sm font-bold bg-[#e40229] hover:bg-[#e40229]/95 text-white rounded-xl shadow-md whitespace-nowrap shrink-0"
           >
             Book a Consultation

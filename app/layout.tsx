@@ -4,6 +4,7 @@ import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import ChatBot from "@/components/ChatBot";
+import ClarityInit from "@/components/ClarityInit";
 // import Header from "@/components/Header";
 // import Footer from "@/components/Footer";
 
@@ -45,6 +46,7 @@ export default function RootLayout({
         <main className="flex-grow">{children}</main>
         {/* <Footer /> */}
         <ChatBot />
+        <ClarityInit />
         <Analytics />
         <SpeedInsights />
       </body>

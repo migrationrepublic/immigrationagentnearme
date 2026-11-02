@@ -6,6 +6,9 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 
 export const TOOLS_NAV_ITEMS = [
+  { name: 'Visit Finder', href: '/tools/visit-visa-finder' },
+  { name: 'Study Finder', href: '/tools/study-visa-finder' },
+  { name: 'Work Finder', href: '/tools/work-visa-finder' },
   {
     name: 'Business Sponsor',
     href: '/tools/business-sponsor-checker',

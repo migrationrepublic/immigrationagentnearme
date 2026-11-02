@@ -224,12 +224,82 @@ export const TOOL_SEO: Record<string, ToolSeo> = {
     ],
     keywords: ["applicant cost calculator", "visa application charge calculator Australia", "VAC calculator", "482 186 494 visa cost"],
   },
+
+  "visit-visa-finder": {
+    slug: "visit-visa-finder",
+    keyword: "Australian Visitor Visa Finder",
+    h1: "Australian Visitor Visa Finder: Which Visa Is Right for Your Trip?",
+    tagline: "Answer up to three questions to see visitor visa options for tourism, family visits, business, transit and working holidays.",
+    metaTitle: "Australian Visitor Visa Finder \u2013 Explore Your Options",
+    metaDescription: "Free Australian Visitor Visa Finder. See which visitor visas, such as 600, 651, 601 and working holiday visas, may suit your trip. Information only, not migration advice.",
+    intro: ["Most visitors to Australia apply for a Visitor visa (subclass 600), an eVisitor (651) or an Electronic Travel Authority (601), depending on their passport and reason for travel.", "The Visit Visa Finder asks about the purpose of your trip and your passport, then lists the visa options worth exploring. It shows options only. It does not assess eligibility, and visa rules, fees and eligible countries change."],
+    howToTitle: "How to use the Visit Visa Finder",
+    steps: [{"name": "Answer the questions", "text": "Choose your purpose of visit and your country of passport. Working holiday travellers are also asked their age group."}, {"name": "Review your options", "text": "See a short list of visa options to explore, with stay, fees from and key points for each."}, {"name": "Read the guide", "text": "Open the Migration Republic guide for any visa that looks relevant."}, {"name": "Book a consultation", "text": "Send your answers to a registered migration agent to talk through your options."}],
+    faqs: [{"q": "Which visa do most tourists use?", "a": "Most tourists use the Visitor visa (subclass 600), an eVisitor (651) or an ETA (601). Which one is available depends on your passport."}, {"q": "Does this tool tell me if I qualify?", "a": "No. It lists options to explore. Eligibility depends on legislation, including health and character requirements."}, {"q": "Can a migration agent lodge an ETA?", "a": "ETAs currently cannot be lodged through an agent and must be applied for using the official app."}, {"q": "Are the fees current?", "a": "Fees change, usually from 1 July. Always check the Home Affairs Visa Pricing Estimator."}],
+    keywords: ["Australian visitor visa finder", "which visitor visa for Australia", "subclass 600 visa", "eVisitor 651", "ETA 601"],
+  },
+
+  "study-visa-finder": {
+    slug: "study-visa-finder",
+    keyword: "Australian Study Visa Finder",
+    h1: "Australian Study Visa Finder: Student, Guardian and Training Visas",
+    tagline: "See which Australian visa options may suit you for study, accompanying a student or workplace training.",
+    metaTitle: "Australian Study Visa Finder \u2013 Student Visa Options",
+    metaDescription: "Free Australian Study Visa Finder. Explore the Student (500), Student Guardian (590) and Training (407) visa options. Information only, not migration advice.",
+    intro: ["Australia has three main visa options for study-related travel: the Student visa (subclass 500) for full-time study, the Student Guardian visa (590) for supporting a student, and the Training visa (407) for workplace-based training.", "The Study Visa Finder shows which of these may suit your plans. It gives general information only and does not assess your eligibility."],
+    howToTitle: "How to use the Study Visa Finder",
+    steps: [{"name": "Answer the questions", "text": "Tell us whether you plan to study, accompany a student or train, plus the student's age and where you are now."}, {"name": "Review your options", "text": "See a short list of visa options to explore, with stay, fees from and key points for each."}, {"name": "Read the guide", "text": "Open the Migration Republic guide for any visa that looks relevant."}, {"name": "Book a consultation", "text": "Send your answers to a registered migration agent to talk through your options."}],
+    faqs: [{"q": "What is the Student visa?", "a": "The Student visa (subclass 500) lets eligible people study full time in an Australian registered course."}, {"q": "Who can apply for a Student Guardian visa?", "a": "The Student Guardian visa (590) is generally for a parent or relative supporting a student who is usually under 18."}, {"q": "What is the Training visa?", "a": "The Training visa (407) is for workplace-based or professional development training. It is not for people who mainly want to work."}, {"q": "Does this tool guarantee a visa?", "a": "No. Only the Department of Home Affairs decides visa applications."}],
+    keywords: ["Australian study visa finder", "student visa options Australia", "subclass 500", "subclass 590", "subclass 407"],
+  },
+
+  "work-visa-finder": {
+    slug: "work-visa-finder",
+    keyword: "Australian Work Visa Finder",
+    h1: "Australian Work Visa Finder: Explore Skilled, Temporary and Working Holiday Visas",
+    tagline: "Choose the kind of work you plan to do and see the Australian work visa options worth exploring.",
+    metaTitle: "Australian Work Visa Finder \u2013 Explore Work Visa Options",
+    metaDescription: "Free Australian Work Visa Finder. Explore skilled, employer sponsored, working holiday, business and temporary work visas. Information only, not migration advice.",
+    intro: ["Australian work visas range from short-stay specialist and temporary activity visas to employer sponsored and permanent skilled visas. Some listed visas may be closed or replaced, so every result carries a status note.", "The Work Visa Finder narrows the list by the type of work you plan to do, how long you want to stay and how you intend to apply. It shows options only and does not assess eligibility."],
+    howToTitle: "How to use the Work Visa Finder",
+    steps: [{"name": "Answer the questions", "text": "Choose the kind of work you will do. Skilled workers are asked how long they plan to stay and how they will apply."}, {"name": "Review your options", "text": "See a short list of visa options to explore, with stay, fees from and key points for each."}, {"name": "Read the guide", "text": "Open the Migration Republic guide for any visa that looks relevant."}, {"name": "Book a consultation", "text": "Send your answers to a registered migration agent to talk through your options."}],
+    faqs: [{"q": "Which work visas lead to permanent residence?", "a": "Skilled options such as the 186, 190 and 189, and some business and talent visas, can lead to permanent residence. Rules and availability change."}, {"q": "Are the 188, 187 and 489 still open?", "a": "They remain on the official list but are reported closed or replaced. We label them. Confirm their status with a registered agent."}, {"q": "Does this tool assess my eligibility?", "a": "No. It lists options to explore and is not migration advice."}, {"q": "Can I book a consultation from the results?", "a": "Yes. Every result links to Book a Consultation and you can send your answers to an agent."}],
+    keywords: ["Australian work visa finder", "work visa options Australia", "skilled visa finder", "working holiday visa Australia"],
+  },
+};
+
+TOOL_SEO["visa-finder"] = {
+  slug: "visa-finder",
+  keyword: "Australia Visa Finder",
+  h1: "Australia Visa Finder: Explore Your Options",
+  tagline: "Choose Visit, Study or Work and answer a few quick questions to see visa options worth exploring.",
+  metaTitle: "Australia Visa Finder – Explore Visit, Study & Work Visas",
+  metaDescription:
+    "Free Australia Visa Finder. Pick Visit, Study or Work and explore the Australian visa options that may suit you. General information only, not migration advice.",
+  intro: [
+    "The Australia Visa Finder is a set of three guided tools, one each for visiting, studying and working in Australia. Each tool asks a few short questions and lists the visa options worth exploring, with stay, application charge from, and key points for every visa.",
+    "The finders show options only. They do not assess eligibility or recommend a visa, and visa rules, fees and eligible countries change. For advice on your situation, book a consultation with a registered migration agent.",
+  ],
+  howToTitle: "How to use the Australia Visa Finder",
+  steps: [
+    { name: "Choose a finder", text: "Pick Visit and Tourism, Study or Work, depending on why you want to come to Australia." },
+    { name: "Answer the questions", text: "Answer one question per screen. The number of options updates as you go." },
+    { name: "Review your options", text: "Read each visa option, then open the Migration Republic guide for any that look relevant." },
+    { name: "Book a consultation", text: "Send your answers to a registered migration agent to talk through your options." },
+  ],
+  faqs: [
+    { q: "What is the Australia Visa Finder?", a: "It is a free guided tool that lists Australian visa options based on your answers to a few questions about your visit, study or work plans." },
+    { q: "Does the Visa Finder tell me which visa I qualify for?", a: "No. It lists options to explore. Eligibility depends on legislation, including health and character requirements." },
+    { q: "Is the Visa Finder an official government tool?", a: "No. It is a Migration Republic tool that adapts information from the Australian Government Department of Home Affairs and is not endorsed by it." },
+    { q: "Are visa fees and eligible countries up to date?", a: "Fees change, usually from 1 July, and eligible countries change often. Check the Home Affairs Visa Pricing Estimator and confirm with a registered agent." },
+  ],
+  keywords: ["Australia visa finder", "Australian visa options", "which visa for Australia", "visit study work visa Australia"],
 };
 
 export const TOOLS_INDEX_SEO = {
   metaTitle: "Free Australian Immigration Tools & Calculators",
   metaDescription:
-    "Free Australian immigration tools: PR Points Calculator, visa eligibility checkers, sponsorship cost estimators and a visa quiz, built by MARA registered agents.",
+    "Free Australian immigration tools: Visit, Study and Work Visa Finders, PR Points Calculator, visa eligibility checkers, sponsorship cost estimators and a visa quiz, built by MARA registered agents.",
 };
 
 export function toolMetadata(slug: string): Metadata {

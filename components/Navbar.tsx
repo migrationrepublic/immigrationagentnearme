@@ -63,6 +63,24 @@ export default function Navbar() {
             <div className="absolute top-full left-1/2 -translate-x-1/2 pt-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
               <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-4 w-72 grid gap-1">
                 <Link
+                  href="/tools/visit-visa-finder"
+                  className="flex items-center gap-3 px-4 py-2.5 hover:bg-brand-primary/5 rounded-xl text-brand-heading font-medium transition-colors text-sm"
+                >
+                  Visit Visa Finder
+                </Link>
+                <Link
+                  href="/tools/study-visa-finder"
+                  className="flex items-center gap-3 px-4 py-2.5 hover:bg-brand-primary/5 rounded-xl text-brand-heading font-medium transition-colors text-sm"
+                >
+                  Study Visa Finder
+                </Link>
+                <Link
+                  href="/tools/work-visa-finder"
+                  className="flex items-center gap-3 px-4 py-2.5 hover:bg-brand-primary/5 rounded-xl text-brand-heading font-medium transition-colors text-sm"
+                >
+                  Work Visa Finder
+                </Link>
+                <Link
                   href="/tools/business-sponsor-checker"
                   className="flex items-center gap-3 px-4 py-2.5 hover:bg-brand-primary/5 rounded-xl text-brand-heading font-medium transition-colors text-sm"
                 >
@@ -203,6 +221,27 @@ export default function Navbar() {
               </button>
               {isToolsOpen && (
                 <div className="pl-4 flex flex-col gap-2 pt-1 pb-2">
+                  <Link
+                    href="/tools/visit-visa-finder"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="text-sm font-semibold text-gray-600 hover:text-brand-accent py-1.5"
+                  >
+                    Visit Visa Finder
+                  </Link>
+                  <Link
+                    href="/tools/study-visa-finder"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="text-sm font-semibold text-gray-600 hover:text-brand-accent py-1.5"
+                  >
+                    Study Visa Finder
+                  </Link>
+                  <Link
+                    href="/tools/work-visa-finder"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="text-sm font-semibold text-gray-600 hover:text-brand-accent py-1.5"
+                  >
+                    Work Visa Finder
+                  </Link>
                   <Link
                     href="/tools/business-sponsor-checker"
                     onClick={() => setIsMobileMenuOpen(false)}

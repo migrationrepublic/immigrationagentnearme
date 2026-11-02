@@ -4,9 +4,36 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ToolNavbar } from '@/components/tools/shared/tool-navbar';
-import { Calculator, ClipboardCheck, MessageSquareQuote, ArrowRight, Building2, Receipt, User } from 'lucide-react';
+import { Calculator, ClipboardCheck, MessageSquareQuote, ArrowRight, Building2, Receipt, User, Plane, GraduationCap, Briefcase } from 'lucide-react';
 
 const tools = [
+  {
+    id: 'visit-visa-finder',
+    title: 'Visit & Tourism Visa Finder',
+    badge: 'Visa Finder',
+    description: 'Holiday, family, business or working holiday? See the visitor visa options worth exploring.',
+    icon: <Plane className="w-7 h-7 text-sky-600" />,
+    href: '/tools/visit-visa-finder',
+    color: 'bg-sky-50',
+  },
+  {
+    id: 'study-visa-finder',
+    title: 'Study Visa Finder',
+    badge: 'Visa Finder',
+    description: 'Student, Student Guardian or Training visa? Explore the study options.',
+    icon: <GraduationCap className="w-7 h-7 text-violet-600" />,
+    href: '/tools/study-visa-finder',
+    color: 'bg-violet-50',
+  },
+  {
+    id: 'work-visa-finder',
+    title: 'Work Visa Finder',
+    badge: 'Visa Finder',
+    description: 'Skilled, temporary, business or working holiday work? Explore the work visa options.',
+    icon: <Briefcase className="w-7 h-7 text-rose-600" />,
+    href: '/tools/work-visa-finder',
+    color: 'bg-rose-50',
+  },
   {
     id: 'business-sponsor-checker',
     title: 'Can My Business Sponsor?',

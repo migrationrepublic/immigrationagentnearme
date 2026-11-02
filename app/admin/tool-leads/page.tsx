@@ -29,6 +29,10 @@ interface ToolLeadResults {
   consent_given?: string
   identified_flags?: string[]
   quiz_responses?: Record<string, unknown>
+  finder_answers?: Record<string, string>
+  matched_visas?: string[]
+  matched_count?: number
+  message?: string
 
   // Employer Tools Fields
   business_name?: string
@@ -121,8 +125,10 @@ export default function ToolLeadsPage() {
       matchesTool = l.tool_name === "PR Calculator" || l.tool_name === "PR Points Calculator"
     } else if (toolFilter === "eligibility") {
       matchesTool = l.tool_name === "Eligibility Checker"
+    } else if (toolFilter === "finder") {
+      matchesTool = !!l.tool_name?.endsWith("Visa Finder")
     } else if (toolFilter === "quiz") {
-      matchesTool = l.tool_name === "Visa Suggestion Quiz" || (!l.tool_name?.includes("482") && l.tool_name !== "PR Calculator" && l.tool_name !== "PR Points Calculator" && l.tool_name !== "Eligibility Checker" && !l.tool_name?.includes("Business Sponsor") && !l.tool_name?.includes("Cost"))
+      matchesTool = l.tool_name === "Visa Suggestion Quiz" || (!l.tool_name?.endsWith("Visa Finder") && !l.tool_name?.includes("482") && l.tool_name !== "PR Calculator" && l.tool_name !== "PR Points Calculator" && l.tool_name !== "Eligibility Checker" && !l.tool_name?.includes("Business Sponsor") && !l.tool_name?.includes("Cost"))
     }
 
     return matchesSearch && matchesTool
@@ -142,7 +148,8 @@ export default function ToolLeadsPage() {
   const count482         = leads.filter(l => l.tool_name?.includes("482") && !l.tool_name?.includes("Business Sponsor")).length
   const prCount          = leads.filter(l => l.tool_name === "PR Calculator" || l.tool_name === "PR Points Calculator").length
   const eligibilityCount = leads.filter(l => l.tool_name === "Eligibility Checker").length
-  const quizCount        = leads.filter(l => l.tool_name === "Visa Suggestion Quiz" || (!l.tool_name?.includes("482") && l.tool_name !== "PR Calculator" && l.tool_name !== "PR Points Calculator" && l.tool_name !== "Eligibility Checker" && !l.tool_name?.includes("Business Sponsor") && !l.tool_name?.includes("Cost"))).length
+  const finderCount      = leads.filter(l => l.tool_name?.endsWith("Visa Finder")).length
+  const quizCount        = leads.filter(l => l.tool_name === "Visa Suggestion Quiz" || (!l.tool_name?.endsWith("Visa Finder") && !l.tool_name?.includes("482") && l.tool_name !== "PR Calculator" && l.tool_name !== "PR Points Calculator" && l.tool_name !== "Eligibility Checker" && !l.tool_name?.includes("Business Sponsor") && !l.tool_name?.includes("Cost"))).length
   const totalCount       = leads.length
 
   return (
@@ -181,13 +188,14 @@ export default function ToolLeadsPage() {
             <option value="482">Subclass 482 Checker ({count482})</option>
             <option value="pr">PR Calculator ({prCount})</option>
             <option value="eligibility">Eligibility Checker ({eligibilityCount})</option>
+            <option value="finder">Visa Finders ({finderCount})</option>
             <option value="quiz">Visa Quiz ({quizCount})</option>
           </select>
         </div>
       </div>
 
       {/* Tool Filter Tiles */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-8 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-9 gap-3">
         {([
           { key: "all", label: "All Leads", count: totalCount },
           { key: "sponsor", label: "Sponsor Quick", count: sponsorCount },
@@ -196,6 +204,7 @@ export default function ToolLeadsPage() {
           { key: "482", label: "482 Visa", count: count482 },
           { key: "pr", label: "PR Calc", count: prCount },
           { key: "eligibility", label: "Eligibility", count: eligibilityCount },
+          { key: "finder", label: "Visa Finders", count: finderCount },
           { key: "quiz", label: "Visa Quiz", count: quizCount },
         ] as const).map(tile => {
           const active = toolFilter === tile.key
@@ -586,6 +595,32 @@ export default function ToolLeadsPage() {
                           </div>
                         ))}
                       </div>
+                    </div>
+                  )}
+
+                  {/* Visa Finder (Visit / Study / Work) results */}
+                  {lead.tool_name?.endsWith("Visa Finder") && (
+                    <div className="space-y-4">
+                      <div>
+                        <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Answers</p>
+                        <div className="space-y-1.5 text-xs text-gray-700">
+                          {Object.entries(results.finder_answers || {}).map(([q, a]) => (
+                            <p key={q}><span className="font-bold text-gray-400">{q}</span> {String(a)}</p>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">
+                          Matched Visas ({results.matched_count ?? results.matched_visas?.length ?? 0})
+                        </p>
+                        <ul className="list-disc pl-5 space-y-1 text-xs text-gray-700">
+                          {(results.matched_visas || []).map((v, i) => <li key={i}>{v}</li>)}
+                        </ul>
+                      </div>
+                      {results.message && (
+                        <p className="text-xs text-gray-700"><span className="font-bold text-gray-400">Message:</span> {results.message}</p>
+                      )}
+                      <p className="text-xs text-gray-500">Consent given: {results.consent_given || "N/A"}</p>
                     </div>
                   )}
 

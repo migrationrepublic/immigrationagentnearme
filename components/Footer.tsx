@@ -131,6 +131,9 @@ export default function Footer() {
               <h4>Migration Tools</h4>
               <ul className="space-y-2 mt-4">
                 {[
+                  { name: "Visit Visa Finder", href: "/tools/visit-visa-finder" },
+                  { name: "Study Visa Finder", href: "/tools/study-visa-finder" },
+                  { name: "Work Visa Finder", href: "/tools/work-visa-finder" },
                   { name: "Can My Business Sponsor?", href: "/tools/business-sponsor-checker" },
                   { name: "Sponsorship Cost Estimator", href: "/tools/sponsorship-cost-estimator" },
                   { name: "Subclass 482 Checker", href: "/tools/subclass-482-checker" },

@@ -4,6 +4,7 @@ import { SignatureService } from "@/lib/services/signature.service";
 import { supabaseServer } from "@/lib/supabase-server";
 import { headers } from "next/headers";
 import { z } from "zod";
+import { actionError, UserFacingError } from "@/lib/errors";
 
 // ── Input Schemas ─────────────────────────────────────────────────────────────
 
@@ -37,10 +38,9 @@ export async function createSignatureRequestAction(input: CreateSignatureRequest
   try {
     const validated = CreateSignatureRequestSchema.parse(input);
     const sigReq = await SignatureService.createSignatureRequest(validated);
-    return { success: true, requestId: sigReq.id, token: sigReq.token };
+    return { success: true as const, requestId: sigReq.id, token: sigReq.token };
   } catch (err) {
-    console.error("[createSignatureRequestAction] error:", err);
-    return { success: false, error: err instanceof Error ? err.message : "An unknown error occurred" };
+    return actionError("createSignatureRequestAction", err, "We couldn't create the signature request. Please try again.");
   }
 }
 
@@ -52,10 +52,11 @@ export async function sendSignatureReminderAction(requestIdInput: string) {
   try {
     const requestId = z.string().uuid("Invalid request ID").parse(requestIdInput);
     const sent = await SignatureService.sendReminder(requestId);
-    return { success: sent };
+    return sent
+      ? { success: true as const }
+      : { success: false, error: "We couldn't send the reminder email. Please try again." };
   } catch (err) {
-    console.error("[sendSignatureReminderAction] error:", err);
-    return { success: false, error: err instanceof Error ? err.message : "An unknown error occurred" };
+    return actionError("sendSignatureReminderAction", err, "We couldn't send the reminder email. Please try again.");
   }
 }
 
@@ -69,14 +70,14 @@ export async function getSignatureRequestByTokenAction(tokenInput: string) {
   try {
     const token = z
       .string()
-      .min(16, "Invalid token")
-      .regex(/^[a-f0-9]+$/, "Malformed token")
+      .min(16, "This signing link is invalid. Please use the link from your email.")
+      .regex(/^[a-f0-9]+$/, "This signing link is invalid. Please use the link from your email.")
       .parse(tokenInput);
 
     const result = await SignatureService.getRequestByToken(token);
 
     if (!result) {
-      return { success: false, error: "Signature request not found or invalid link." };
+      return { success: false, error: "This signing link is invalid or no longer available. Please contact the sender." };
     }
 
     return {
@@ -94,8 +95,7 @@ export async function getSignatureRequestByTokenAction(tokenInput: string) {
       fields: result.request.fields ?? [],
     };
   } catch (err) {
-    console.error("[getSignatureRequestByTokenAction] error:", err);
-    return { success: false, error: err instanceof Error ? err.message : "An unknown error occurred" };
+    return actionError("getSignatureRequestByTokenAction", err, "We couldn't open this signing link. Please check the link or contact the sender.");
   }
 }
 
@@ -119,7 +119,7 @@ export async function updateSignatureStatusAction(input: UpdateSignatureStatusIn
 
     if (validated.status === "signed") {
       if (!validated.signature_image_base64) {
-        throw new Error("A drawn signature image is required to sign this document.");
+        throw new UserFacingError("Please draw your signature before submitting.");
       }
       success = await SignatureService.signDocument(
         validated.request_id,
@@ -131,10 +131,11 @@ export async function updateSignatureStatusAction(input: UpdateSignatureStatusIn
       success = await SignatureService.declineSignatureRequest(validated.request_id);
     }
 
-    return { success };
+    return success
+      ? { success: true as const }
+      : { success: false, error: "We couldn't save your response. Please try again." };
   } catch (err) {
-    console.error("[updateSignatureStatusAction] error:", err);
-    return { success: false, error: err instanceof Error ? err.message : "An unknown error occurred" };
+    return actionError("updateSignatureStatusAction", err, "We couldn't save your response. Please try again.");
   }
 }
 
@@ -159,10 +160,9 @@ export async function getSignatureRequestsByDocumentAction(documentIdInput: stri
       .order("created_at", { ascending: true });
 
     if (error) throw error;
-    return { success: true, requests: data || [] };
+    return { success: true as const, requests: data || [] };
   } catch (err) {
-    console.error("[getSignatureRequestsByDocumentAction] error:", err);
-    return { success: false, error: err instanceof Error ? err.message : "An unknown error occurred" };
+    return actionError("getSignatureRequestsByDocumentAction", err, "We couldn't load the signers for this document.");
   }
 }
 
@@ -172,9 +172,10 @@ export async function sendSignatureRequestsAction(input: SendSignatureRequestsIn
   try {
     const validated = SendSignatureRequestsSchema.parse(input);
     const success = await SignatureService.activateRequests(validated.document_id, validated.requests);
-    return { success };
+    return success
+      ? { success: true as const }
+      : { success: false, error: "We couldn't send the document for signing. Please try again." };
   } catch (err) {
-    console.error("[sendSignatureRequestsAction] error:", err);
-    return { success: false, error: err instanceof Error ? err.message : "An unknown error occurred" };
+    return actionError("sendSignatureRequestsAction", err, "We couldn't send the document for signing. Please try again.");
   }
 }

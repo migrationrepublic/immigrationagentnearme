@@ -5,6 +5,7 @@ import { PDFService } from "@/lib/services/pdf.service";
 import { StorageService } from "@/lib/services/storage.service";
 import { supabaseServer } from "@/lib/supabase-server";
 import { z } from "zod";
+import { actionError, UserFacingError } from "@/lib/errors";
 
 // Zod Validation Schemas
 const UploadDocumentSchema = z.object({
@@ -42,10 +43,9 @@ export async function uploadDocumentAction(input: UploadDocumentInput) {
   try {
     const validated = UploadDocumentSchema.parse(input);
     const doc = await DocumentService.createDocument(validated);
-    return { success: true, documentId: doc.id };
+    return { success: true as const, documentId: doc.id };
   } catch (err) {
-    console.error("Document upload action error:", err);
-    return { success: false, error: err instanceof Error ? err.message : "An unknown error occurred" };
+    return actionError("uploadDocumentAction", err, "We couldn't save the document. Please try again.");
   }
 }
 
@@ -61,10 +61,9 @@ export async function reviewDocumentAction(input: ReviewDocumentInput) {
     if (!success) {
       return { success: false, error: "Review update failed" };
     }
-    return { success: true };
+    return { success: true as const };
   } catch (err) {
-    console.error("Document review action error:", err);
-    return { success: false, error: err instanceof Error ? err.message : "An unknown error occurred" };
+    return actionError("reviewDocumentAction", err, "We couldn't update the document status. Please try again.");
   }
 }
 
@@ -81,10 +80,9 @@ export async function extractPdfFieldsAction(filePathInput: string) {
     // Extract fields
     const fields = await PDFService.readAcroForm(pdfBuffer);
 
-    return { success: true, fields };
+    return { success: true as const, fields };
   } catch (err) {
-    console.error("extractPdfFieldsAction error:", err);
-    return { success: false, error: err instanceof Error ? err.message : "An unknown error occurred" };
+    return actionError("extractPdfFieldsAction", err, "We couldn't read the form fields from this PDF.");
   }
 }
 
@@ -108,10 +106,9 @@ export async function saveFieldMappingsAction(input: SaveMappingsInput) {
       }
     }
 
-    return { success: true };
+    return { success: true as const };
   } catch (err) {
-    console.error("saveFieldMappingsAction error:", err);
-    return { success: false, error: err instanceof Error ? err.message : "An unknown error occurred" };
+    return actionError("saveFieldMappingsAction", err, "We couldn't save the field mappings. Please try again.");
   }
 }
 
@@ -148,7 +145,7 @@ export async function previewFillPdfAction(
     }
 
     if (!template.file_path) {
-      throw new Error("This template has no PDF file uploaded. Please upload a PDF first.");
+      throw new UserFacingError("This template has no PDF file uploaded. Please upload a PDF first.");
     }
 
     // 2. Fetch saved pdf_field_name mappings for this template's fields
@@ -180,10 +177,9 @@ export async function previewFillPdfAction(
     const base64 = filledBytes.toString("base64");
     const dataUri = `data:application/pdf;base64,${base64}`;
 
-    return { success: true, dataUri };
+    return { success: true as const, dataUri };
   } catch (err) {
-    console.error("previewFillPdfAction error:", err);
-    return { success: false, error: err instanceof Error ? err.message : "An unknown error occurred" };
+    return actionError("previewFillPdfAction", err, "We couldn't generate the preview. Please try again.");
   }
 }
 
@@ -197,10 +193,9 @@ export async function generateFilledDocumentAction(documentIdInput: string) {
 
     const generatedPath = await PDFService.generateDocument(documentId);
 
-    return { success: true, filePath: generatedPath };
+    return { success: true as const, filePath: generatedPath };
   } catch (err) {
-    console.error("generateFilledDocumentAction error:", err);
-    return { success: false, error: err instanceof Error ? err.message : "An unknown error occurred" };
+    return actionError("generateFilledDocumentAction", err, "We couldn't generate the filled document. Please try again.");
   }
 }
 
@@ -212,9 +207,8 @@ export async function mergePdfsAction(pdfBase64s: string[]) {
     const buffers = pdfBase64s.map(base64 => Buffer.from(base64, "base64"));
     const mergedBuffer = await PDFService.mergePdfs(buffers);
     const mergedBase64 = mergedBuffer.toString("base64");
-    return { success: true, base64Data: mergedBase64 };
+    return { success: true as const, base64Data: mergedBase64 };
   } catch (err) {
-    console.error("mergePdfsAction error:", err);
-    return { success: false, error: err instanceof Error ? err.message : "An unknown error occurred" };
+    return actionError("mergePdfsAction", err, "We couldn't combine these PDF files. Please check they are valid PDFs.");
   }
 }

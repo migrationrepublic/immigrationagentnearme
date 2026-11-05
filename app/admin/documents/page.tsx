@@ -8,6 +8,7 @@ import {
 import { getSignedUrlAction } from '@/app/actions/storage'
 import { reviewDocumentAction, generateFilledDocumentAction } from '@/app/actions/document'
 import { Document } from '@/lib/types'
+import { handleError, UserFacingError } from '@/lib/errors'
 
 type DocumentWithRelations = Document & {
   signature_requests?: Array<{ signer_name?: string; signer_email?: string }>
@@ -93,7 +94,7 @@ export default function ClientDocumentsPage() {
       if (error) throw error
       setDocuments((data as unknown as DocumentWithRelations[]) || [])
     } catch (e: unknown) {
-      alert(`Error loading documents: ${e instanceof Error ? e.message : String(e)}`)
+      alert(handleError('Documents.load', e, "We couldn't load the documents. Please refresh the page."))
     } finally {
       setLoading(false)
     }
@@ -105,9 +106,9 @@ export default function ClientDocumentsPage() {
         ? 'signed' : 'documents'
       const res = await getSignedUrlAction({ bucket, path: doc.file_path, expiresIn: 120 })
       if (res.success) window.open(res.signedUrl, '_blank')
-      else throw new Error(res.error || "Could not retrieve signed link")
+      else throw new UserFacingError(res.error || "We couldn't open this file.")
     } catch (e: unknown) {
-      alert(`Failed to retrieve file link: ${e instanceof Error ? e.message : String(e)}`)
+      alert(handleError('Documents.openFile', e, "We couldn't open this file. It may have been moved or deleted."))
     }
   }
 
@@ -115,7 +116,7 @@ export default function ClientDocumentsPage() {
     try {
       setProcessingId(doc.id)
       const res = await reviewDocumentAction({ document_id: doc.id, status: 'approved' })
-      if (!res.success) throw new Error(res.error || "Review failed")
+      if (!res.success) throw new UserFacingError(res.error || "We couldn't approve the document. Please try again.")
       const template = doc.templates
       if (template && template.file_path) {
         const mergeRes = await generateFilledDocumentAction(doc.id)
@@ -126,7 +127,7 @@ export default function ClientDocumentsPage() {
       }
       await fetchDocuments()
     } catch (e: unknown) {
-      alert(`Failed to approve document: ${e instanceof Error ? e.message : String(e)}`)
+      alert(handleError('Documents.approve', e, "We couldn't approve the document. Please try again."))
     } finally {
       setProcessingId(null)
     }
@@ -137,12 +138,12 @@ export default function ClientDocumentsPage() {
     try {
       setProcessingId(rejectingDoc.id)
       const res = await reviewDocumentAction({ document_id: rejectingDoc.id, status: 'rejected', rejection_reason: rejectReason.trim() })
-      if (!res.success) throw new Error(res.error || "Rejection failed")
+      if (!res.success) throw new UserFacingError(res.error || "We couldn't reject the document. Please try again.")
       setRejectingDoc(null)
       await fetchDocuments()
       alert("Document flagged rejected with notice sent successfully.")
     } catch (e: unknown) {
-      alert(`Failed to reject document: ${e instanceof Error ? e.message : String(e)}`)
+      alert(handleError('Documents.reject', e, "We couldn't reject the document. Please try again."))
     } finally {
       setProcessingId(null)
     }

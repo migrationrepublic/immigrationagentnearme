@@ -29,8 +29,9 @@ import {
   createSignatureRequestAction,
   sendSignatureReminderAction,
 } from '@/app/actions/signature'
-import { uploadFileAction, getSignedUrlAction } from '@/app/actions/storage'
-import { mergePdfsAction } from '@/app/actions/document'
+import { getSignedUrlAction } from '@/app/actions/storage'
+import { uploadFileDirect, mergePdfFiles } from '@/lib/upload-client'
+import { handleError, UserFacingError } from '@/lib/errors'
 import { SignatureRequest, Document, DocumentTemplate } from '@/lib/types'
 
 // ── Toast types ─────────────────────────────────────────────────────────────
@@ -70,8 +71,7 @@ export default function SignatureRequestsPage() {
   const [uploadedFiles, setUploadedFiles] = useState<Array<{
     name: string
     size: number
-    mimeType: string
-    base64Data: string
+    file: File
   }>>([])
   const [documentName, setDocumentName] = useState('')
   const [recipients, setRecipients] = useState<RecipientRow[]>([
@@ -110,7 +110,7 @@ export default function SignatureRequestsPage() {
       if (error) throw error
       setRequests(data || [])
     } catch (e) {
-      showToast('error', `Failed to load requests: ${(e as Error).message}`)
+      showToast('error', handleError('SignatureRequests.load', e, "We couldn't load your signature requests. Please refresh the page."))
     } finally {
       setLoading(false)
     }
@@ -159,34 +159,20 @@ export default function SignatureRequestsPage() {
       showToast('error', 'Only PDF files are supported. Non-PDF files were skipped.')
     }
 
-    if (pdfFiles.length === 0) return
+    const MAX_BYTES = 20 * 1024 * 1024
+    const accepted = pdfFiles.filter(f => f.size <= MAX_BYTES)
+    if (accepted.length !== pdfFiles.length) {
+      showToast('error', 'Files larger than 20MB were skipped.')
+    }
+    if (accepted.length === 0) return
 
-    let loadedCount = 0
-    const newFiles: Array<{ name: string; size: number; mimeType: string; base64Data: string }> = []
-
-    pdfFiles.forEach(file => {
-      const reader = new FileReader()
-      reader.onload = () => {
-        const base64 = (reader.result as string).split(',')[1]
-        newFiles.push({
-          name: file.name,
-          size: file.size,
-          mimeType: file.type,
-          base64Data: base64
-        })
-        loadedCount++
-        if (loadedCount === pdfFiles.length) {
-          setUploadedFiles(prev => {
-            const updated = [...prev, ...newFiles]
-            if (!documentName && updated.length > 0) {
-              setDocumentName(updated[0].name.replace(/\.[^/.]+$/, ""))
-            }
-            return updated
-          })
-        }
-      }
-      reader.readAsDataURL(file)
-    })
+    const newFiles = accepted.map(file => ({ name: file.name, size: file.size, file }))
+    setUploadedFiles(prev => [...prev, ...newFiles])
+    if (!documentName) {
+      setDocumentName((uploadedFiles[0] ?? newFiles[0]).name.replace(/\.[^/.]+$/, ''))
+    }
+    // Allow re-selecting the same file after removing it
+    e.target.value = ''
   }
 
   // Add me (admin) to signers list
@@ -218,10 +204,10 @@ export default function SignatureRequestsPage() {
         setRecipients(newRecipients)
         showToast('success', 'Added yourself to signers list.')
       } else {
-        showToast('error', 'Unable to fetch user credentials.')
+        showToast('error', 'Your session has expired. Please sign in again.')
       }
     } catch (e) {
-      showToast('error', `Failed to fetch active user: ${(e as Error).message}`)
+      showToast('error', handleError('SignatureRequests.addMe', e, "We couldn't add you as a signer. Please try again."))
     }
   }
 
@@ -328,35 +314,24 @@ export default function SignatureRequestsPage() {
 
       // 2. Document Setup
       if (selectedSourceType === 'upload') {
-        let mergedBase64 = ''
+        let fileToUpload: Blob
         let mainFileName = ''
 
         if (uploadedFiles.length === 1) {
-          mergedBase64 = uploadedFiles[0].base64Data
+          fileToUpload = uploadedFiles[0].file
           mainFileName = uploadedFiles[0].name
         } else {
-          // Merge multiple files on the server
-          const mergeRes = await mergePdfsAction(uploadedFiles.map(f => f.base64Data))
-          if (!mergeRes.success || !mergeRes.base64Data) {
-            throw new Error(mergeRes.error || 'Failed to merge PDF files.')
-          }
-          mergedBase64 = mergeRes.base64Data
-          mainFileName = `${documentName.replace(/\s+/g, '_')}_merged.pdf`
+          // Merge multiple files in the browser (no large payload to the server)
+          fileToUpload = await mergePdfFiles(uploadedFiles.map(f => f.file))
+          mainFileName = `${documentName}_merged.pdf`
         }
 
-        const uploadPath = `signatures/${Date.now()}_${mainFileName.replace(/\s+/g, '_')}`
-        const uploadRes = await uploadFileAction({
-          bucket: 'documents',
-          path: uploadPath,
-          base64Data: mergedBase64,
-          mimeType: 'application/pdf'
-        })
+        // Storage keys must be URL-safe: strip spaces/special characters
+        const safeName = mainFileName.replace(/[^a-zA-Z0-9._-]+/g, '_')
+        const uploadPath = `signatures/${Date.now()}_${safeName}`
 
-        if (!uploadRes.success || !uploadRes.path) {
-          throw new Error(uploadRes.error || 'Failed to upload document file.')
-        }
-
-        finalFilePath = uploadRes.path
+        // Browser → Supabase Storage directly (bypasses the 1MB Server Action limit)
+        finalFilePath = await uploadFileDirect('documents', uploadPath, fileToUpload)
 
         const { data: newDoc, error: docErr } = await supabase
           .from('documents')
@@ -370,7 +345,7 @@ export default function SignatureRequestsPage() {
           .single()
 
         if (docErr || !newDoc) {
-          throw new Error(`Failed to create document record: ${docErr?.message}`)
+          throw new Error(`Failed to create document record: ${docErr?.message}`, { cause: docErr })
         }
 
         docId = newDoc.id
@@ -378,7 +353,7 @@ export default function SignatureRequestsPage() {
         docId = selectedDocId
       } else {
         const tpl = templates.find(t => t.id === selectedTemplateId)
-        if (!tpl) throw new Error('Selected template not found.')
+        if (!tpl) throw new UserFacingError('The selected template is no longer available. Please choose another one.')
 
         const { data: newDoc, error: docErr } = await supabase
           .from('documents')
@@ -393,7 +368,7 @@ export default function SignatureRequestsPage() {
           .single()
 
         if (docErr || !newDoc) {
-          throw new Error(`Failed to initialize template copy: ${docErr?.message}`)
+          throw new Error(`Failed to initialize template copy: ${docErr?.message}`, { cause: docErr })
         }
 
         docId = newDoc.id
@@ -420,14 +395,14 @@ export default function SignatureRequestsPage() {
         })
 
         if (!res.success) {
-          throw new Error(res.error || `Failed to create signature request for ${r.email}`)
+          throw new UserFacingError(res.error || `We couldn't add ${r.email} as a signer. Please try again.`)
         }
       }
 
       showToast('success', 'Document setup successfully. Opening layout editor…')
       router.push(`/admin/pdf-editor?documentId=${docId}`)
     } catch (e) {
-      showToast('error', `Flow setup failed: ${(e as Error).message}`)
+      showToast('error', handleError('SignatureRequests.createFlow', e, "We couldn't prepare your document for signing. Please try again."))
     } finally {
       setSubmitting(false)
     }
@@ -448,7 +423,7 @@ export default function SignatureRequestsPage() {
       await navigator.clipboard.writeText(secureLink)
       showToast('success', `Copied secure signing link for ${req.signer_name}!`)
     } catch {
-      showToast('error', 'Failed to copy to clipboard.')
+      showToast('error', "Couldn't copy the link. Please copy it manually.")
     }
   }
 
@@ -459,10 +434,10 @@ export default function SignatureRequestsPage() {
       if (res.success) {
         showToast('success', `Manual email signature reminder sent to ${req.signer_name}!`)
       } else {
-        throw new Error(res.error || 'Failed to dispatch notification.')
+        throw new UserFacingError(res.error || "We couldn't send the reminder email. Please try again.")
       }
     } catch (e) {
-      showToast('error', `Reminder failed: ${(e as Error).message}`)
+      showToast('error', handleError('SignatureRequests.reminder', e, "We couldn't send the reminder email. Please try again."))
     } finally {
       setProcessingId(null)
     }
@@ -474,10 +449,10 @@ export default function SignatureRequestsPage() {
       if (res.success) {
         window.open(res.signedUrl, '_blank')
       } else {
-        throw new Error(res.error || 'Could not retrieve signed URL')
+        throw new UserFacingError(res.error || "We couldn't open the signed document. Please try again.")
       }
     } catch (e) {
-      showToast('error', `Failed to open signed file: ${(e as Error).message}`)
+      showToast('error', handleError('SignatureRequests.viewSigned', e, "We couldn't open the signed document. Please try again."))
     }
   }
 

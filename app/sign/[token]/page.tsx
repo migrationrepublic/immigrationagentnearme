@@ -12,6 +12,7 @@ import {
   updateSignatureStatusAction,
 } from '@/app/actions/signature'
 import { getSignedUrlAction } from '@/app/actions/storage'
+import { handleError, UserFacingError } from '@/lib/errors'
 import {
   PenLine,
   CheckCircle2,
@@ -583,6 +584,8 @@ export default function SignPage() {
 
   const [pageState, setPageState] = useState<PageState>('loading')
   const [errorMsg, setErrorMsg] = useState('')
+  // Recoverable error (submit/decline/render) — shown as a banner, keeps the signer's work
+  const [actionError, setActionError] = useState<string | null>(null)
   const [requestData, setRequestData] = useState<RequestData | null>(null)
   const [pdfUrl, setPdfUrl] = useState<string | null>(null)
 
@@ -637,7 +640,7 @@ export default function SignPage() {
       }
     } catch (err) {
       console.error('PDF.js injection failed:', err)
-      showToastError('Failed to initialize document viewer.')
+      showToastError("The document viewer couldn't load. Please check your internet connection and refresh the page.")
     }
   }, [showToastError])
 
@@ -647,7 +650,7 @@ export default function SignPage() {
       const res = await getSignatureRequestByTokenAction(token)
 
       if (!res.success) {
-        showToastError(res.error || 'Unable to load signature request.')
+        showToastError(res.error || "We couldn't open this signing link. Please check the link or contact the sender.")
         return
       }
 
@@ -692,12 +695,12 @@ export default function SignPage() {
       if (urlRes.success) {
         setPdfUrl(urlRes.signedUrl)
       } else {
-        throw new Error(urlRes.error || 'Unable to load PDF source.')
+        throw new UserFacingError(urlRes.error || "We couldn't load the document. Please refresh the page.")
       }
 
       setPageState('ready')
     } catch (e: unknown) {
-      showToastError(e instanceof Error ? e.message : 'An unexpected error occurred.')
+      showToastError(handleError('SignPage.load', e, "We couldn't load this document. Please refresh the page or try again later."))
     }
   }, [token, showToastError])
 
@@ -705,7 +708,7 @@ export default function SignPage() {
   useEffect(() => {
     if (!token) {
       Promise.resolve().then(() => {
-        showToastError('Invalid or missing signature link.')
+        showToastError('This signing link is invalid. Please use the link from your email.')
       })
       return
     }
@@ -757,7 +760,8 @@ export default function SignPage() {
         }
       }
     } catch (e: unknown) {
-      console.error(`Page ${pageNum} render error:`, e)
+      if (e instanceof Error && e.name === 'RenderingCancelledException') return
+      setActionError(handleError('SignPage.renderPage', e, `We couldn't display page ${pageNum} of the document. Please refresh the page.`))
     }
   }, [pdfjsLoaded, pdfUrl, pdfDocInstance, zoomScale])
 
@@ -897,6 +901,7 @@ export default function SignPage() {
     }
 
     try {
+      setActionError(null)
       setPageState('submitting')
 
       const res = await updateSignatureStatusAction({
@@ -909,10 +914,12 @@ export default function SignPage() {
       if (res.success) {
         setPageState('success')
       } else {
-        throw new Error(res.error || 'Signing failed. Please try again.')
+        throw new UserFacingError(res.error || "We couldn't submit your signature. Please try again.")
       }
     } catch (e: unknown) {
-      showToastError(e instanceof Error ? e.message : 'Signing submit encountered a critical error.')
+      // Go back to the document so the signer keeps their signature and filled fields
+      setActionError(handleError('SignPage.submit', e, "We couldn't submit your signature. Please check your connection and try again."))
+      setPageState('ready')
     }
   }
 
@@ -922,14 +929,19 @@ export default function SignPage() {
     if (!confirm('Are you sure you want to decline this signature request?')) return
 
     try {
+      setActionError(null)
       setPageState('submitting')
-      await updateSignatureStatusAction({
+      const res = await updateSignatureStatusAction({
         request_id: requestData.requestId,
         status: 'declined',
       })
+      if (!res.success) {
+        throw new UserFacingError(res.error || "We couldn't record your response. Please try again.")
+      }
       setPageState('declined')
     } catch (e: unknown) {
-      showToastError(e instanceof Error ? e.message : 'Decline request failed.')
+      setActionError(handleError('SignPage.decline', e, "We couldn't record your response. Please try again."))
+      setPageState('ready')
     }
   }
 
@@ -1015,7 +1027,7 @@ export default function SignPage() {
           <div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-red-200">
             <XCircle className="w-9 h-9 text-red-600" />
           </div>
-          <h2 className="text-xl font-bold text-[#012269] mb-2">Portal Error</h2>
+          <h2 className="text-xl font-bold text-[#012269] mb-2">We couldn&apos;t open this document</h2>
           <p className="text-gray-600 text-sm leading-relaxed">{errorMsg}</p>
           <p className="text-gray-500 text-xs mt-4">Please contact Migration Republic support if you believe this link is valid.</p>
         </div>
@@ -1112,6 +1124,25 @@ export default function SignPage() {
   // ─── READY / MAIN SIGNING SCREEN ──────────────────────────────────
   return (
     <div className="min-h-screen bg-[#f8fafc] flex flex-col font-sans text-gray-800">
+
+      {/* Recoverable error banner — the signer's work is preserved */}
+      {actionError && (
+        <div
+          role="alert"
+          className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-lg flex items-start gap-3 px-4 py-3 rounded-xl shadow-2xl bg-white border border-red-200 text-red-800 text-sm font-medium"
+        >
+          <XCircle className="w-5 h-5 text-red-600 mt-0.5 shrink-0" />
+          <span className="leading-snug flex-1">{actionError}</span>
+          <button
+            type="button"
+            onClick={() => setActionError(null)}
+            className="text-red-400 hover:text-red-700 text-xs font-bold uppercase tracking-wide shrink-0"
+            aria-label="Dismiss error"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
 
       {/* Signing toolbar — fields remaining, zoom, download/print, decline/submit.
           The document and fields are interactive right away; the disclosure is

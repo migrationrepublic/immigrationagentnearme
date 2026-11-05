@@ -23,7 +23,7 @@ export class PDFService {
    */
   static async readAcroForm(pdfBuffer: Buffer): Promise<AcroFormFieldInfo[]> {
     try {
-      const pdfDoc = await PDFDocument.load(pdfBuffer);
+      const pdfDoc = await PDFDocument.load(pdfBuffer, { ignoreEncryption: true });
       const form = pdfDoc.getForm();
       const fields = form.getFields();
 
@@ -52,7 +52,7 @@ export class PDFService {
     try {
       const mergedPdf = await PDFDocument.create();
       for (const buffer of pdfBuffers) {
-        const pdf = await PDFDocument.load(buffer);
+        const pdf = await PDFDocument.load(buffer, { ignoreEncryption: true });
         const copiedPages = await mergedPdf.copyPages(pdf, pdf.getPageIndices());
         copiedPages.forEach((page) => mergedPdf.addPage(page));
       }
@@ -69,7 +69,7 @@ export class PDFService {
    */
   static async fillAcroForm(templatePdfBuffer: Buffer, fieldValues: Record<string, string | boolean>): Promise<Buffer> {
     try {
-      const pdfDoc = await PDFDocument.load(templatePdfBuffer);
+      const pdfDoc = await PDFDocument.load(templatePdfBuffer, { ignoreEncryption: true });
       const form = pdfDoc.getForm();
 
       for (const [key, value] of Object.entries(fieldValues)) {

@@ -12,7 +12,8 @@ import {
   AlertCircle 
 } from 'lucide-react'
 import { extractPdfFieldsAction, saveFieldMappingsAction } from '@/app/actions/document'
-import { uploadFileAction } from '@/app/actions/storage'
+import { uploadFileDirect } from '@/lib/upload-client'
+import { handleError, UserFacingError } from '@/lib/errors'
 import { DocumentTemplate, DocumentField } from '@/lib/types'
 
 export default function DocumentTemplatesPage() {
@@ -47,7 +48,7 @@ export default function DocumentTemplatesPage() {
       if (error) throw error
       setTemplates(data || [])
     } catch (e: unknown) {
-      alert(`Error fetching templates: ${e instanceof Error ? e.message : String(e)}`)
+      alert(handleError('Templates.load', e, "We couldn't load your templates. Please refresh the page."))
     } finally {
       setLoadingTemplates(false)
     }
@@ -92,7 +93,7 @@ export default function DocumentTemplatesPage() {
         await loadPdfFields(tpl.file_path)
       }
     } catch (e: unknown) {
-      alert(`Error loading fields: ${e instanceof Error ? e.message : String(e)}`)
+      alert(handleError('Templates.loadFields', e, "We couldn't load the fields for this template. Please try again."))
     } finally {
       setLoadingFields(false)
     }
@@ -102,13 +103,12 @@ export default function DocumentTemplatesPage() {
     try {
       setLoadingPdf(true)
       const res = await extractPdfFieldsAction(filePath)
-      if (res.success && res.fields) {
-        setPdfFields(res.fields)
-      } else {
-        console.warn("Could not extract pdf fields:", res.error)
+      if (!res.success) {
+        throw new UserFacingError(res.error || "We couldn't read the form fields from this PDF.")
       }
+      setPdfFields(res.fields)
     } catch (e: unknown) {
-      console.error(e)
+      alert(handleError('Templates.extractFields', e, "We couldn't read the form fields from this PDF."))
     } finally {
       setLoadingPdf(false)
     }
@@ -135,7 +135,7 @@ export default function DocumentTemplatesPage() {
       setShowAddTemplate(false)
       handleSelectTemplate(data)
     } catch (e: unknown) {
-      alert(`Failed to create template: ${e instanceof Error ? e.message : String(e)}`)
+      alert(handleError('Templates.create', e, "We couldn't create the template. Please try again."))
     } finally {
       setCreatingTemplate(false)
     }
@@ -164,7 +164,7 @@ export default function DocumentTemplatesPage() {
       setNewFieldName('')
       setNewFieldLabel('')
     } catch (e: unknown) {
-      alert(`Failed to add field: ${e instanceof Error ? e.message : String(e)}`)
+      alert(handleError('Templates.addField', e, "We couldn't add the field. Please try again."))
     }
   }
 
@@ -178,7 +178,7 @@ export default function DocumentTemplatesPage() {
       if (error) throw error
       setFields(fields.filter(f => f.id !== id))
     } catch (e: unknown) {
-      alert(`Failed to delete field: ${e instanceof Error ? e.message : String(e)}`)
+      alert(handleError('Templates.deleteField', e, "We couldn't delete the field. Please try again."))
     }
   }
 
@@ -191,47 +191,27 @@ export default function DocumentTemplatesPage() {
       const fileExt = file.name.split('.').pop()
       const filePath = `${selectedTemplate.id}_form.${fileExt}`
 
-      // Convert file to Base64 to send safely to upload Server Action
-      const reader = new FileReader()
-      reader.onload = async () => {
-        try {
-          const base64Data = (reader.result as string).split(',')[1]
-          
-          const uploadRes = await uploadFileAction({
-            bucket: 'templates',
-            path: filePath,
-            base64Data,
-            mimeType: file.type
-          })
+      // Upload browser → Supabase Storage directly (Server Actions cap bodies at 1MB)
+      await uploadFileDirect('templates', filePath, file, file.type || 'application/pdf')
 
-          if (!uploadRes.success) {
-            throw new Error(uploadRes.error || "Upload failed")
-          }
+      // Update template file_path in DB
+      const { error: updateError } = await supabase
+        .from('document_templates')
+        .update({ file_path: filePath })
+        .eq('id', selectedTemplate.id)
 
-          // Update template file_path in DB
-          const { error: updateError } = await supabase
-            .from('document_templates')
-            .update({ file_path: filePath })
-            .eq('id', selectedTemplate.id)
+      if (updateError) throw updateError
 
-          if (updateError) throw updateError
+      // Update selectedTemplate state
+      const updatedTemplate = { ...selectedTemplate, file_path: filePath }
+      setSelectedTemplate(updatedTemplate)
+      setTemplates(templates.map(t => t.id === selectedTemplate.id ? updatedTemplate : t))
 
-          // Update selectedTemplate state
-          const updatedTemplate = { ...selectedTemplate, file_path: filePath }
-          setSelectedTemplate(updatedTemplate)
-          setTemplates(templates.map(t => t.id === selectedTemplate.id ? updatedTemplate : t))
-
-          // Trigger automatic field extraction
-          await loadPdfFields(filePath)
-        } catch (innerError: unknown) {
-          alert(`Failed to complete template upload: ${innerError instanceof Error ? innerError.message : String(innerError)}`)
-        } finally {
-          setLoadingPdf(false)
-        }
-      }
-      reader.readAsDataURL(file)
+      // Trigger automatic field extraction
+      await loadPdfFields(filePath)
     } catch (e: unknown) {
-      alert(`Failed to upload PDF template: ${e instanceof Error ? e.message : String(e)}`)
+      alert(handleError('Templates.uploadPdf', e, "We couldn't upload the PDF template. Please try again."))
+    } finally {
       setLoadingPdf(false)
     }
   }
@@ -255,10 +235,10 @@ export default function DocumentTemplatesPage() {
       if (res.success) {
         alert("Field mappings saved successfully!")
       } else {
-        throw new Error(res.error)
+        throw new UserFacingError(res.error || "We couldn't save the field mappings. Please try again.")
       }
     } catch (e: unknown) {
-      alert(`Failed to save field mappings: ${e instanceof Error ? e.message : String(e)}`)
+      alert(handleError('Templates.saveMappings', e, "We couldn't save the field mappings. Please try again."))
     } finally {
       setSavingMapping(false)
     }

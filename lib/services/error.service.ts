@@ -1,4 +1,5 @@
 import { AuditService } from "./audit.service";
+import { toUserMessage, GENERIC_ERROR_MESSAGE } from "@/lib/errors";
 
 /**
  * ErrorService
@@ -18,7 +19,8 @@ export class ErrorService {
     error: unknown,
     contextName: string,
     userId: string | null = null,
-    triggerAudit = false
+    triggerAudit = false,
+    fallback = GENERIC_ERROR_MESSAGE
   ): { success: false; error: string } {
     const rawMessage = error instanceof Error ? error.message : String(error);
     const logMessage = `[ERROR] In ${contextName}: ${rawMessage}`;
@@ -37,10 +39,11 @@ export class ErrorService {
       ).catch(e => console.error("ErrorService failed to record audit log:", e));
     }
 
-    // 3. User-friendly normalized response object
+    // 3. User-friendly normalized response object — never leak the raw
+    //    technical message (it is in the server log above).
     return {
       success: false,
-      error: `Error in ${contextName}: ${rawMessage}`,
+      error: toUserMessage(error, fallback),
     };
   }
 }

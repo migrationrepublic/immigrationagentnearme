@@ -1,4 +1,5 @@
 import { supabaseServer } from "@/lib/supabase-server";
+import { UserFacingError } from "@/lib/errors";
 import { SignatureRequest } from "@/lib/types";
 import { StorageService } from "./storage.service";
 import { EmailService } from "./email.service";
@@ -65,7 +66,7 @@ export class SignatureService {
 
     if (error) {
       console.error("SignatureService.createSignatureRequest error:", error);
-      throw new Error(`Failed to create signature request: ${error.message}`);
+      throw new Error(`Failed to create signature request: ${error.message}`, { cause: error });
     }
 
     // Send invitation email (non-blocking — failure logged but won't throw)
@@ -155,20 +156,27 @@ export class SignatureService {
 
     if (fetchRequestError || !request) {
       console.error("SignatureService.signDocument fetch request error:", fetchRequestError);
-      return false;
+      throw new UserFacingError("This signing request could not be found. Please check your link or contact the sender.");
     }
 
     const typedRequest = request as SignatureRequest;
     const document = typedRequest.document;
     if (!document) {
       console.error("SignatureService.signDocument: Document not found");
-      return false;
+      throw new UserFacingError("The document for this request is no longer available. Please contact the sender.");
+    }
+
+    if (request.status === "signed") {
+      throw new UserFacingError("This document has already been signed.");
+    }
+    if (request.status === "declined") {
+      throw new UserFacingError("This signature request was declined and can no longer be signed.");
     }
 
     // Check expiry
     if (request.expires_at && new Date(request.expires_at) < new Date()) {
       console.error("SignatureService.signDocument: Request is expired");
-      return false;
+      throw new UserFacingError("This signing link has expired. Please ask the sender for a new link.");
     }
 
     // 2. Decode Base64 signature PNG and upload to 'signatures' bucket
@@ -191,7 +199,7 @@ export class SignatureService {
     }
 
     // 4. Load the PDF and embed the signature image
-    const pdfDoc = await PDFDocument.load(originalPdfBytes);
+    const pdfDoc = await PDFDocument.load(originalPdfBytes, { ignoreEncryption: true });
     const signatureImage = await pdfDoc.embedPng(signatureBuffer);
     const pages = pdfDoc.getPages();
 
@@ -511,11 +519,16 @@ export class SignatureService {
 
     if (error || !request) {
       console.error("SignatureService.sendReminder: Request not found", error);
-      return false;
+      throw new UserFacingError("This signature request could not be found.");
     }
 
     if (request.status !== "sent") {
-      return false; // Only remind on pending requests
+      // Only remind on pending requests
+      throw new UserFacingError(
+        request.status === "draft"
+          ? "This request hasn't been sent yet. Finish placing the fields and send it first."
+          : "Reminders can only be sent for documents that are still waiting to be signed."
+      );
     }
 
     const doc = (request as any).document;

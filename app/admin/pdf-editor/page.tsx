@@ -30,6 +30,7 @@ import {
   GripVertical,
 } from 'lucide-react'
 import { getSignedUrlAction } from '@/app/actions/storage'
+import { handleError, UserFacingError } from '@/lib/errors'
 import {
   extractPdfFieldsAction,
   saveFieldMappingsAction,
@@ -200,7 +201,7 @@ function PDFEditorPage() {
       }
     } catch (err) {
       console.error('Failed to inject PDF.js library:', err)
-      showToast('error', 'Failed to load PDF viewer engine.')
+      showToast('error', "The document viewer couldn't load. Please check your connection and refresh the page.")
     }
   }, [showToast])
 
@@ -217,13 +218,16 @@ function PDFEditorPage() {
         .eq('id', documentId)
         .single()
 
-      if (docErr || !doc) throw new Error(docErr?.message || 'Document not found.')
+      if (docErr || !doc) {
+        if (docErr) console.error('[PDF Editor] document fetch error:', docErr)
+        throw new UserFacingError('This document could not be found. It may have been deleted.')
+      }
       setPdfDocName(doc.name)
 
       // 2. Fetch all signature requests linked to this document
       const res = await getSignatureRequestsByDocumentAction(documentId)
       if (!res.success) {
-        throw new Error(res.error || 'Failed to load recipients list.')
+        throw new UserFacingError(res.error || "We couldn't load the signers for this document.")
       }
 
       const requests = res.requests || []
@@ -264,10 +268,10 @@ function PDFEditorPage() {
       if (urlRes.success) {
         setPdfFileUrl(urlRes.signedUrl)
       } else {
-        throw new Error(urlRes.error || 'Could not retrieve PDF file url.')
+        throw new UserFacingError(urlRes.error || "We couldn't open the PDF file. Please try again.")
       }
     } catch (e: unknown) {
-      showToast('error', `Failed to load document: ${e instanceof Error ? e.message : String(e)}`)
+      showToast('error', handleError('PDFEditor.loadDocument', e, "We couldn't load this document. Please refresh the page."))
     } finally {
       setLoadingVisualDoc(false)
     }
@@ -315,10 +319,10 @@ function PDFEditorPage() {
       }
     } catch (err: unknown) {
       if (err instanceof Error && err.name !== 'RenderingCancelledException') {
-        console.error('PDF page render error:', err)
+        showToast('error', handleError('PDFEditor.renderPage', err, "We couldn't display this page of the PDF. Please refresh and try again."))
       }
     }
-  }, [pdfjsLoaded, pdfFileUrl, pdfInstance, currentPage, zoomScale])
+  }, [pdfjsLoaded, pdfFileUrl, pdfInstance, currentPage, zoomScale, showToast])
 
   useEffect(() => {
     if (pdfjsLoaded && pdfFileUrl) {
@@ -521,10 +525,10 @@ function PDFEditorPage() {
         showToast('success', 'Document sent for signature successfully!')
         router.push('/admin/signature-requests')
       } else {
-        throw new Error(res.error)
+        throw new UserFacingError(res.error || "We couldn't send the document for signing. Please try again.")
       }
     } catch (e: unknown) {
-      showToast('error', `Failed to send document: ${e instanceof Error ? e.message : String(e)}`)
+      showToast('error', handleError('PDFEditor.send', e, "We couldn't send the document for signing. Please try again."))
     } finally {
       setSavingVisualPlacements(false)
     }
@@ -543,7 +547,7 @@ function PDFEditorPage() {
       if (error) throw error
       setTemplates(data || [])
     } catch (e: unknown) {
-      showToast('error', `Failed to load templates: ${e instanceof Error ? e.message : String(e)}`)
+      showToast('error', handleError('PDFEditor.loadTemplates', e, "We couldn't load your templates. Please refresh the page."))
     } finally {
       setLoadingTemplates(false)
     }
@@ -613,12 +617,12 @@ function PDFEditorPage() {
           setViewerUrl(urlRes.signedUrl)
           setViewerLabel('template')
         } else {
-          throw new Error(urlRes.error || 'Failed to generate PDF signed URL')
+          throw new UserFacingError(urlRes.error || "We couldn't open the template PDF.")
         }
         await loadPdfFormFields(tpl.file_path)
       }
     } catch (err: unknown) {
-      showToast('error', `Error loading template: ${err instanceof Error ? err.message : String(err)}`)
+      showToast('error', handleError('PDFEditor.loadTemplate', err, "We couldn't load this template. Please try again."))
     } finally {
       setLoadingFields(false)
     }
@@ -631,9 +635,11 @@ function PDFEditorPage() {
       if (res.success && res.fields) {
         setPdfFields(res.fields)
         showToast('info', `${res.fields.length} PDF form field(s) detected`)
+      } else if (!res.success) {
+        throw new UserFacingError(res.error || "We couldn't read the form fields from this PDF.")
       }
     } catch (e) {
-      console.error('[PDF Editor] loadPdfFormFields error:', e)
+      showToast('error', handleError('PDFEditor.loadPdfFormFields', e, "We couldn't read the form fields from this PDF."))
     } finally {
       setExtractingPdf(false)
     }
@@ -655,10 +661,10 @@ function PDFEditorPage() {
       if (res.success) {
         showToast('success', 'Field mappings saved successfully!')
       } else {
-        throw new Error(res.error)
+        throw new UserFacingError(res.error || "We couldn't save the field mappings. Please try again.")
       }
     } catch (e: unknown) {
-      showToast('error', `Failed to save mappings: ${e instanceof Error ? e.message : String(e)}`)
+      showToast('error', handleError('PDFEditor.saveMappings', e, "We couldn't save the field mappings. Please try again."))
     } finally {
       setSavingMapping(false)
     }
@@ -670,14 +676,14 @@ function PDFEditorPage() {
     try {
       setPreviewLoading(true)
       const res = await previewFillPdfAction(selectedTemplate.id, sandboxData)
-      if (!res.success || !res.dataUri) {
-        throw new Error(res.error || 'Preview generation failed')
+      if (!res.success) {
+        throw new UserFacingError(res.error || "We couldn't generate the preview. Please try again.")
       }
       setViewerUrl(res.dataUri)
       setViewerLabel('preview')
       showToast('success', 'Preview generated!')
     } catch (e: unknown) {
-      showToast('error', `Preview failed: ${e instanceof Error ? e.message : String(e)}`)
+      showToast('error', handleError('PDFEditor.preview', e, "We couldn't generate the preview. Please try again."))
     } finally {
       setPreviewLoading(false)
     }

@@ -128,6 +128,9 @@ function PDFEditorPage() {
 
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const renderTaskRef = useRef<PDFRenderTask | null>(null)
+  // Bumped on every render request; stale (superseded) renders bail out so two
+  // renders never draw on the same canvas at once (pdf.js throws if they do).
+  const renderGenRef = useRef(0)
 
   // Signer color badges helper
   const colors = [
@@ -281,6 +284,9 @@ function PDFEditorPage() {
   const renderPdfPage = useCallback(async () => {
     if (!pdfjsLoaded || !pdfFileUrl || !canvasRef.current) return
 
+    const gen = ++renderGenRef.current
+    const isStale = () => gen !== renderGenRef.current
+
     try {
       const pdfjsLib = window.pdfjsLib
       if (!pdfjsLib) return
@@ -294,12 +300,19 @@ function PDFEditorPage() {
         pdf = loadedPdf
       }
 
-      // Cancel ongoing render task if any
+      if (isStale()) return
+
+      // Cancel ongoing render task if any, and wait until the canvas is free
       if (renderTaskRef.current) {
-        renderTaskRef.current.cancel()
+        const prevTask = renderTaskRef.current
+        renderTaskRef.current = null
+        prevTask.cancel()
+        await prevTask.promise.catch(() => {})
       }
+      if (isStale()) return
 
       const page = await pdf.getPage(currentPage)
+      if (isStale()) return
       const viewport = page.getViewport({ scale: zoomScale })
       const canvas = canvasRef.current
       const context = canvas.getContext('2d')
@@ -318,6 +331,7 @@ function PDFEditorPage() {
         await renderTask.promise
       }
     } catch (err: unknown) {
+      if (isStale()) return
       if (err instanceof Error && err.name !== 'RenderingCancelledException') {
         showToast('error', handleError('PDFEditor.renderPage', err, "We couldn't display this page of the PDF. Please refresh and try again."))
       }

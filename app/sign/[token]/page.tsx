@@ -31,7 +31,7 @@ import {
   ListChecks,
 } from 'lucide-react'
 
-import { PdfRenderContext, PdfDocument } from '@/lib/types'
+import { PdfRenderContext, PdfDocument, PDFRenderTask } from '@/lib/types'
 
 // ── Domain field types ──────────────────────────────────────────────────────────
 type FieldType = 'signature' | 'initial' | 'sign_date' | 'full_name' | 'first_name' | 'last_name' | 'email' | 'checkbox' | 'text'
@@ -721,47 +721,81 @@ export default function SignPage() {
   // Render individual page canvas helper
   const canvasRefs = useRef<Record<number, HTMLCanvasElement | null>>({})
 
+  // One render job per page at a time. pdf.js throws "Cannot use the same canvas
+  // during multiple render() operations" if a second render starts on a canvas
+  // before the first finishes — and the canvas ref callback fires on every
+  // re-render, so without this guard that happened constantly.
+  const renderJobsRef = useRef<Record<number, { scale: number; task: PDFRenderTask | null } | undefined>>({})
+  // Shared document load so N pages don't each download the PDF in parallel
+  const pdfLoadRef = useRef<Promise<PdfDocument> | null>(null)
+
   const renderPdfPage = useCallback(async (pageNum: number) => {
     if (!pdfjsLoaded || !pdfUrl || !canvasRefs.current[pageNum]) return
+    const pdfjsLib = window.pdfjsLib
+    if (!pdfjsLib) return
+
+    const previous = renderJobsRef.current[pageNum]
+    // Already rendering this page at this zoom → nothing to do
+    if (previous && previous.scale === zoomScale) return
+
+    // Claim the page synchronously so concurrent calls see it immediately
+    const job: { scale: number; task: PDFRenderTask | null } = { scale: zoomScale, task: null }
+    renderJobsRef.current[pageNum] = job
+    const isCurrent = () => renderJobsRef.current[pageNum] === job
+    let rendered = false
 
     try {
-      const pdfjsLib = window.pdfjsLib
-      if (!pdfjsLib) return
-      let pdf = pdfDocInstance
+      // Zoom changed mid-render: cancel the old render and wait until the canvas is free
+      if (previous?.task) {
+        previous.task.cancel()
+        await previous.task.promise.catch(() => {})
+      }
+      if (!isCurrent()) return
 
+      let pdf = pdfDocInstance
       if (!pdf) {
-        const loadingTask = pdfjsLib.getDocument(pdfUrl)
-        const loadedPdf = await loadingTask.promise
-        setPdfDocInstance(loadedPdf)
-        setTotalPages(loadedPdf.numPages)
-        pdf = loadedPdf
+        if (!pdfLoadRef.current) {
+          pdfLoadRef.current = pdfjsLib.getDocument(pdfUrl).promise.then(loaded => {
+            setPdfDocInstance(loaded)
+            setTotalPages(loaded.numPages)
+            return loaded
+          })
+          // Allow a retry if the download fails
+          pdfLoadRef.current.catch(() => { pdfLoadRef.current = null })
+        }
+        pdf = await pdfLoadRef.current
       }
 
       const page = await pdf.getPage(pageNum)
-      const viewport = page.getViewport({ scale: zoomScale })
       const canvas = canvasRefs.current[pageNum]
-      if (canvas) {
-        const context = canvas.getContext('2d')
-        if (context) {
-          canvas.height = viewport.height
-          canvas.width = viewport.width
+      const context = canvas?.getContext('2d')
+      if (!isCurrent() || !canvas || !context) return
 
-          setCanvasDimensions(prev => ({
-            ...prev,
-            [pageNum]: { width: viewport.width, height: viewport.height }
-          }))
+      const viewport = page.getViewport({ scale: zoomScale })
+      canvas.height = viewport.height
+      canvas.width = viewport.width
 
-          const renderContext: PdfRenderContext = {
-            canvasContext: context,
-            viewport,
-          }
-          await page.render(renderContext).promise
-          setRenderedPages(prev => ({ ...prev, [pageNum]: true }))
-        }
+      setCanvasDimensions(prev => ({
+        ...prev,
+        [pageNum]: { width: viewport.width, height: viewport.height }
+      }))
+
+      const renderContext: PdfRenderContext = {
+        canvasContext: context,
+        viewport,
       }
+      job.task = page.render(renderContext)
+      await job.task.promise
+      rendered = true
+      if (isCurrent()) setRenderedPages(prev => ({ ...prev, [pageNum]: true }))
     } catch (e: unknown) {
-      if (e instanceof Error && e.name === 'RenderingCancelledException') return
+      // Cancelled because the zoom changed — expected, not an error
+      if (!isCurrent() || (e instanceof Error && e.name === 'RenderingCancelledException')) return
       setActionError(handleError('SignPage.renderPage', e, `We couldn't display page ${pageNum} of the document. Please refresh the page.`))
+    } finally {
+      // On success keep the slot so repeat calls at the same zoom are no-ops
+      // (a zoom change creates a new job). On failure free it so it can retry.
+      if (isCurrent() && !rendered) renderJobsRef.current[pageNum] = undefined
     }
   }, [pdfjsLoaded, pdfUrl, pdfDocInstance, zoomScale])
 

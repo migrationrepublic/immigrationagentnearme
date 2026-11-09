@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
-  ArrowRight, Check, ChevronLeft, ExternalLink, Info, Loader2, RotateCcw, Search, ShieldCheck,
+  AlertTriangle, ArrowRight, Check, ChevronLeft, ExternalLink, Info, Loader2, RotateCcw, Search, ShieldCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ToolDisclaimer } from "@/components/tools/shared/tool-disclaimer";
@@ -15,7 +15,7 @@ import { COUNTRIES } from "@/lib/tools/visa-finder/countries";
 import {
   BOOK_CONSULTATION_URL, CATALOGUE_REVIEWED_ON, MARN, OMARA_REGISTER_URL, VISA_PRICING_ESTIMATOR_URL,
 } from "@/lib/tools/visa-finder/config";
-import type { Answers, Question, ToolId, VisaOption } from "@/lib/tools/visa-finder/types";
+import type { Answers, Question, ResultBanner, ToolId, VisaOption } from "@/lib/tools/visa-finder/types";
 
 const DISCLAIMER =
   "This tool gives general information only and is not migration advice. It does not list every visa, consider secondary applicants, or assess eligibility, which depends on legislation, including health and character requirements. Visa rules, fees and eligible countries change. Information is adapted from the Australian Government Department of Home Affairs and is not endorsed by it.";
@@ -25,6 +25,36 @@ function track(event: string, params: Record<string, string | number>) {
     const w = window as unknown as { gtag?: (...a: unknown[]) => void };
     w.gtag?.("event", event, params);
   } catch { /* analytics must never break the tool */ }
+}
+
+/** Build a link to a related tool, carrying selected answers across as query params. */
+function relatedHref(visa: VisaOption, answers: Answers): string | undefined {
+  if (!visa.relatedTool) return undefined;
+  const params = new URLSearchParams();
+  visa.relatedTool.carry?.forEach((k) => { const val = answers[k]; if (val) params.set(k, val); });
+  const qs = params.toString();
+  return qs ? `${visa.relatedTool.href}?${qs}` : visa.relatedTool.href;
+}
+
+function Banner({ banner }: { banner: ResultBanner }) {
+  const warning = banner.tone === "warning";
+  return (
+    <div
+      role={warning ? "alert" : "status"}
+      className={`rounded-2xl border p-4 sm:p-5 flex gap-3 ${warning ? "bg-amber-50 border-amber-300 text-amber-900" : "bg-blue-50 border-blue-200 text-blue-900"}`}
+    >
+      {warning ? <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5 text-amber-600" /> : <Info className="w-5 h-5 shrink-0 mt-0.5 text-blue-700" />}
+      <div className="text-sm space-y-1.5">
+        <p className="font-bold">{banner.title}</p>
+        <p className="leading-relaxed">{banner.text}</p>
+        {banner.link && (
+          <Link href={banner.link.href} className="inline-flex items-center gap-1 font-bold underline">
+            {banner.link.label} <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        )}
+      </div>
+    </div>
+  );
 }
 
 const money = (n: number | null) =>
@@ -92,10 +122,11 @@ function CountryCombobox({ value, onSelect }: { value?: string; onSelect: (c: st
 
 // ───────── Result card ─────────
 function ResultCard({
-  visa, folded, notes, onCta,
+  visa, folded, notes, onCta, related,
 }: {
   visa: VisaOption; folded: VisaOption[]; notes: string[];
   onCta: (id: string, kind: "guide" | "cta") => void;
+  related?: string;
 }) {
   const flagged = visa.status === "closed" || visa.status === "transitional";
   return (
@@ -103,7 +134,7 @@ function ResultCard({
       <div className="flex flex-wrap items-start justify-between gap-2 mb-2">
         <div>
           <p className="text-[11px] font-extrabold uppercase tracking-wider text-brand-accent">
-            {visa.subclass ? `Subclass ${visa.subclass}` : "Authority"}
+            {visa.kicker ?? (visa.subclass ? `Subclass ${visa.subclass}` : "Authority")}
           </p>
           <h3 className="text-base sm:text-lg font-bold text-brand-primary leading-tight">
             {visa.name}{visa.stream ? ` — ${visa.stream}` : ""}
@@ -159,6 +190,14 @@ function ResultCard({
       )}
 
       <div className="flex flex-col sm:flex-row gap-2 pt-3 border-t border-gray-100">
+        {related && visa.relatedTool && (
+          <Link
+            href={related}
+            className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-brand-primary text-white text-xs font-bold hover:bg-brand-primary/90"
+          >
+            {visa.relatedTool.label} <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        )}
         {visa.guideUrl && (
           <a
             href={visa.guideUrl} target="_blank" rel="noopener noreferrer"
@@ -306,6 +345,7 @@ export function VisaFinder({ tool }: { tool: ToolId }) {
   const finished = showAll || step >= active.length;
   const question: Question | undefined = active[step];
   const groups = useMemo(() => foldResults(results), [results]);
+  const banner = cfg.resultBanner?.(answers) ?? null;
 
   // Move focus to the new heading on each step, but not on first load (avoids a scroll jump)
   const firstRender = useRef(true);
@@ -368,7 +408,7 @@ export function VisaFinder({ tool }: { tool: ToolId }) {
                   <h2 ref={headingRef} tabIndex={-1} className="text-lg sm:text-2xl font-bold text-brand-primary mb-1 outline-none">
                     {question.label}
                   </h2>
-                  <p className="text-xs text-gray-500 mb-4">Looking for someone else? Answer as if you were that traveller.</p>
+                  <p className="text-xs text-gray-500 mb-4">{cfg.helperText ?? "Looking for someone else? Answer as if you were that traveller."}</p>
 
                   {question.type === "country" ? (
                     <CountryCombobox value={answers[question.id]} onSelect={(c) => answer(question, c)} />
@@ -386,6 +426,9 @@ export function VisaFinder({ tool }: { tool: ToolId }) {
                             <input
                               type="radio" name={question.id} value={o.value} checked={selected}
                               onChange={() => answer(question, o.value)}
+                              // Radios don't fire onChange when already checked: re-confirming a
+                              // pre-filled answer (shared link, hand-off, "Change") must still advance.
+                              onClick={() => { if (selected) answer(question, o.value); }}
                               className="mt-1 w-4 h-4 accent-[#012269]"
                             />
                             <span>
@@ -415,7 +458,7 @@ export function VisaFinder({ tool }: { tool: ToolId }) {
             <div className="space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <h2 ref={headingRef} tabIndex={-1} className="text-xl sm:text-2xl font-extrabold text-brand-primary outline-none">
-                  {results.length > 0 ? `${results.length} options to explore` : "No listed option matched"}
+                  {results.length > 0 ? `${results.length} ${results.length === 1 ? "option" : "options"} to explore` : "No listed option matched"}
                 </h2>
                 <div className="flex gap-2">
                   <Button variant="outline" onClick={back} className="rounded-xl text-xs"><ChevronLeft className="w-4 h-4 mr-1" /> Change answers</Button>
@@ -429,6 +472,8 @@ export function VisaFinder({ tool }: { tool: ToolId }) {
                 for current charges.
               </p>
 
+              {banner && <Banner banner={banner} />}
+
               {results.length === 0 && (
                 <div className="bg-white border border-gray-200 rounded-2xl p-6 text-sm text-gray-600">
                   None of the visas in this tool matched your answers. That does not mean there is no option for you. A registered agent can look at your full situation.
@@ -440,12 +485,13 @@ export function VisaFinder({ tool }: { tool: ToolId }) {
                   <ResultCard
                     key={primary.id} visa={primary} folded={folded}
                     notes={getVisaNotes(tool, answers, primary)}
+                    related={relatedHref(primary, answers)}
                     onCta={(id, kind) => track(kind === "guide" ? "vf_guide_click" : "vf_cta_click", { tool, visa_id: id })}
                   />
                 ))}
               </div>
 
-              <FinderLeadForm tool={tool} answers={answers} matched={results} />
+              {!cfg.hideLeadForm?.(answers) && <FinderLeadForm tool={tool} answers={answers} matched={results} />}
 
               <ToolDisclaimer customText={DISCLAIMER} extraClause={`Migration Republic, MARN ${MARN}. Last reviewed: ${CATALOGUE_REVIEWED_ON}.`} />
               <p className="text-xs text-gray-500 flex items-center gap-1.5">

@@ -73,6 +73,11 @@ interface ToolLeadResults {
   total_visa_application_charges?: string
 }
 
+/** Visit/Study/Work/Join Family finders, PR Pathway Explorer and Stay Longer Planner */
+function isFinderLead(name?: string | null): boolean {
+  return !!name && (name.endsWith("Visa Finder") || name === "PR Pathway Explorer" || name === "Stay Longer Planner")
+}
+
 export default function ToolLeadsPage() {
   const [leads, setLeads] = useState<ToolLead[]>([])
   const [search, setSearch] = useState("")
@@ -126,9 +131,9 @@ export default function ToolLeadsPage() {
     } else if (toolFilter === "eligibility") {
       matchesTool = l.tool_name === "Eligibility Checker"
     } else if (toolFilter === "finder") {
-      matchesTool = !!l.tool_name?.endsWith("Visa Finder")
+      matchesTool = !!isFinderLead(l.tool_name)
     } else if (toolFilter === "quiz") {
-      matchesTool = l.tool_name === "Visa Suggestion Quiz" || (!l.tool_name?.endsWith("Visa Finder") && !l.tool_name?.includes("482") && l.tool_name !== "PR Calculator" && l.tool_name !== "PR Points Calculator" && l.tool_name !== "Eligibility Checker" && !l.tool_name?.includes("Business Sponsor") && !l.tool_name?.includes("Cost"))
+      matchesTool = l.tool_name === "Visa Suggestion Quiz" || (!isFinderLead(l.tool_name) && !l.tool_name?.includes("482") && l.tool_name !== "PR Calculator" && l.tool_name !== "PR Points Calculator" && l.tool_name !== "Eligibility Checker" && !l.tool_name?.includes("Business Sponsor") && !l.tool_name?.includes("Cost"))
     }
 
     return matchesSearch && matchesTool
@@ -148,8 +153,8 @@ export default function ToolLeadsPage() {
   const count482         = leads.filter(l => l.tool_name?.includes("482") && !l.tool_name?.includes("Business Sponsor")).length
   const prCount          = leads.filter(l => l.tool_name === "PR Calculator" || l.tool_name === "PR Points Calculator").length
   const eligibilityCount = leads.filter(l => l.tool_name === "Eligibility Checker").length
-  const finderCount      = leads.filter(l => l.tool_name?.endsWith("Visa Finder")).length
-  const quizCount        = leads.filter(l => l.tool_name === "Visa Suggestion Quiz" || (!l.tool_name?.endsWith("Visa Finder") && !l.tool_name?.includes("482") && l.tool_name !== "PR Calculator" && l.tool_name !== "PR Points Calculator" && l.tool_name !== "Eligibility Checker" && !l.tool_name?.includes("Business Sponsor") && !l.tool_name?.includes("Cost"))).length
+  const finderCount      = leads.filter(l => isFinderLead(l.tool_name)).length
+  const quizCount        = leads.filter(l => l.tool_name === "Visa Suggestion Quiz" || (!isFinderLead(l.tool_name) && !l.tool_name?.includes("482") && l.tool_name !== "PR Calculator" && l.tool_name !== "PR Points Calculator" && l.tool_name !== "Eligibility Checker" && !l.tool_name?.includes("Business Sponsor") && !l.tool_name?.includes("Cost"))).length
   const totalCount       = leads.length
 
   return (
@@ -188,7 +193,7 @@ export default function ToolLeadsPage() {
             <option value="482">Subclass 482 Checker ({count482})</option>
             <option value="pr">PR Calculator ({prCount})</option>
             <option value="eligibility">Eligibility Checker ({eligibilityCount})</option>
-            <option value="finder">Visa Finders ({finderCount})</option>
+            <option value="finder">Visa Finders &amp; Planners ({finderCount})</option>
             <option value="quiz">Visa Quiz ({quizCount})</option>
           </select>
         </div>
@@ -204,7 +209,7 @@ export default function ToolLeadsPage() {
           { key: "482", label: "482 Visa", count: count482 },
           { key: "pr", label: "PR Calc", count: prCount },
           { key: "eligibility", label: "Eligibility", count: eligibilityCount },
-          { key: "finder", label: "Visa Finders", count: finderCount },
+          { key: "finder", label: "Visa Finders & Planners", count: finderCount },
           { key: "quiz", label: "Visa Quiz", count: quizCount },
         ] as const).map(tile => {
           const active = toolFilter === tile.key
@@ -599,7 +604,7 @@ export default function ToolLeadsPage() {
                   )}
 
                   {/* Visa Finder (Visit / Study / Work) results */}
-                  {lead.tool_name?.endsWith("Visa Finder") && (
+                  {isFinderLead(lead.tool_name) && (
                     <div className="space-y-4">
                       <div>
                         <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Answers</p>

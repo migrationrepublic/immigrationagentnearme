@@ -1,4 +1,4 @@
-export type ToolId = "visit" | "study" | "work";
+export type ToolId = "visit" | "study" | "work" | "family" | "pr";
 export type VisaStatus = "open" | "restricted" | "closed" | "transitional";
 export type AgeBand = "under18" | "18_30" | "31_35" | "over35";
 
@@ -10,6 +10,8 @@ export interface VisaOption {
   subclass: string | null;
   name: string;
   stream?: string;
+  /** Small label above the name. Defaults to "Subclass X" (or "Authority" when no subclass). */
+  kicker?: string;
   tools: ToolId[];
   /** Match tags, format `${tool}.${questionId}:${value}` */
   tags: string[];
@@ -29,6 +31,8 @@ export interface VisaOption {
   agentCanAssist: boolean;
   guideUrl?: string;
   officialUrl: string;
+  /** Internal link to another tool, carrying some answers across (e.g. PR → Join Family) */
+  relatedTool?: { href: string; label: string; carry?: string[] };
   /** Group key so 2nd/3rd working holiday cards fold under the first */
   foldUnder?: string;
   lastReviewed: string;
@@ -53,9 +57,22 @@ export interface Question {
   showIf?: (answers: Answers) => boolean;
 }
 
+export interface ResultBanner {
+  tone: "warning" | "info";
+  title: string;
+  text: string;
+  link?: { href: string; label: string };
+}
+
 export interface ToolConfig {
   id: ToolId;
   title: string;
   leadName: string;
   questions: Question[];
+  /** Line under each question. Defaults to the traveller wording. */
+  helperText?: string;
+  /** Prominent notice above the results (e.g. "No Further Stay" warning). */
+  resultBanner?: (answers: Answers) => ResultBanner | null;
+  /** Hide the consultation form (e.g. humanitarian results: no sales push). */
+  hideLeadForm?: (answers: Answers) => boolean;
 }

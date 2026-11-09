@@ -9,6 +9,9 @@ export const TOOLS_NAV_ITEMS = [
   { name: 'Visit Finder', href: '/tools/visit-visa-finder' },
   { name: 'Study Finder', href: '/tools/study-visa-finder' },
   { name: 'Work Finder', href: '/tools/work-visa-finder' },
+  { name: 'Family Finder', href: '/tools/join-family-visa-finder' },
+  { name: 'PR Pathways', href: '/tools/pr-pathway-explorer' },
+  { name: 'Stay Longer', href: '/tools/stay-longer-planner' },
   {
     name: 'Business Sponsor',
     href: '/tools/business-sponsor-checker',

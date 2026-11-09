@@ -296,10 +296,96 @@ TOOL_SEO["visa-finder"] = {
   keywords: ["Australia visa finder", "Australian visa options", "which visa for Australia", "visit study work visa Australia"],
 };
 
+// ── Family, PR pathway and stay-longer tools ──
+Object.assign(TOOL_SEO, {
+  "join-family-visa-finder": {
+    slug: "join-family-visa-finder",
+    keyword: "Join Family Visa Finder",
+    h1: "Join Family Visa Finder: Partner, Parent and Child Visas for Australia",
+    tagline: "Answer a few quick questions to see the partner and family visa options that may suit you, with the reasons each one matched.",
+    metaTitle: "Join Family Visa Finder – Australian Partner & Family Visas",
+    metaDescription: "Free Join Family Visa Finder. Explore Australian partner (820/801, 309/100, 300), parent, child, carer and other family visa options. General information only, not migration advice.",
+    intro: [
+      "Quick answer: if your partner, child, parent or another relative is an Australian citizen, permanent resident or eligible New Zealand citizen, you may have a family visa option. Partners usually look at the 820/801 (in Australia) or 309/100 (outside Australia) partner visas, parents at the parent visa family, and children at the child visas.",
+      "The Join Family Visa Finder asks why you want to come, how long you want to stay, who your family member is and where you will be when you apply, then lists the visas worth exploring. It covers the main applicant only, gives general information, and does not assess eligibility. Several parent and other family visas are capped and queued, so every card carries a status note.",
+    ],
+    howToTitle: "How to use the Join Family Visa Finder",
+    steps: [
+      { name: "Tell us why you're coming", text: "Choose partner, child, parents, another family member, or caring for a sick relative." },
+      { name: "Answer the follow-up questions", text: "Say how long you want to stay, who your family member is and where you'll be when you apply." },
+      { name: "Review your options", text: "See each visa with its stay, key points and any status notes, and open the guide for the ones that look relevant." },
+      { name: "Book a consultation", text: "Send your answers to a registered migration agent to talk through your situation." },
+    ],
+    faqs: [
+      { q: "What is the difference between the 820/801 and 309/100 partner visas?", a: "Both are for married or de facto partners of Australian citizens, permanent residents or eligible New Zealand citizens. The 820/801 is applied for in Australia and the 309/100 from outside Australia. Each is a single application with a temporary stage followed by a permanent stage." },
+      { q: "What if I'm engaged but not married yet?", a: "The Prospective Marriage visa (subclass 300) may suit people who plan to marry their Australian partner in Australia. It is applied for from outside Australia." },
+      { q: "Why do parent visas take so long?", a: "Most parent visas are capped and queued, so waiting times can be many years. Contributory parent visas cost more but generally move faster. Check current processing with a registered agent." },
+      { q: "Does this tool include my children or partner as secondary applicants?", a: "No. It covers the main applicant only. Including family members can change which visas are suitable." },
+      { q: "Is this tool migration advice?", a: "No. It lists options to explore and is general information only. A registered migration agent can advise on your circumstances." },
+    ],
+    keywords: ["join family visa finder", "Australian partner visa options", "parent visa Australia", "child visa Australia", "family visa Australia", "820 801 vs 309 100"],
+  },
+
+  "pr-pathway-explorer": {
+    slug: "pr-pathway-explorer",
+    keyword: "PR Pathway Explorer",
+    h1: "PR Pathway Explorer: Find Your Route to Australian Permanent Residence",
+    tagline: "Answer a few questions to see which permanent residence pathways may be worth exploring, and what to do next.",
+    metaTitle: "PR Pathway Explorer – Australian Permanent Residence Options",
+    metaDescription: "Free PR Pathway Explorer. See which Australian permanent residence pathways may suit you: family, skilled (186, 189, 190), regional, National Innovation, Pacific Engagement and more. Information only.",
+    intro: [
+      "Quick answer: most people become Australian permanent residents through a family-stream visa (as a partner, child or parent of a citizen or permanent resident) or a skilled visa (employer sponsored, state nominated or points-tested independent). Smaller pathways exist for exceptional talent, former residents, Pacific Island citizens and long-term retirement visa holders.",
+      "The PR Pathway Explorer asks why you want to settle in Australia, how you would apply and where you are now, then shows the pathways worth exploring. If you are in Australia, it also checks for a 'No Further Stay' condition, which can stop you applying onshore. It gives general information only and does not assess eligibility.",
+    ],
+    howToTitle: "How to use the PR Pathway Explorer",
+    steps: [
+      { name: "Choose your reason", text: "Family, skills, exceptional talent, a Pacific connection, past residence, a retirement visa or protection." },
+      { name: "Answer the follow-up questions", text: "Skilled workers say how they would apply. Everyone says where they are now." },
+      { name: "Review your pathways", text: "See the pathways worth exploring. Family pathways link straight into the Join Family Visa Finder." },
+      { name: "Book a consultation", text: "Send your answers to a registered migration agent for advice on your situation." },
+    ],
+    faqs: [
+      { q: "What are the main pathways to permanent residence in Australia?", a: "The main pathways are family-stream visas and skilled visas. Skilled options include the Employer Nomination Scheme (186), Skilled Nominated (190), Skilled Independent (189) and regional visas that lead to the permanent 191." },
+      { q: "What does 'No Further Stay' mean?", a: "Conditions such as 8503, 8534 and 8535 generally stop you applying for most other visas while you are in Australia. You may need to apply from outside Australia, or ask for a waiver in limited cases." },
+      { q: "Can I apply for the National Innovation visa directly?", a: "No. The National Innovation visa (subclass 858) is by invitation only. You first submit an Expression of Interest." },
+      { q: "Does the PR Pathway Explorer tell me if I qualify?", a: "No. It shows pathways worth exploring. Eligibility depends on the law, your circumstances, and health and character requirements." },
+    ],
+    keywords: ["PR pathway explorer", "Australian permanent residence pathways", "how to get PR in Australia", "permanent visa options Australia", "no further stay 8503"],
+  },
+
+  "stay-longer-planner": {
+    slug: "stay-longer-planner",
+    keyword: "Stay Longer Planner",
+    h1: "Stay Longer Planner: Is Your Australian Visa About to Expire?",
+    tagline: "Enter your visa details to see where you stand, how many days you have, and a clear checklist of what to do next.",
+    metaTitle: "Stay Longer Planner – Australian Visa Expiry Checker",
+    metaDescription: "Free Stay Longer Planner. Check how long is left on your Australian visa, whether a No Further Stay condition affects you, and what to do before or after it expires. General information only.",
+    intro: [
+      "Quick answer: to stay in Australia longer you need to apply for a new visa before your current one expires. Lodging a valid application in time usually gives you a Bridging visa A, which keeps you lawful while it is processed. If your visa has a 'No Further Stay' condition such as 8503, you generally cannot apply in Australia. If your visa has already expired, get help straight away.",
+      "The Stay Longer Planner works out which of four situations you are in: unable to apply in Australia, able to apply before expiry, applied and waiting, or expired. It counts the days left and gives you a checklist you can print. It also warns you that leaving Australia ends a Bridging visa A. Your answers stay in your browser unless you choose to book a consultation.",
+    ],
+    howToTitle: "How to use the Stay Longer Planner",
+    steps: [
+      { name: "Find your visa details", text: "Check your expiry date and conditions in VEVO, the myVEVO app or your visa grant letter." },
+      { name: "Answer five quick questions", text: "Your visa, expiry date, any 'No Further Stay' condition, whether you've applied, and travel plans." },
+      { name: "Read your plan", text: "See your situation, the days left and a step-by-step checklist with official links." },
+      { name: "Get help early", text: "If time is short or your visa has expired, call or WhatsApp a registered migration agent." },
+    ],
+    faqs: [
+      { q: "Can I stay in Australia after my visa expires?", a: "Only if you hold another valid visa, usually a bridging visa granted because you lodged a new application before your visa expired. Without a valid visa you are unlawful and expected to leave." },
+      { q: "What is a Bridging visa A?", a: "A Bridging visa A (BVA) is usually granted when you lodge a valid visa application in Australia while holding a substantive visa. It generally lets you stay lawfully until a decision is made." },
+      { q: "Can I travel overseas on a Bridging visa A?", a: "A Bridging visa A ends when you leave Australia. To travel and return, you generally need a Bridging visa B, applied for before you leave." },
+      { q: "What does condition 8503 mean?", a: "Condition 8503 ('No Further Stay') generally means you cannot apply for most other visas while in Australia. In limited cases you can ask for it to be waived." },
+      { q: "How do I check my visa expiry date and conditions?", a: "Use the free VEVO service or the myVEVO app, or check your visa grant letter." },
+    ],
+    keywords: ["stay longer planner", "Australian visa expiry checker", "visa about to expire Australia", "bridging visa A", "8503 no further stay", "what to do when visa expires Australia"],
+  },
+} satisfies Record<string, ToolSeo>);
+
 export const TOOLS_INDEX_SEO = {
   metaTitle: "Free Australian Immigration Tools & Calculators",
   metaDescription:
-    "Free Australian immigration tools: Visit, Study and Work Visa Finders, PR Points Calculator, visa eligibility checkers, sponsorship cost estimators and a visa quiz, built by MARA registered agents.",
+    "Free Australian immigration tools: Visit, Study, Work and Join Family Visa Finders, PR Pathway Explorer, Stay Longer Planner, PR Points Calculator, visa eligibility checkers, sponsorship cost estimators and a visa quiz, built by MARA registered agents.",
 };
 
 export function toolMetadata(slug: string): Metadata {

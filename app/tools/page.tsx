@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ToolNavbar } from '@/components/tools/shared/tool-navbar';
-import { Calculator, ClipboardCheck, MessageSquareQuote, ArrowRight, Building2, Receipt, User, Plane, GraduationCap, Briefcase } from 'lucide-react';
+import { Calculator, ClipboardCheck, MessageSquareQuote, ArrowRight, Building2, Receipt, User, Plane, GraduationCap, Briefcase, Users, Route, CalendarClock } from 'lucide-react';
 
 const tools = [
   {
@@ -33,6 +33,33 @@ const tools = [
     icon: <Briefcase className="w-7 h-7 text-rose-600" />,
     href: '/tools/work-visa-finder',
     color: 'bg-rose-50',
+  },
+  {
+    id: 'join-family-visa-finder',
+    title: 'Join Family Visa Finder',
+    badge: 'Visa Finder',
+    description: 'Partner, parent, child, carer or other relative? See the family visa options worth exploring.',
+    icon: <Users className="w-7 h-7 text-pink-600" />,
+    href: '/tools/join-family-visa-finder',
+    color: 'bg-pink-50',
+  },
+  {
+    id: 'pr-pathway-explorer',
+    title: 'PR Pathway Explorer',
+    badge: 'Permanent Residence',
+    description: 'Family, skilled, talent or other routes: find the permanent residence pathways that may fit you.',
+    icon: <Route className="w-7 h-7 text-cyan-700" />,
+    href: '/tools/pr-pathway-explorer',
+    color: 'bg-cyan-50',
+  },
+  {
+    id: 'stay-longer-planner',
+    title: 'Stay Longer Planner',
+    badge: 'Visa Expiry',
+    description: 'Visa about to expire? See how many days you have left and a checklist of what to do next.',
+    icon: <CalendarClock className="w-7 h-7 text-orange-600" />,
+    href: '/tools/stay-longer-planner',
+    color: 'bg-orange-50',
   },
   {
     id: 'business-sponsor-checker',

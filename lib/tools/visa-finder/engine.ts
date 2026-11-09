@@ -116,7 +116,134 @@ const work: ToolConfig = {
   ],
 };
 
-export const TOOL_CONFIGS: Record<ToolId, ToolConfig> = { visit, study, work };
+const LOCATION_OPTIONS = [
+  { value: "onshore", label: "In Australia", help: "You will be in Australia when the application is lodged." },
+  { value: "offshore", label: "Outside Australia", help: "You will be overseas when the application is lodged." },
+];
+
+const family: ToolConfig = {
+  id: "family",
+  title: "Join Family Visa Finder",
+  leadName: "Join Family Visa Finder",
+  helperText: "Asking for a relative? Answer as if you were the person who will apply.",
+  questions: [
+    {
+      id: "reason", label: "Why do you want to come to Australia?", type: "single", filters: true,
+      options: [
+        { value: "partner", label: "To be with my partner or spouse", help: "Your partner is in Australia, or you are engaged to marry them." },
+        { value: "child", label: "To be with my child or children", help: "Your adult child lives in Australia (parent visas)." },
+        { value: "parents", label: "To live with my parents", help: "You are a child of a parent living in Australia (child visas)." },
+        { value: "other_family", label: "To join another family member", help: "For example a brother, sister, grandparent, uncle or aunt." },
+        { value: "carer", label: "To care for a sick relative", help: "A relative in Australia needs long-term care for a medical condition." },
+      ],
+    },
+    {
+      id: "stay", label: "How long do you want to stay?", type: "single", filters: true,
+      options: [
+        { value: "temporary", label: "For a while (temporarily)", help: "A visit or a stay for a set period." },
+        { value: "permanent", label: "Permanently", help: "You want to live in Australia long term." },
+      ],
+    },
+    {
+      id: "relationship", label: "What is your relationship with your partner?", type: "single", filters: true,
+      showIf: (a) => a.reason === "partner",
+      options: [
+        { value: "married_defacto", label: "Married or de facto", help: "You are married, or living together in a committed relationship." },
+        { value: "engaged", label: "Engaged to be married", help: "You plan to marry your partner in Australia." },
+      ],
+    },
+    {
+      id: "sponsor", label: "Your family member in Australia is:", type: "single", filters: false, alwaysAsk: true,
+      options: [
+        { value: "citizen", label: "An Australian citizen", help: "Born or naturalised in Australia." },
+        { value: "pr", label: "An Australian permanent resident", help: "Holds a permanent visa." },
+        { value: "nz", label: "An eligible New Zealand citizen", help: "A New Zealand citizen who meets the eligibility rules." },
+        { value: "other", label: "None of these / not sure", help: "For example they hold a temporary visa." },
+      ],
+    },
+    {
+      id: "location", label: "When you apply, where will you be?", type: "single", filters: true,
+      options: LOCATION_OPTIONS,
+    },
+  ],
+  resultBanner: (a) =>
+    a.sponsor === "other"
+      ? {
+          tone: "info",
+          title: "Most family visas need an eligible sponsor",
+          text: "Your family member usually needs to be an Australian citizen, permanent resident or eligible New Zealand citizen to sponsor you. A registered agent can check whether another pathway fits.",
+        }
+      : null,
+};
+
+const pr: ToolConfig = {
+  id: "pr",
+  title: "PR Pathway Explorer",
+  leadName: "PR Pathway Explorer",
+  helperText: "Asking for someone else? Answer as if you were that person.",
+  questions: [
+    {
+      id: "goal", label: "What best describes why you want to settle in Australia?", type: "single", filters: true,
+      options: [
+        { value: "family", label: "My partner or family is in Australia", help: "A partner, child, parent or relative who is a citizen or permanent resident." },
+        { value: "skills", label: "My work and skills", help: "Skilled work, with or without a sponsor." },
+        { value: "talent", label: "Exceptional talent or achievement", help: "An internationally recognised record of achievement." },
+        { value: "pacific", label: "I'm from a Pacific Island country or Timor-Leste", help: "Ballot-based permanent residence." },
+        { value: "returning", label: "I lived in Australia before", help: "Former or current permanent residents returning to Australia." },
+        { value: "retirement", label: "I hold a retirement visa", help: "Long-term holders of a Retirement (405) or Investor Retirement (410) visa." },
+        { value: "humanitarian", label: "I need protection", help: "Refugee and humanitarian pathways." },
+        { value: "not_sure", label: "I'm not sure", help: "Show me all the main pathways." },
+      ],
+    },
+    {
+      id: "route", label: "How would you apply as a skilled worker?", type: "single", filters: true,
+      showIf: (a) => a.goal === "skills",
+      options: [
+        { value: "employer", label: "An Australian employer will sponsor me", help: "An employer is willing to nominate you for a permanent or regional role." },
+        { value: "state", label: "A state, territory or regional relative would nominate me", help: "State or territory nomination, or a family member in a regional area." },
+        { value: "independent", label: "No sponsor", help: "Points-tested, with no employer, state or family sponsor." },
+      ],
+    },
+    {
+      id: "location", label: "Where are you now?", type: "single", filters: false, alwaysAsk: true,
+      options: [
+        { value: "onshore", label: "In Australia on a visa", help: "You currently hold an Australian visa." },
+        { value: "offshore", label: "Outside Australia", help: "You are currently overseas." },
+      ],
+    },
+    {
+      id: "nfs", label: "Does your current visa have a 'No Further Stay' condition?", type: "single", filters: false, alwaysAsk: true,
+      showIf: (a) => a.location === "onshore",
+      options: [
+        { value: "no", label: "No", help: "Your visa has no 8503, 8534 or 8535 condition." },
+        { value: "yes", label: "Yes", help: "For example condition 8503 on your grant letter or in VEVO." },
+        { value: "unsure", label: "I don't know", help: "Check your visa grant letter or VEVO." },
+      ],
+    },
+  ],
+  resultBanner: (a) => {
+    if (a.nfs === "yes") {
+      return {
+        tone: "warning",
+        title: "Your 'No Further Stay' condition may stop you applying in Australia",
+        text: "With this condition you generally cannot apply for most other visas while in Australia, including many permanent visas. You may need to leave and apply from outside Australia, or ask for a waiver in limited cases. Get advice before your visa expires.",
+        link: { href: "/tools/stay-longer-planner?nfs=yes", label: "Open the Stay Longer Planner" },
+      };
+    }
+    if (a.nfs === "unsure") {
+      return {
+        tone: "info",
+        title: "Check your visa conditions first",
+        text: "A 'No Further Stay' condition can stop you applying for another visa in Australia. You can check your conditions in VEVO or on your visa grant letter.",
+        link: { href: "/tools/stay-longer-planner", label: "Open the Stay Longer Planner" },
+      };
+    }
+    return null;
+  },
+  hideLeadForm: (a) => a.goal === "humanitarian",
+};
+
+export const TOOL_CONFIGS: Record<ToolId, ToolConfig> = { visit, study, work, family, pr };
 
 // ───────── Matching ─────────
 
@@ -211,6 +338,12 @@ export function getVisaNotes(tool: ToolId, answers: Answers, v: VisaOption): str
   }
   if (v.ageRule && answers.ageBand === "31_35" && v.id.startsWith("417")) {
     notes.push("Ages 31 to 35 are only eligible for some passports. Confirm yours.");
+  }
+  if (tool === "family" && v.location === "onshore") {
+    notes.push("A 'No Further Stay' condition (such as 8503) on your current visa can stop you applying in Australia.");
+  }
+  if (tool === "family" && answers.reason === "partner" && answers.sponsor === "nz") {
+    notes.push("Your New Zealand citizen partner must meet the 'eligible New Zealand citizen' rules to sponsor you.");
   }
   if (v.passportListUnverified) {
     notes.push("Eligible passports change often. Check the current list before applying.");

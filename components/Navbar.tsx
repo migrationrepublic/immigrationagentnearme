@@ -81,6 +81,24 @@ export default function Navbar() {
                   Work Visa Finder
                 </Link>
                 <Link
+                  href="/tools/join-family-visa-finder"
+                  className="flex items-center gap-3 px-4 py-2.5 hover:bg-brand-primary/5 rounded-xl text-brand-heading font-medium transition-colors text-sm"
+                >
+                  Join Family Visa Finder
+                </Link>
+                <Link
+                  href="/tools/pr-pathway-explorer"
+                  className="flex items-center gap-3 px-4 py-2.5 hover:bg-brand-primary/5 rounded-xl text-brand-heading font-medium transition-colors text-sm"
+                >
+                  PR Pathway Explorer
+                </Link>
+                <Link
+                  href="/tools/stay-longer-planner"
+                  className="flex items-center gap-3 px-4 py-2.5 hover:bg-brand-primary/5 rounded-xl text-brand-heading font-medium transition-colors text-sm"
+                >
+                  Stay Longer Planner
+                </Link>
+                <Link
                   href="/tools/business-sponsor-checker"
                   className="flex items-center gap-3 px-4 py-2.5 hover:bg-brand-primary/5 rounded-xl text-brand-heading font-medium transition-colors text-sm"
                 >
@@ -241,6 +259,27 @@ export default function Navbar() {
                     className="text-sm font-semibold text-gray-600 hover:text-brand-accent py-1.5"
                   >
                     Work Visa Finder
+                  </Link>
+                  <Link
+                    href="/tools/join-family-visa-finder"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="text-sm font-semibold text-gray-600 hover:text-brand-accent py-1.5"
+                  >
+                    Join Family Visa Finder
+                  </Link>
+                  <Link
+                    href="/tools/pr-pathway-explorer"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="text-sm font-semibold text-gray-600 hover:text-brand-accent py-1.5"
+                  >
+                    PR Pathway Explorer
+                  </Link>
+                  <Link
+                    href="/tools/stay-longer-planner"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="text-sm font-semibold text-gray-600 hover:text-brand-accent py-1.5"
+                  >
+                    Stay Longer Planner
                   </Link>
                   <Link
                     href="/tools/business-sponsor-checker"

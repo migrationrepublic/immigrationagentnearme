@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Briefcase, GraduationCap, Plane } from "lucide-react";
+import { ArrowRight, Briefcase, CalendarClock, GraduationCap, Plane, Route, Users } from "lucide-react";
 import { ToolHeader } from "@/components/tools/shared/tool-header";
 import { TOOL_SEO } from "@/lib/tools/seo-data";
 import { ToolDisclaimer } from "@/components/tools/shared/tool-disclaimer";
@@ -8,6 +8,9 @@ const FINDERS = [
   { href: "/tools/visit-visa-finder", title: "Visit and Tourism", desc: "Holidays, family visits, business trips, transit and working holidays.", icon: Plane },
   { href: "/tools/study-visa-finder", title: "Study", desc: "Full-time study, accompanying a student, or workplace training.", icon: GraduationCap },
   { href: "/tools/work-visa-finder", title: "Work", desc: "Skilled, temporary, business, working holiday and other work visas.", icon: Briefcase },
+  { href: "/tools/join-family-visa-finder", title: "Join Family", desc: "Partner, parent, child, carer and other family visas.", icon: Users },
+  { href: "/tools/pr-pathway-explorer", title: "Permanent Residence", desc: "Family, skilled, talent and other pathways to PR.", icon: Route },
+  { href: "/tools/stay-longer-planner", title: "Stay Longer", desc: "Visa about to expire? Get a plan and a checklist.", icon: CalendarClock },
 ];
 
 export default function VisaFinderHubPage() {

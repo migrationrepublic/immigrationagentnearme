@@ -1,6 +1,7 @@
 import { EXTERNAL_LINKS } from "@/lib/links";
 import { CATALOGUE_REVIEWED_ON, CATALOGUE_REVIEWED_BY } from "./config";
 import type { ToolId, VisaOption } from "./types";
+import { FAMILY_PR_VISAS } from "./family-pr-visas";
 import {
   ADS_COUNTRIES, ETA_COUNTRIES, EVISITOR_COUNTRIES, FREQUENT_TRAVELLER_COUNTRIES,
   NEW_ZEALAND, WORKING_HOLIDAY_417_COUNTRIES, WORK_AND_HOLIDAY_462_COUNTRIES,
@@ -325,4 +326,7 @@ export const VISAS: VisaOption[] = [
     highlights: ["Permanent residence", "Requires prior regional visa"],
     stay: "Permanent", feeFromAud: 630,
   }),
+
+  // ───────── JOIN FAMILY + PR PATHWAY (see family-pr-visas.ts) ─────────
+  ...FAMILY_PR_VISAS,
 ];

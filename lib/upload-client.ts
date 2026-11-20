@@ -1,6 +1,7 @@
 'use client'
 
-import { PDFDocument } from 'pdf-lib'
+import { PDFDocument } from '@cantoo/pdf-lib'
+import { loadPdf } from '@/lib/pdf-load'
 import { supabase } from '@/lib/supabase'
 import { createSignedUploadUrlAction } from '@/app/actions/storage'
 import { UserFacingError } from '@/lib/errors'
@@ -32,16 +33,32 @@ export async function uploadFileDirect(
 }
 
 /**
+ * Checks that the server will be able to stamp signatures onto this PDF, using the
+ * same loader as the server. Owner-protected government forms (e.g. Form 1006) pass,
+ * because loadPdf() decrypts them. Only PDFs that need a real password to open, or
+ * damaged files, are rejected — at upload time instead of when the client signs.
+ */
+export async function assertSignablePdf(file: File): Promise<void> {
+  try {
+    await loadPdf(await file.arrayBuffer())
+  } catch (err) {
+    throw new UserFacingError(
+      `"${file.name}" is password-protected or damaged, so it can't be signed online. Open it, choose Print and then "Save as PDF" (or "Microsoft Print to PDF"), and upload the new file.`,
+      { cause: err }
+    )
+  }
+}
+
+/**
  * Merges several PDFs into one, entirely in the browser.
- * `ignoreEncryption` lets owner-password-protected government forms load
- * (they're openable without a password but flagged as encrypted).
+ * loadPdf() decrypts owner-protected government forms, so they can be merged too.
  */
 export async function mergePdfFiles(files: Blob[]): Promise<Blob> {
   const merged = await PDFDocument.create()
   for (const file of files) {
     let src: PDFDocument
     try {
-      src = await PDFDocument.load(await file.arrayBuffer(), { ignoreEncryption: true })
+      src = await loadPdf(await file.arrayBuffer())
     } catch (err) {
       const name = file instanceof File ? `"${file.name}"` : 'One of the files'
       throw new UserFacingError(`${name} couldn't be opened. Please make sure it is a valid PDF.`, { cause: err })

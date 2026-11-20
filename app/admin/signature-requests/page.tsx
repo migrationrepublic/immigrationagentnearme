@@ -30,7 +30,7 @@ import {
   sendSignatureReminderAction,
 } from '@/app/actions/signature'
 import { getSignedUrlAction } from '@/app/actions/storage'
-import { uploadFileDirect, mergePdfFiles } from '@/lib/upload-client'
+import { uploadFileDirect, mergePdfFiles, assertSignablePdf } from '@/lib/upload-client'
 import { handleError, UserFacingError } from '@/lib/errors'
 import { SignatureRequest, Document, DocumentTemplate } from '@/lib/types'
 
@@ -314,6 +314,9 @@ export default function SignatureRequestsPage() {
 
       // 2. Document Setup
       if (selectedSourceType === 'upload') {
+        // Reject protected PDFs the server can't stamp, before anything is uploaded
+        for (const f of uploadedFiles) await assertSignablePdf(f.file)
+
         let fileToUpload: Blob
         let mainFileName = ''
 

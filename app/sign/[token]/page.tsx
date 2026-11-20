@@ -802,8 +802,13 @@ export default function SignPage() {
   // Trigger page render when canvas element mounts
   const handleRefSetup = (pageNum: number, el: HTMLCanvasElement | null) => {
     if (el) {
+      const previous = canvasRefs.current[pageNum]
       canvasRefs.current[pageNum] = el
-      if (!renderedPages[pageNum]) {
+      // A brand-new canvas (e.g. after returning from the "submitting" screen) is blank,
+      // even if this page was drawn before: forget the old job so it is drawn again.
+      const isNewCanvas = previous !== undefined && previous !== el
+      if (isNewCanvas) renderJobsRef.current[pageNum] = undefined
+      if (!renderedPages[pageNum] || isNewCanvas) {
         renderPdfPage(pageNum)
       }
     }

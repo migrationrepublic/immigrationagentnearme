@@ -1,9 +1,11 @@
 import { supabaseServer } from "@/lib/supabase-server";
 import { UserFacingError } from "@/lib/errors";
 import { SignatureRequest } from "@/lib/types";
+import type { PlacedFieldData } from "@/lib/types/signature";
 import { StorageService } from "./storage.service";
 import { EmailService } from "./email.service";
-import { PDFDocument, rgb } from "pdf-lib";
+import { PDFDocument, rgb } from "@cantoo/pdf-lib";
+import { loadPdf } from "@/lib/pdf-load";
 import { AuditService } from "./audit.service";
 import { randomBytes } from "crypto";
 
@@ -29,7 +31,7 @@ export class SignatureService {
     signer_email: string;
     signer_name: string;
     expires_at?: string;
-    fields?: any[];
+    fields?: PlacedFieldData[];
     signing_order?: number;
     signing_message?: string;
     status?: string;
@@ -142,7 +144,7 @@ export class SignatureService {
     requestId: string,
     signatureImageBase64: string,
     metadata?: { ipAddress?: string; userAgent?: string },
-    fieldsInput?: any[]
+    fieldsInput?: PlacedFieldData[]
   ): Promise<boolean> {
     const ipAddress = metadata?.ipAddress || "Unknown IP";
     const userAgent = metadata?.userAgent || "Unknown Agent";
@@ -179,13 +181,7 @@ export class SignatureService {
       throw new UserFacingError("This signing link has expired. Please ask the sender for a new link.");
     }
 
-    // 2. Decode Base64 signature PNG and upload to 'signatures' bucket
-    const base64Data = signatureImageBase64.replace(/^data:image\/\w+;base64,/, "");
-    const signatureBuffer = Buffer.from(base64Data, "base64");
-    const signatureFileName = `${requestId}_sig.png`;
-    await StorageService.upload("signatures", signatureFileName, signatureBuffer, "image/png");
-
-    // 3. Download the current unsigned/approved PDF
+    // 2. Download the current unsigned/approved PDF
     let originalPdfBytes: Buffer;
     try {
       originalPdfBytes = await StorageService.download("signed", document.file_path);
@@ -198,10 +194,26 @@ export class SignatureService {
       }
     }
 
-    // 4. Load the PDF and embed the signature image
-    const pdfDoc = await PDFDocument.load(originalPdfBytes, { ignoreEncryption: true });
-    const signatureImage = await pdfDoc.embedPng(signatureBuffer);
+    // 3. Load the PDF. loadPdf() decrypts owner-protected government forms (e.g. Form 1006
+    //    saved in Adobe Reader) so they can be stamped; the signed copy is saved unencrypted.
+    let pdfDoc: PDFDocument;
+    try {
+      pdfDoc = await loadPdf(originalPdfBytes);
+    } catch (err) {
+      console.error(`SignatureService.signDocument: cannot process PDF for document ${document.id}:`, err);
+      throw new UserFacingError(
+        "This document can't be signed online because the PDF is password-protected or damaged. Please contact the sender so they can upload a new copy.",
+        { cause: err }
+      );
+    }
     const pages = pdfDoc.getPages();
+
+    // 4. Decode the signature PNG, store it, and embed it
+    const base64Data = signatureImageBase64.replace(/^data:image\/\w+;base64,/, "");
+    const signatureBuffer = Buffer.from(base64Data, "base64");
+    const signatureFileName = `${requestId}_sig.png`;
+    await StorageService.upload("signatures", signatureFileName, signatureBuffer, "image/png");
+    const signatureImage = await pdfDoc.embedPng(signatureBuffer);
 
     // Determine placements - use fieldsInput or request.fields from database if available
     const placements = fieldsInput || typedRequest.fields || [];
@@ -210,6 +222,13 @@ export class SignatureService {
       // Coordinate-based signature overlay
       const helveticaFont = await pdfDoc.embedFont("Helvetica");
       const helveticaBold = await pdfDoc.embedFont("Helvetica-Bold");
+      // Helvetica only covers WinAnsi (Latin) characters: drawText throws on anything else
+      // (e.g. Urdu/Arabic/emoji typed into a field) and on newlines. Replace them safely.
+      const supported = new Set(helveticaFont.getCharacterSet());
+      const safe = (text: unknown) =>
+        Array.from(String(text ?? "").replace(/\s+/g, " "))
+          .map((ch) => (supported.has(ch.codePointAt(0)!) ? ch : "?"))
+          .join("");
 
       for (const field of placements) {
         // page is 1-indexed, pdf-lib is 0-indexed
@@ -237,7 +256,7 @@ export class SignatureService {
           });
         } else if (type === "sign_date" || type === "date") {
           const dateText = field.value || new Date().toLocaleDateString("en-AU");
-          page.drawText(dateText, {
+          page.drawText(safe(dateText), {
             x: pdfX + 5,
             y: pdfY + (pdfH / 2) - 4,
             size: Math.max(8, pdfH * 0.5),
@@ -246,7 +265,7 @@ export class SignatureService {
           });
         } else if (type === "full_name" || type === "name") {
           const nameText = field.value || typedRequest.signer_name;
-          page.drawText(nameText, {
+          page.drawText(safe(nameText), {
             x: pdfX + 5,
             y: pdfY + (pdfH / 2) - 4,
             size: Math.max(8, pdfH * 0.5),
@@ -259,7 +278,7 @@ export class SignatureService {
             ? (nameParts[0] || "")
             : (nameParts.length > 1 ? nameParts.slice(1).join(" ") : "");
           const nameText = field.value || fallback;
-          page.drawText(nameText, {
+          page.drawText(safe(nameText), {
             x: pdfX + 5,
             y: pdfY + (pdfH / 2) - 4,
             size: Math.max(8, pdfH * 0.5),
@@ -268,7 +287,7 @@ export class SignatureService {
           });
         } else if (type === "email") {
           const emailText = typedRequest.signer_email;
-          page.drawText(emailText, {
+          page.drawText(safe(emailText), {
             x: pdfX + 5,
             y: pdfY + (pdfH / 2) - 4,
             size: Math.max(8, pdfH * 0.5),
@@ -300,7 +319,7 @@ export class SignatureService {
           // generic text or company or job title
           const valText = String(field.value || "");
           if (valText) {
-            page.drawText(valText, {
+            page.drawText(safe(valText), {
               x: pdfX + 5,
               y: pdfY + (pdfH / 2) - 4,
               size: Math.max(8, pdfH * 0.5),
@@ -313,7 +332,7 @@ export class SignatureService {
     } else {
       // Legacy fallback: Stamp on the LAST page of the document
       const lastPage = pages[pages.length - 1];
-      const { width, height } = lastPage.getSize();
+      const { width } = lastPage.getSize();
 
       // Signature block background
       lastPage.drawRectangle({
@@ -401,7 +420,7 @@ export class SignatureService {
     }
 
     // 8. Update signature request status
-    const requestUpdatePayload: any = {
+    const requestUpdatePayload: Record<string, unknown> = {
       status: "signed",
       signature_url: signatureFileName,
       signed_at: new Date().toISOString(),
@@ -531,7 +550,7 @@ export class SignatureService {
       );
     }
 
-    const doc = (request as any).document;
+    const doc = (request as { document?: { name?: string } | null }).document;
     const documentName = doc?.name ?? "Document";
 
     return EmailService.sendSignatureReminder(
@@ -586,7 +605,7 @@ export class SignatureService {
    */
   static async activateRequests(
     documentId: string,
-    requests: Array<{ id: string; fields: any[] }>
+    requests: Array<{ id: string; fields: PlacedFieldData[] }>
   ): Promise<boolean> {
     // 1. Fetch document name
     const { data: document } = await supabaseServer

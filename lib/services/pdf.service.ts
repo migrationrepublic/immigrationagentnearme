@@ -1,4 +1,5 @@
-import { PDFDocument, PDFTextField, PDFCheckBox, PDFDropdown, PDFRadioGroup, PDFOptionList } from "pdf-lib";
+import { PDFDocument, PDFTextField, PDFCheckBox, PDFDropdown, PDFRadioGroup, PDFOptionList } from "@cantoo/pdf-lib";
+import { loadPdf } from "@/lib/pdf-load";
 import { supabaseServer } from "@/lib/supabase-server";
 import { StorageService } from "./storage.service";
 import { Booking } from "@/lib/types";
@@ -23,7 +24,7 @@ export class PDFService {
    */
   static async readAcroForm(pdfBuffer: Buffer): Promise<AcroFormFieldInfo[]> {
     try {
-      const pdfDoc = await PDFDocument.load(pdfBuffer, { ignoreEncryption: true });
+      const pdfDoc = await loadPdf(pdfBuffer);
       const form = pdfDoc.getForm();
       const fields = form.getFields();
 
@@ -39,9 +40,9 @@ export class PDFService {
 
         return { name, type };
       });
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error("PDFService.readAcroForm error:", e);
-      throw new Error(`Failed to read PDF form fields: ${e.message}`);
+      throw new Error(`Failed to read PDF form fields: ${e instanceof Error ? e.message : String(e)}`, { cause: e });
     }
   }
 
@@ -52,15 +53,15 @@ export class PDFService {
     try {
       const mergedPdf = await PDFDocument.create();
       for (const buffer of pdfBuffers) {
-        const pdf = await PDFDocument.load(buffer, { ignoreEncryption: true });
+        const pdf = await loadPdf(buffer);
         const copiedPages = await mergedPdf.copyPages(pdf, pdf.getPageIndices());
         copiedPages.forEach((page) => mergedPdf.addPage(page));
       }
       const mergedPdfBytes = await mergedPdf.save();
       return Buffer.from(mergedPdfBytes);
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error("PDFService.mergePdfs error:", e);
-      throw new Error(`Failed to merge PDF files: ${e.message}`);
+      throw new Error(`Failed to merge PDF files: ${e instanceof Error ? e.message : String(e)}`, { cause: e });
     }
   }
 
@@ -69,7 +70,7 @@ export class PDFService {
    */
   static async fillAcroForm(templatePdfBuffer: Buffer, fieldValues: Record<string, string | boolean>): Promise<Buffer> {
     try {
-      const pdfDoc = await PDFDocument.load(templatePdfBuffer, { ignoreEncryption: true });
+      const pdfDoc = await loadPdf(templatePdfBuffer);
       const form = pdfDoc.getForm();
 
       for (const [key, value] of Object.entries(fieldValues)) {
